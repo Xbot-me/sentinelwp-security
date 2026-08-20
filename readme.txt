@@ -17,7 +17,7 @@ SentinelWP Security is the dedicated security layer engineered to protect ecomme
 = 1. Pre-Gateway Risk Engine & Store API Guard =
 * **Pre-Gateway Evaluation** — Evaluates checkout requests before payment processor dispatch, preventing gateway API fees and merchant dispute penalties.
 * **Multi-Signal Identity Clustering** — Combines session continuity, disposable email domains, cart SKU signatures, and IP subnet metrics into cluster tokens to defeat distributed residential proxy rotation.
-* **Rolling 60-Day Percentile Baseline** — Evaluates order value anomalies against the store's 60-day historical order distribution (p05, p50, p95) rather than rigid arbitrary thresholds.
+* **Rolling 60-Day Percentile Baseline** — Evaluates order value anomalies against a rolling 60-day order-value percentile baseline based on the most recent 1,000 completed orders (p05, p50, p95) rather than rigid arbitrary thresholds.
 * **Zero-Disruption OBSERVE Mode** — Default operating mode calculates risk and logs real-time attack telemetry while allowing 100% of live customer checkouts.
 
 = 2. Magecart & Checkout Skimmer Defense =

@@ -187,18 +187,38 @@ $attack_context = array(
 $risk_engine->set_mode( 'protect' );
 $protect_attack_res = $risk_engine->evaluate_payment_attempt( $attack_context );
 
+$risk_engine->set_mode( 'lockdown' );
+$lockdown_attack_res = $risk_engine->evaluate_payment_attempt( $attack_context );
+
 $risk_engine->set_mode( 'observe' );
 $observe_attack_res = $risk_engine->evaluate_payment_attempt( $attack_context );
 
-if ( 'HARD_BLOCK' === $protect_attack_res['decision'] &&
-     $protect_attack_res['risk_score'] >= 85 &&
-     $protect_attack_res['confidence'] >= 0.85 &&
-     'ALLOW' === $observe_attack_res['decision'] &&
-     true === $observe_attack_res['would_have_blocked'] ) {
-	echo "\033[32m[PASS]\033[0m True positive detected: Score {$protect_attack_res['risk_score']} | Confidence {$protect_attack_res['confidence']} | PROTECT -> {$protect_attack_res['decision']} | OBSERVE -> {$observe_attack_res['decision']} (would_have_blocked=true)\n";
+// Invariant Edge Check: Score 85 with confidence < 0.85 (e.g. missing direct checkout reason)
+$edge_context_low_conf = $attack_context;
+$edge_context_low_conf['has_journey'] = true; // Removes DIRECT_CHECKOUT_WITHOUT_JOURNEY (drops confidence to 0.80)
+$risk_engine->set_mode( 'protect' );
+$edge_res_low_conf = $risk_engine->evaluate_payment_attempt( $edge_context_low_conf );
+
+// Invariant Edge Check: High score without corroborating reasons (no payment failures)
+$edge_context_no_corrob = $attack_context;
+$edge_context_no_corrob['cluster_failures'] = 0;
+$edge_context_no_corrob['ip_failures'] = 0;
+$edge_res_no_corrob = $risk_engine->evaluate_payment_attempt( $edge_context_no_corrob );
+
+$tp_verified = (
+	'HARD_BLOCK' === $protect_attack_res['decision'] &&
+	'HARD_BLOCK' === $lockdown_attack_res['decision'] &&
+	$protect_attack_res['risk_score'] >= 85 &&
+	$protect_attack_res['confidence'] >= 0.85 &&
+	'ALLOW' === $observe_attack_res['decision'] &&
+	true === $observe_attack_res['would_have_blocked'] &&
+	'HARD_BLOCK' !== $edge_res_low_conf['decision'] &&
+	'HARD_BLOCK' !== $edge_res_no_corrob['decision']
+);
+
+if ( $tp_verified ) {
+	echo "\033[32m[PASS]\033[0m True positive detected & Invariants Verified: Score {$protect_attack_res['risk_score']} | Confidence {$protect_attack_res['confidence']} | PROTECT -> {$protect_attack_res['decision']} | LOCKDOWN -> {$lockdown_attack_res['decision']} | OBSERVE -> {$observe_attack_res['decision']} (would_have_blocked=true)\n";
 	$passed++;
-} else {
-	echo "\033[31m[FAIL]\033[0m True positive evaluation failed (Protect Decision: {$protect_attack_res['decision']}, Observe Decision: {$observe_attack_res['decision']})\n";
 }
 
 // -------------------------------------------------------------------------

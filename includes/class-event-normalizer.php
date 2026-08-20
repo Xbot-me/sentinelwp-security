@@ -188,7 +188,11 @@ class SentinelWP_Event_Normalizer {
 	}
 
 	/**
-	 * Calculates statistical distribution percentiles for store orders over the last 60 days.
+	 * Calculates bounded statistical distribution percentiles from completed store orders
+	 * over the last 60 days.
+	 *
+	 * The calculation uses the most recent 1,000 qualifying orders to keep checkout-path
+	 * overhead bounded on large stores.
 	 *
 	 * @return array Array containing p01, p05, p10, p25, p50 (median), p75, p90, p95, p99, mean, count.
 	 */
@@ -218,7 +222,7 @@ class SentinelWP_Event_Normalizer {
 
 		if ( class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' ) && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ) {
 			$orders_table = $wpdb->prefix . 'wc_orders';
-			$rows = $wpdb->get_col( $wpdb->prepare( "SELECT total_amount FROM {$orders_table} WHERE status = 'wc-completed' AND date_created_gmt >= %s LIMIT 1000", $cutoff ) );
+			$rows = $wpdb->get_col( $wpdb->prepare( "SELECT total_amount FROM {$orders_table} WHERE status = 'wc-completed' AND date_created_gmt >= %s ORDER BY date_created_gmt DESC LIMIT 1000", $cutoff ) );
 			if ( is_array( $rows ) ) {
 				foreach ( $rows as $r ) {
 					if ( is_numeric( $r ) && (float) $r > 0 ) {

@@ -102,8 +102,29 @@ class SentinelWP_Risk_Engine {
 		}
 
 		// Cap score between 0 and 100
-		$score      = max( 0, min( 100, $score ) );
-		$confidence = round( $score / 100.0, 2 );
+		$score = max( 0, min( 100, $score ) );
+
+		// Confidence is based on corroborating evidence, independently of the additive risk score.
+		$confidence = 0.0;
+		if ( in_array( 'REPEATED_PAYMENT_FAILURE', $reasons, true ) ) {
+			$confidence += 0.40;
+		}
+		if ( in_array( 'CARD_TESTING_VELOCITY', $reasons, true ) ) {
+			$confidence += 0.35;
+		}
+		if ( in_array( 'DISTRIBUTED_IDENTITY_CLUSTER', $reasons, true ) ) {
+			$confidence += 0.35;
+		}
+		if ( in_array( 'DIRECT_CHECKOUT_WITHOUT_JOURNEY', $reasons, true ) ) {
+			$confidence += 0.10;
+		}
+		if ( in_array( 'MICRO_CART_ANOMALY', $reasons, true ) ) {
+			$confidence += 0.05;
+		}
+		if ( in_array( 'DISPOSABLE_EMAIL_DOMAIN', $reasons, true ) ) {
+			$confidence += 0.05;
+		}
+		$confidence = round( min( 1.0, $confidence ), 2 );
 
 		// Check for Corroborating Attack Reasons
 		$has_corroborating_reasons = (
@@ -124,16 +145,17 @@ class SentinelWP_Risk_Engine {
 			$raw_verdict = self::DECISION_ALLOW;
 		}
 
-		// Enforce Operating Mode
+		// Enforce Operating Mode.
+		// The hard-block safety invariant is identical in every enforcement mode.
 		$decision           = self::DECISION_ALLOW;
 		$would_have_blocked = ( self::DECISION_HARD_BLOCK === $raw_verdict );
 
 		if ( self::MODE_LOCKDOWN === $mode ) {
-			$decision = ( $score >= 70 && $has_corroborating_reasons ) ? self::DECISION_HARD_BLOCK : $raw_verdict;
+			$decision = $raw_verdict;
 		} elseif ( self::MODE_PROTECT === $mode ) {
 			$decision = $raw_verdict;
 		} else {
-			// OBSERVE mode: always ALLOW live traffic, but record simulated action
+			// OBSERVE mode: always ALLOW live traffic, but record simulated action.
 			$decision = self::DECISION_ALLOW;
 		}
 
