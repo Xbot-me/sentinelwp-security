@@ -36,10 +36,6 @@ if ( ! defined( 'ARRAY_A' ) ) {
 	define( 'ARRAY_A', 'ARRAY_A' );
 }
 
-if ( ! defined( 'ARRAY_N' ) ) {
-	define( 'ARRAY_N', 'ARRAY_N' );
-}
-
 if ( ! defined( 'OBJECT' ) ) {
 	define( 'OBJECT', 'OBJECT' );
 }
@@ -48,24 +44,20 @@ if ( ! defined( 'OBJECT_K' ) ) {
 	define( 'OBJECT_K', 'OBJECT_K' );
 }
 
-if ( ! defined( 'FS_CHMOD_FILE' ) ) {
-	define( 'FS_CHMOD_FILE', 0644 );
-}
-
-if ( ! defined( 'FS_CHMOD_DIR' ) ) {
-	define( 'FS_CHMOD_DIR', 0755 );
+if ( ! defined( 'ARRAY_N' ) ) {
+	define( 'ARRAY_N', 'ARRAY_N' );
 }
 
 if ( ! defined( 'SENTINELWP_VERSION' ) ) {
 	define( 'SENTINELWP_VERSION', '0.4.1' );
 }
 
-if ( ! defined( 'SENTINELWP_PATH' ) ) {
-	define( 'SENTINELWP_PATH', dirname( __DIR__ ) . '/' );
+if ( ! defined( 'SENTINELWP_FILE' ) ) {
+	define( 'SENTINELWP_FILE', ABSPATH . 'sentinelwp-security.php' );
 }
 
-if ( ! defined( 'SENTINELWP_FILE' ) ) {
-	define( 'SENTINELWP_FILE', SENTINELWP_PATH . 'sentinelwp-security.php' );
+if ( ! defined( 'SENTINELWP_PATH' ) ) {
+	define( 'SENTINELWP_PATH', ABSPATH );
 }
 
 if ( ! defined( 'SENTINELWP_URL' ) ) {
@@ -77,7 +69,7 @@ if ( ! defined( 'SENTINELWP_BASENAME' ) ) {
 }
 
 // Global in-memory mock stores
-global $mock_options, $mock_transients, $mock_filters, $mock_actions, $wpdb, $current_user, $wp_filesystem;
+global $mock_options, $mock_transients, $mock_filters, $mock_actions, $wpdb;
 $mock_options    = array();
 $mock_transients = array();
 $mock_filters    = array();
@@ -97,27 +89,19 @@ if ( ! isset( $wpdb ) ) {
 		public $insert_id = 100;
 		public $queries = array();
 		public $tables = array();
-		public $suppress_errors = false;
+		public $created_tables = array();
 
 		public function __construct() {
-			$this->init_tables();
-		}
-
-		public function init_tables() {
-			$this->tables['wp_sentinelwp_findings']      = array();
-			$this->tables['wp_sentinelwp_quarantine']    = array();
+			$this->created_tables = array(
+				'wp_sentinelwp_findings'      => true,
+				'wp_sentinelwp_quarantine'    => true,
+				'wp_sentinelwp_request_rates' => true,
+				'wp_sentinelwp_store_hashes'  => true,
+				'wp_sentinelwp_ai_log'        => true,
+			);
+			$this->tables['wp_sentinelwp_findings'] = array();
+			$this->tables['wp_sentinelwp_quarantine'] = array();
 			$this->tables['wp_sentinelwp_request_rates'] = array();
-			$this->tables['wp_sentinelwp_store_hashes']  = array();
-			$this->tables['wp_wc_orders']                = array();
-			$this->tables['wp_posts']                    = array();
-			$this->tables['wp_postmeta']                 = array();
-			$this->tables['wp_users']                    = array();
-			$this->tables['wp_options']                  = array();
-		}
-
-		public function suppress_errors( $suppress = true ) {
-			$this->suppress_errors = (bool) $suppress;
-			return $this->suppress_errors;
 		}
 
 		public function get_charset_collate() {
@@ -126,6 +110,10 @@ if ( ! isset( $wpdb ) ) {
 
 		public function get_blog_prefix() {
 			return $this->prefix;
+		}
+
+		public function suppress_errors( $suppress = true ) {
+			return true;
 		}
 
 		public function prepare( $query, ...$args ) {
@@ -148,86 +136,24 @@ if ( ! isset( $wpdb ) ) {
 
 		public function query( $sql ) {
 			$this->queries[] = $sql;
-			
-			// Handle TRUNCATE
-			if ( preg_match( '/TRUNCATE\s+(?:TABLE\s+)?([a-zA-Z0-9_]+)/i', $sql, $m ) ) {
-				$table = $m[1];
-				$this->tables[ $table ] = array();
-				return true;
+			if ( preg_match( '/DROP TABLE IF EXISTS ([a-zA-Z0-9_]+)/i', $sql, $m ) ) {
+				unset( $this->created_tables[ $m[1] ] );
+				unset( $this->tables[ $m[1] ] );
 			}
-
-			// Handle DROP TABLE
-			if ( preg_match( '/DROP\s+TABLE\s+(?:IF\s+EXISTS\s+)?([a-zA-Z0-9_]+)/i', $sql, $m ) ) {
-				$table = $m[1];
-				unset( $this->tables[ $table ] );
-				return true;
+			if ( preg_match( '/CREATE TABLE ([a-zA-Z0-9_]+)/i', $sql, $m ) ) {
+				$this->created_tables[ $m[1] ] = true;
 			}
-
-			// Handle CREATE TABLE
-			if ( preg_match( '/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?([a-zA-Z0-9_]+)/i', $sql, $m ) ) {
-				$table = $m[1];
-				if ( ! isset( $this->tables[ $table ] ) ) {
-					$this->tables[ $table ] = array();
-				}
-				return true;
+			if ( preg_match( '/DELETE FROM ([a-zA-Z0-9_]+)/i', $sql, $m ) ) {
+				$this->tables[ $m[1] ] = array();
 			}
-
-			// Handle DELETE FROM
-			if ( preg_match( '/DELETE\s+FROM\s+([a-zA-Z0-9_]+)/i', $sql, $m ) ) {
-				$table = $m[1];
-				if ( isset( $this->tables[ $table ] ) ) {
-					if ( strpos( $sql, "status = 'open'" ) !== false ) {
-						foreach ( $this->tables[ $table ] as $id => $row ) {
-							$status = is_object( $row ) ? ( isset( $row->status ) ? $row->status : '' ) : ( isset( $row['status'] ) ? $row['status'] : '' );
-							if ( 'open' === $status ) {
-								unset( $this->tables[ $table ][ $id ] );
-							}
-						}
-					} elseif ( strpos( $sql, 'WHERE' ) === false ) {
-						$this->tables[ $table ] = array();
-					}
-				}
-				return true;
-			}
-
 			return 1;
 		}
 
 		public function get_var( $sql ) {
 			$this->queries[] = $sql;
-
-			// Handle SHOW TABLES LIKE
-			if ( preg_match( "/SHOW\s+TABLES\s+LIKE\s+'([^']+)'/i", $sql, $m ) ) {
-				$tbl = $m[1];
-				return isset( $this->tables[ $tbl ] ) ? $tbl : null;
+			if ( preg_match( "/SHOW TABLES LIKE '([^']+)'/i", $sql, $m ) ) {
+				return isset( $this->created_tables[ $m[1] ] ) ? $m[1] : null;
 			}
-
-			// Handle SELECT COUNT(*)
-			if ( preg_match( '/SELECT\s+COUNT\(\*\)\s+FROM\s+([a-zA-Z0-9_]+)(?:\s+WHERE\s+(.+))?/i', $sql, $m ) ) {
-				$table = $m[1];
-				if ( ! isset( $this->tables[ $table ] ) ) {
-					return 0;
-				}
-				$where = isset( $m[2] ) ? $m[2] : '';
-				if ( empty( $where ) ) {
-					return count( $this->tables[ $table ] );
-				}
-				$count = 0;
-				foreach ( $this->tables[ $table ] as $row ) {
-					$status   = is_object( $row ) ? ( isset( $row->status ) ? $row->status : '' ) : ( isset( $row['status'] ) ? $row['status'] : '' );
-					$severity = is_object( $row ) ? ( isset( $row->severity ) ? $row->severity : '' ) : ( isset( $row['severity'] ) ? $row['severity'] : '' );
-					
-					if ( strpos( $where, "status = 'open'" ) !== false && 'open' !== $status ) {
-						continue;
-					}
-					if ( strpos( $where, "severity = 'critical'" ) !== false && 'critical' !== $severity ) {
-						continue;
-					}
-					$count++;
-				}
-				return $count;
-			}
-
 			if ( strpos( $sql, 'SELECT hit_count' ) !== false ) {
 				return 1;
 			}
@@ -236,63 +162,20 @@ if ( ! isset( $wpdb ) ) {
 
 		public function get_row( $sql, $output = OBJECT ) {
 			$this->queries[] = $sql;
-
-			// Extract table and ID if present
-			if ( preg_match( '/FROM\s+([a-zA-Z0-9_]+)\s+WHERE\s+id\s*=\s*(\d+)/i', $sql, $m ) ) {
-				$table = $m[1];
-				$id    = (int) $m[2];
-				if ( isset( $this->tables[ $table ][ $id ] ) ) {
-					$row = $this->tables[ $table ][ $id ];
-					if ( OBJECT === $output ) {
-						return is_object( $row ) ? $row : (object) $row;
-					}
-					return is_array( $row ) ? $row : (array) $row;
-				}
-			}
-
+			$row = null;
 			if ( strpos( $sql, 'wp_sentinelwp_findings' ) !== false ) {
 				if ( ! empty( $this->tables['wp_sentinelwp_findings'] ) ) {
-					$last = end( $this->tables['wp_sentinelwp_findings'] );
-					return OBJECT === $output ? ( is_object( $last ) ? $last : (object) $last ) : ( is_array( $last ) ? $last : (array) $last );
+					$row = end( $this->tables['wp_sentinelwp_findings'] );
 				}
-				$default = array(
-					'id'                  => 1,
-					'type'                => 'suspicious_file',
-					'severity'            => 'high',
-					'confidence'          => 'confirmed',
-					'detector'            => 'scanner',
-					'source'              => 'wp-content/plugins/sample.php',
-					'title'               => 'Suspicious PHP File',
-					'details'             => 'eval(base64_decode())',
-					'remediation'         => 'Remove file',
-					'false_positive_risk' => 'low',
-					'status'              => 'new',
-					'created_at'          => date( 'Y-m-d H:i:s' ),
-					'updated_at'          => date( 'Y-m-d H:i:s' ),
-				);
-				return OBJECT === $output ? (object) $default : $default;
-			}
-
-			if ( strpos( $sql, 'wp_sentinelwp_quarantine' ) !== false ) {
+			} elseif ( strpos( $sql, 'wp_sentinelwp_quarantine' ) !== false ) {
 				if ( ! empty( $this->tables['wp_sentinelwp_quarantine'] ) ) {
-					$last = end( $this->tables['wp_sentinelwp_quarantine'] );
-					return OBJECT === $output ? ( is_object( $last ) ? $last : (object) $last ) : ( is_array( $last ) ? $last : (array) $last );
+					$row = end( $this->tables['wp_sentinelwp_quarantine'] );
 				}
-				$default = array(
-					'id'                  => 1,
-					'finding_id'          => 1,
-					'original_path'       => WP_CONTENT_DIR . '/uploads/quarantined-test.php',
-					'quarantine_filename' => 'quarantined-test.php.12345.quarantine',
-					'file_hash'           => hash( 'sha256', '<?php echo "malware";' ),
-					'file_size'           => 20,
-					'permissions'         => '0644',
-					'status'              => 'quarantined',
-					'created_at'          => date( 'Y-m-d H:i:s' ),
-					'restored_at'         => null,
-				);
-				return OBJECT === $output ? (object) $default : $default;
 			}
 
+			if ( $row ) {
+				return ( ARRAY_A === $output ) ? (array) $row : (object) $row;
+			}
 			return null;
 		}
 
@@ -306,93 +189,54 @@ if ( ! isset( $wpdb ) ) {
 
 		public function get_results( $sql, $output = OBJECT ) {
 			$this->queries[] = $sql;
-
-			// Handle custom orders table
-			if ( strpos( $sql, 'wc_orders' ) !== false && isset( $this->tables['wp_wc_orders'] ) ) {
-				$results = array();
-				foreach ( $this->tables['wp_wc_orders'] as $row ) {
-					$results[] = ( ARRAY_A === $output ) ? (array) $row : ( (object) $row );
+			$results = array();
+			if ( strpos( $sql, 'EXPLAIN' ) !== false ) {
+				$results = array(
+					(object) array(
+						'table' => 'wp_wc_orders',
+						'type'  => 'range',
+						'key'   => 'date_created_gmt',
+						'rows'  => 12,
+					)
+				);
+			} elseif ( strpos( $sql, 'wp_sentinelwp_findings' ) !== false ) {
+				if ( ! empty( $this->tables['wp_sentinelwp_findings'] ) ) {
+					$results = array_values( $this->tables['wp_sentinelwp_findings'] );
 				}
-				return $results;
 			}
 
-			if ( strpos( $sql, 'wp_sentinelwp_findings' ) !== false ) {
-				$findings = array();
-				if ( isset( $this->tables['wp_sentinelwp_findings'] ) ) {
-					foreach ( $this->tables['wp_sentinelwp_findings'] as $row ) {
-						$status = is_object( $row ) ? ( isset( $row->status ) ? $row->status : '' ) : ( isset( $row['status'] ) ? $row['status'] : '' );
-						if ( strpos( $sql, "status = 'open'" ) !== false && 'open' !== $status ) {
-							continue;
-						}
-						if ( strpos( $sql, "status = 'new'" ) !== false && 'new' !== $status ) {
-							continue;
-						}
-						$findings[] = ( ARRAY_A === $output ) ? (array) $row : ( (object) $row );
-					}
-				}
-				return $findings;
+			if ( ARRAY_A === $output ) {
+				return array_map( function( $item ) {
+					return is_object( $item ) ? (array) $item : $item;
+				}, $results );
 			}
-
-			return array();
+			return array_map( function( $item ) {
+				return is_array( $item ) ? (object) $item : $item;
+			}, $results );
 		}
 
 		public function insert( $table, $data, $format = null ) {
 			$this->queries[] = "INSERT INTO $table";
+			if ( ! isset( $this->created_tables[ $table ] ) ) {
+				return false;
+			}
 			$this->insert_id++;
 			$data['id'] = $this->insert_id;
-			if ( ! isset( $this->tables[ $table ] ) ) {
-				$this->tables[ $table ] = array();
-			}
-			$this->tables[ $table ][ $this->insert_id ] = (object) $data;
+			$this->tables[$table][$this->insert_id] = (object) $data;
 			return 1;
 		}
 
 		public function update( $table, $data, $where, $format = null, $where_format = null ) {
 			$this->queries[] = "UPDATE $table";
-			if ( isset( $this->tables[ $table ] ) ) {
-				foreach ( $this->tables[ $table ] as $id => $row ) {
-					$match = true;
-					foreach ( $where as $wk => $wv ) {
-						$row_val = is_object( $row ) ? ( isset( $row->$wk ) ? $row->$wk : null ) : ( isset( $row[ $wk ] ) ? $row[ $wk ] : null );
-						if ( (string) $row_val !== (string) $wv ) {
-							$match = false;
-							break;
-						}
-					}
-					if ( $match ) {
-						foreach ( $data as $dk => $dv ) {
-							if ( is_object( $this->tables[ $table ][ $id ] ) ) {
-								$this->tables[ $table ][ $id ]->$dk = $dv;
-							} else {
-								$this->tables[ $table ][ $id ][ $dk ] = $dv;
-							}
-						}
-					}
-				}
-			}
 			return 1;
 		}
 
 		public function delete( $table, $where, $where_format = null ) {
 			$this->queries[] = "DELETE FROM $table";
-			$deleted = 0;
-			if ( isset( $this->tables[ $table ] ) ) {
-				foreach ( $this->tables[ $table ] as $id => $row ) {
-					$match = true;
-					foreach ( $where as $wk => $wv ) {
-						$row_val = is_object( $row ) ? ( isset( $row->$wk ) ? $row->$wk : null ) : ( isset( $row[ $wk ] ) ? $row[ $wk ] : null );
-						if ( (string) $row_val !== (string) $wv ) {
-							$match = false;
-							break;
-						}
-					}
-					if ( $match ) {
-						unset( $this->tables[ $table ][ $id ] );
-						$deleted++;
-					}
-				}
+			if ( isset( $where['id'] ) && isset( $this->tables[$table][$where['id']] ) ) {
+				unset( $this->tables[$table][$where['id']] );
 			}
-			return $deleted;
+			return 1;
 		}
 	}
 	$wpdb = new MockWPDB();
@@ -445,12 +289,29 @@ if ( ! function_exists( 'delete_transient' ) ) {
 	}
 }
 
+if ( ! function_exists( 'get_site_transient' ) ) {
+	function get_site_transient( $key ) {
+		return get_transient( $key );
+	}
+}
+
+if ( ! function_exists( 'set_site_transient' ) ) {
+	function set_site_transient( $key, $val, $exp = 0 ) {
+		return set_transient( $key, $val, $exp );
+	}
+}
+
+if ( ! function_exists( 'delete_site_transient' ) ) {
+	function delete_site_transient( $key ) {
+		return delete_transient( $key );
+	}
+}
+
 if ( ! function_exists( 'add_filter' ) ) {
 	function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
 		global $mock_filters;
 		$mock_filters[ $hook ][] = array(
 			'callback' => $callback,
-			'priority' => $priority,
 			'args'     => $accepted_args,
 		);
 		return true;
@@ -473,17 +334,9 @@ if ( ! function_exists( 'apply_filters' ) ) {
 }
 
 if ( ! function_exists( 'remove_all_filters' ) ) {
-	function remove_all_filters( $hook, $priority = false ) {
+	function remove_all_filters( $hook ) {
 		global $mock_filters;
-		if ( false === $priority ) {
-			unset( $mock_filters[ $hook ] );
-		} else {
-			if ( ! empty( $mock_filters[ $hook ] ) ) {
-				$mock_filters[ $hook ] = array_filter( $mock_filters[ $hook ], function( $f ) use ( $priority ) {
-					return $f['priority'] !== $priority;
-				} );
-			}
-		}
+		unset( $mock_filters[ $hook ] );
 		return true;
 	}
 }
@@ -493,7 +346,6 @@ if ( ! function_exists( 'add_action' ) ) {
 		global $mock_actions;
 		$mock_actions[ $hook ][] = array(
 			'callback' => $callback,
-			'priority' => $priority,
 			'args'     => $accepted_args,
 		);
 		return true;
@@ -511,32 +363,6 @@ if ( ! function_exists( 'do_action' ) ) {
 				}
 			}
 		}
-	}
-}
-
-if ( ! function_exists( 'remove_all_actions' ) ) {
-	function remove_all_actions( $hook, $priority = false ) {
-		global $mock_actions;
-		unset( $mock_actions[ $hook ] );
-		return true;
-	}
-}
-
-if ( ! function_exists( '__return_true' ) ) {
-	function __return_true() {
-		return true;
-	}
-}
-
-if ( ! function_exists( '__return_false' ) ) {
-	function __return_false() {
-		return false;
-	}
-}
-
-if ( ! function_exists( '__return_empty_array' ) ) {
-	function __return_empty_array() {
-		return array();
 	}
 }
 
@@ -698,18 +524,6 @@ if ( ! function_exists( 'esc_html__' ) ) {
 	}
 }
 
-if ( ! function_exists( 'esc_textarea' ) ) {
-	function esc_textarea( $text ) {
-		return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
-	}
-}
-
-if ( ! function_exists( 'wp_kses_post' ) ) {
-	function wp_kses_post( $text ) {
-		return (string) $text;
-	}
-}
-
 if ( ! function_exists( '__' ) ) {
 	function __( $text, $domain = 'default' ) {
 		return $text;
@@ -736,88 +550,47 @@ if ( ! function_exists( 'current_user_can' ) ) {
 
 if ( ! function_exists( 'get_current_user_id' ) ) {
 	function get_current_user_id() {
-		global $current_user;
-		return ! empty( $current_user->ID ) ? (int) $current_user->ID : 0;
-	}
-}
-
-if ( ! function_exists( 'wp_set_current_user' ) ) {
-	function wp_set_current_user( $id ) {
-		global $current_user;
-		$current_user = (object) array(
-			'ID'            => (int) $id,
-			'user_login'    => 'admin',
-			'user_email'    => 'admin@example.com',
-			'display_name'  => 'Admin User',
-			'roles'         => array( 'administrator' ),
-		);
-		return $current_user;
-	}
-}
-
-if ( ! function_exists( 'get_user_by' ) ) {
-	function get_user_by( $field, $value ) {
-		return (object) array(
-			'ID'            => 1,
-			'user_login'    => 'admin',
-			'user_email'    => 'admin@example.com',
-			'display_name'  => 'Admin User',
-			'roles'         => array( 'administrator' ),
-		);
-	}
-}
-
-if ( ! function_exists( 'wp_create_nonce' ) ) {
-	function wp_create_nonce( $action = -1 ) {
-		return substr( md5( 'nonce_' . $action ), 0, 10 );
-	}
-}
-
-if ( ! function_exists( 'wp_verify_nonce' ) ) {
-	function wp_verify_nonce( $nonce, $action = -1 ) {
-		return ! empty( $nonce );
-	}
-}
-
-if ( ! function_exists( 'check_admin_referer' ) ) {
-	function check_admin_referer( $action = -1, $query_arg = '_wpnonce' ) {
 		return 1;
 	}
 }
 
-if ( ! function_exists( 'admin_url' ) ) {
-	function admin_url( $path = '' ) {
-		return 'https://example.com/wp-admin/' . ltrim( (string) $path, '/' );
-	}
-}
-
-if ( ! function_exists( 'home_url' ) ) {
-	function home_url( $path = '' ) {
-		return 'https://example.com/' . ltrim( (string) $path, '/' );
-	}
-}
-
-if ( ! function_exists( 'site_url' ) ) {
-	function site_url( $path = '' ) {
-		return 'https://example.com/' . ltrim( (string) $path, '/' );
-	}
-}
-
-if ( ! function_exists( 'is_admin' ) ) {
-	function is_admin() {
-		return true;
-	}
-}
-
-if ( ! function_exists( 'is_ssl' ) ) {
-	function is_ssl() {
-		return true;
+if ( ! function_exists( 'is_multisite' ) ) {
+	function is_multisite() {
+		return false;
 	}
 }
 
 if ( ! function_exists( 'get_locale' ) ) {
 	function get_locale() {
 		return 'en_US';
+	}
+}
+
+if ( ! function_exists( 'wp_json_encode' ) ) {
+	function wp_json_encode( $data, $options = 0, $depth = 512 ) {
+		return json_encode( $data, $options, $depth );
+	}
+}
+
+if ( ! function_exists( 'add_query_arg' ) ) {
+	function add_query_arg( ...$args ) {
+		return 'https://api.wordpress.org/core/checksums/1.0/?version=6.6.1&locale=en_US';
+	}
+}
+
+if ( ! function_exists( 'dbDelta' ) ) {
+	function dbDelta( $queries ) {
+		global $wpdb;
+		if ( is_string( $queries ) ) {
+			$queries = explode( ';', $queries );
+		}
+		foreach ( $queries as $q ) {
+			$q = trim( $q );
+			if ( ! empty( $q ) ) {
+				$wpdb->query( $q );
+			}
+		}
+		return array();
 	}
 }
 
@@ -833,120 +606,66 @@ if ( ! function_exists( 'wp_die' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wc_add_notice' ) ) {
+	function wc_add_notice( $message, $type = 'error' ) {
+		// Mock notice
+	}
+}
+
 if ( ! function_exists( 'get_plugins' ) ) {
 	function get_plugins() {
 		return array(
 			'sentinelwp-security/sentinelwp-security.php' => array(
 				'Name'        => 'SentinelWP Security',
 				'Version'     => '0.4.1',
-				'PluginURI'   => 'https://github.com/Xbot-me/sentinelwp-security',
-				'Author'      => 'SentinelWP Team',
-				'Description' => 'Enterprise WooCommerce Fraud Prevention & Threat Defense.',
+				'Author'      => 'SentinelWP Security',
+				'AuthorURI'   => 'https://sentinelwp.io',
+				'PluginURI'   => 'https://sentinelwp.io',
+				'TextDomain'  => 'sentinelwp-security',
 			),
 		);
 	}
 }
 
-if ( ! function_exists( 'dbDelta' ) ) {
-	function dbDelta( $queries ) {
-		global $wpdb;
-		if ( ! is_array( $queries ) ) {
-			$queries = explode( ';', (string) $queries );
-		}
-		foreach ( $queries as $query ) {
-			$query = trim( $query );
-			if ( ! empty( $query ) ) {
-				$wpdb->query( $query );
-			}
-		}
-		return array( 'wp_sentinelwp_findings' => 'Created table' );
+if ( ! function_exists( 'wp_get_themes' ) ) {
+	function wp_get_themes() {
+		return array();
 	}
 }
 
 if ( ! function_exists( 'wp_remote_get' ) ) {
 	function wp_remote_get( $url, $args = array() ) {
-		$filtered = apply_filters( 'pre_http_request', false, $args, $url );
-		if ( false !== $filtered ) {
-			return $filtered;
-		}
 		return array(
 			'response' => array( 'code' => 200, 'message' => 'OK' ),
-			'body'     => json_encode( array( 'status' => 'ok' ) ),
+			'body'     => '{"checksums":{"6.6.1":{"wp-login.php":"mockhash"}}}',
 		);
 	}
 }
 
 if ( ! function_exists( 'wp_remote_post' ) ) {
 	function wp_remote_post( $url, $args = array() ) {
-		$filtered = apply_filters( 'pre_http_request', false, $args, $url );
-		if ( false !== $filtered ) {
-			return $filtered;
-		}
 		return array(
 			'response' => array( 'code' => 200, 'message' => 'OK' ),
-			'body'     => json_encode( array( 'status' => 'ok' ) ),
+			'body'     => '{"verdict":"clean"}',
 		);
-	}
-}
-
-if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
-	function wp_remote_retrieve_body( $response ) {
-		if ( is_wp_error( $response ) || ! is_array( $response ) || ! isset( $response['body'] ) ) {
-			return '';
-		}
-		return $response['body'];
 	}
 }
 
 if ( ! function_exists( 'wp_remote_retrieve_response_code' ) ) {
 	function wp_remote_retrieve_response_code( $response ) {
-		if ( is_wp_error( $response ) || ! is_array( $response ) || ! isset( $response['response']['code'] ) ) {
-			return 0;
-		}
-		return (int) $response['response']['code'];
+		return is_array( $response ) && isset( $response['response']['code'] ) ? (int) $response['response']['code'] : 0;
 	}
 }
 
-if ( ! function_exists( 'wp_safe_redirect' ) ) {
-	function wp_safe_redirect( $location, $status = 302 ) {
-		return true;
-	}
-}
-
-if ( ! function_exists( 'wp_send_json_success' ) ) {
-	function wp_send_json_success( $data = null ) {
-		echo json_encode( array( 'success' => true, 'data' => $data ) );
-	}
-}
-
-if ( ! function_exists( 'wp_send_json_error' ) ) {
-	function wp_send_json_error( $data = null ) {
-		echo json_encode( array( 'success' => false, 'data' => $data ) );
-	}
-}
-
-if ( ! function_exists( 'wp_parse_args' ) ) {
-	function wp_parse_args( $args, $defaults = array() ) {
-		if ( is_object( $args ) ) {
-			$r = get_object_vars( $args );
-		} elseif ( is_array( $args ) ) {
-			$r =& $args;
-		} else {
-			wp_parse_str( $args, $r );
-		}
-		return array_merge( $defaults, $r );
+if ( ! function_exists( 'wp_remote_retrieve_body' ) ) {
+	function wp_remote_retrieve_body( $response ) {
+		return is_array( $response ) && isset( $response['body'] ) ? $response['body'] : '';
 	}
 }
 
 if ( ! function_exists( 'is_wp_error' ) ) {
 	function is_wp_error( $thing ) {
-		return ( $thing instanceof WP_Error );
-	}
-}
-
-if ( ! function_exists( 'wc_add_notice' ) ) {
-	function wc_add_notice( $message, $type = 'error' ) {
-		// Mock notice
+		return $thing instanceof WP_Error;
 	}
 }
 
@@ -974,87 +693,32 @@ if ( ! class_exists( 'WP_Error' ) ) {
 	}
 }
 
-// Mock WP Filesystem
-class MockFilesystem {
-	public function put_contents( $file, $contents, $mode = false ) {
-		$dir = dirname( $file );
-		if ( ! file_exists( $dir ) ) {
-			@mkdir( $dir, 0777, true );
-		}
-		return (bool) @file_put_contents( $file, $contents );
-	}
-	public function get_contents( $file ) {
-		return file_exists( $file ) ? file_get_contents( $file ) : false;
-	}
-	public function exists( $file ) {
-		return file_exists( $file );
-	}
-	public function is_file( $file ) {
-		return is_file( $file );
-	}
-	public function is_dir( $path ) {
-		return is_dir( $path );
-	}
-	public function is_writable( $path ) {
-		return is_writable( $path );
-	}
-	public function chmod( $file, $mode = false, $recursive = false ) {
-		return $mode ? @chmod( $file, $mode ) : true;
-	}
-	public function delete( $file, $recursive = false, $type = false ) {
-		if ( is_file( $file ) ) {
-			return @unlink( $file );
-		}
-		return true;
-	}
-	public function mkdir( $path, $chmod = false, $chown = false, $chgrp = false ) {
-		return @mkdir( $path, $chmod ? $chmod : 0777, true );
-	}
-	public function move( $from, $to, $overwrite = false ) {
-		if ( ! $overwrite && file_exists( $to ) ) {
-			return false;
-		}
-		return @rename( $from, $to );
-	}
-	public function copy( $from, $to, $overwrite = false, $mode = false ) {
-		if ( ! $overwrite && file_exists( $to ) ) {
-			return false;
-		}
-		return @copy( $from, $to );
-	}
-}
-
-if ( ! function_exists( 'WP_Filesystem' ) ) {
-	function WP_Filesystem() {
-		global $wp_filesystem;
-		if ( empty( $wp_filesystem ) ) {
-			$wp_filesystem = new MockFilesystem();
-		}
-		return true;
-	}
-}
-
-global $wp_filesystem;
-if ( empty( $wp_filesystem ) ) {
-	$wp_filesystem = new MockFilesystem();
-}
-
-if ( ! function_exists( 'add_query_arg' ) ) {
-	function add_query_arg( ...$args ) {
-		return 'https://example.com/?mock_query_arg=1';
-	}
-}
-
 if ( ! class_exists( 'WP_REST_Request' ) ) {
 	class WP_REST_Request {
-		private $headers = array();
-		private $params  = array();
-		public function __construct( $method = 'GET', $route = '' ) {}
-		public function get_header( $key ) { return isset( $this->headers[ strtolower( $key ) ] ) ? $this->headers[ strtolower( $key ) ] : null; }
-		public function set_header( $key, $value ) { $this->headers[ strtolower( $key ) ] = $value; }
-		public function get_param( $key ) { return isset( $this->params[ $key ] ) ? $this->params[ $key ] : null; }
-		public function set_param( $key, $value ) { $this->params[ $key ] = $value; }
-		public function get_params() { return $this->params; }
+		protected $route = '';
+		protected $params = array();
+		protected $headers = array();
+		public function __construct( $method = 'GET', $route = '' ) {
+			$this->route = $route;
+		}
+		public function get_route() {
+			return $this->route;
+		}
+		public function set_route( $route ) {
+			$this->route = $route;
+		}
+		public function get_param( $key ) {
+			return isset( $this->params[ $key ] ) ? $this->params[ $key ] : null;
+		}
+		public function set_param( $key, $val ) {
+			$this->params[ $key ] = $val;
+		}
+		public function get_params() {
+			return $this->params;
+		}
+		public function get_header( $header ) {
+			return isset( $this->headers[ $header ] ) ? $this->headers[ $header ] : '';
+		}
 	}
 }
 
@@ -1079,4 +743,3 @@ spl_autoload_register( function ( $class ) {
 		}
 	}
 } );
-

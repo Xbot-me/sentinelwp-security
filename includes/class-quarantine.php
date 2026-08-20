@@ -543,9 +543,9 @@ class SentinelWP_Quarantine {
 			return true;
 		}
 
-				// Disallow quarantining our own plugin files
+				// Disallow quarantining our own plugin files (excluding uploads)
 		$our_plugin_dir = wp_normalize_path( strtolower( untrailingslashit( plugin_dir_path( dirname( __FILE__ ) ) ) ) );
-		if ( strpos( $normalized, $our_plugin_dir . '/' ) === 0 ) {
+		if ( strpos( $normalized, $our_plugin_dir . '/' ) === 0 && strpos( $normalized, '/uploads/' ) === false ) {
 			return true;
 		}
 

@@ -1,8 +1,8 @@
 ---
-name: Feature request
-about: Suggest an idea or feature for SentinelWP Security
+name: Feature Request
+about: Suggest an idea or enhancement for SentinelWP Security
 title: '[FEATURE] '
-labels: ['enhancement']
+labels: 'enhancement'
 assignees: ''
 ---
 
@@ -15,8 +15,5 @@ A clear and concise description of what you want to happen.
 **Describe alternatives you've considered**
 A clear and concise description of any alternative solutions or features you've considered.
 
-**Use Case / Impact**
-How would this feature benefit WordPress / WooCommerce administrators or security teams?
-
 **Additional context**
-Add any other context, mockups, or relevant documentation links here.
+Add any other context, screenshots, or examples about the feature request here.

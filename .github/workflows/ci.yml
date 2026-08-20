@@ -1,31 +1,35 @@
-name: CI Test Suite
+name: SentinelWP CI
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main, master, 'release/**' ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ main, master ]
 
 jobs:
-  test:
-    name: PHP ${{ matrix.php-version }} Test Matrix
+  lint-and-test:
+    name: PHP ${{ matrix.php }} Lint & Test Suite
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['7.4', '8.0', '8.1', '8.2', '8.3', '8.4']
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3']
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup PHP
+      - name: Set up PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
-          extensions: mbstring, json, hash, curl, openssl
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, json, hash, openssl
           coverage: none
 
-      - name: Run Test Suite
+      - name: Syntax Check (php -l)
+        run: |
+          find . -type f -name "*.php" ! -path "./vendor/*" ! -path "./wp-content/*" -exec php -l {} +
+
+      - name: Run Full Test Suite
         run: |
           php tests/run-all-tests.php

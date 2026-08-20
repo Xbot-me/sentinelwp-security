@@ -128,7 +128,7 @@ class SentinelWP_Scan_Coordinator {
 		$critical_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'open' AND severity = 'critical'" );
 
 		$history_entry = array(
-			'id'             => time(),
+			'id'             => (int) round( microtime( true ) * 1000 ),
 			'timestamp'      => current_time( 'mysql' ),
 			'total_time'     => $results['total_time'],
 			'peak_memory'    => $results['peak_memory'],
@@ -306,7 +306,7 @@ class SentinelWP_Scan_Coordinator {
 	 */
 	public function delete_scan_run( $id ) {
 		$id      = (int) $id;
-		$history = get_option( 'sentinelwp_scan_history_log', array() );
+		$history = $this->get_scan_history();
 		if ( ! is_array( $history ) || empty( $history ) ) {
 			return false;
 		}
@@ -314,7 +314,7 @@ class SentinelWP_Scan_Coordinator {
 		$filtered = array();
 		$found    = false;
 		foreach ( $history as $run ) {
-			if ( isset( $run['id'] ) && (int) $run['id'] === $id ) {
+			if ( ! $found && isset( $run['id'] ) && (int) $run['id'] === $id ) {
 				$found = true;
 				continue;
 			}

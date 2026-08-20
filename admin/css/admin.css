@@ -559,7 +559,7 @@ tr:hover .title a {
 	border: 1px solid;
 }
 
-.p-crit { color: #ffffff; background: var(--crit); border-color: var(--crit); }
+.p-critical { color: #ffffff; background: var(--crit); border-color: var(--crit); }
 .p-high { color: var(--high); background: var(--high-bg); border-color: #e6c893; }
 .p-med  { color: var(--med); background: var(--med-bg); border-color: #e5dda0; }
 .p-low  { color: var(--low); background: #f6f7f7; border-color: var(--line); }
