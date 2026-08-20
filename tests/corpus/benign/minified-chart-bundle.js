@@ -1,0 +1,1 @@
+!function(t,e){"object"==typeof exports&&"undefined"!=typeof module?module.exports=e():"function"==typeof define&&define.amd?define(e):(t=t||self).Chart=e()}(this,(function(){"use strict";function t(t){return null!=t}function e(t){return"function"==typeof t}var n={val:100,calc:function(r){return r*2}};return n}));
