@@ -541,13 +541,19 @@ class SentinelWP_Admin {
 			),
 		);
 
-		// Calculate count for sorting
+		// Calculate count for sorting directly from in-memory $findings
 		$modules = array();
 		$active_module_count = 0;
 		foreach ( $modules_raw as $k => $mod ) {
-			$escaped_types = array_map( 'esc_sql', $mod['types'] );
-			$in_clause     = "'" . implode( "','", $escaped_types ) . "'";
-			$count         = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE type IN ({$in_clause}) AND status != 'resolved'" );
+			$types = $mod['types'];
+			$count = 0;
+			if ( ! empty( $findings ) ) {
+				foreach ( $findings as $f ) {
+					if ( in_array( $f->type, $types, true ) ) {
+						$count++;
+					}
+				}
+			}
 			$mod['count']  = $count;
 			$modules[ $k ] = $mod;
 			$active_module_count++;

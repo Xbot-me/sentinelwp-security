@@ -542,14 +542,12 @@ class SentinelWP_Ecommerce_Guard {
 			'woocommerce_default_country',
 		);
 
-		$hashes_table = $wpdb->prefix . 'sentinelwp_store_hashes';
-
 		foreach ( $monitored_options as $option_name ) {
 			$value = get_option( $option_name );
 			$hash_value = hash( 'sha256', maybe_serialize( $value ) );
 
 			$existing_hash = $wpdb->get_var( $wpdb->prepare(
-				"SELECT hash_value FROM {$hashes_table} WHERE option_name = %s",
+				"SELECT hash_value FROM {$wpdb->prefix}sentinelwp_store_hashes WHERE option_name = %s",
 				$option_name
 			) );
 
@@ -570,21 +568,24 @@ class SentinelWP_Ecommerce_Guard {
 
 			if ( is_null( $existing_hash ) ) {
 				$wpdb->insert(
-					$hashes_table,
+					$wpdb->prefix . 'sentinelwp_store_hashes',
 					array(
 						'option_name' => $option_name,
 						'hash_value'  => $hash_value,
 						'updated_at'  => current_time( 'mysql' ),
-					)
+					),
+					array( '%s', '%s', '%s' )
 				);
-			} else if ( $existing_hash !== $hash_value ) {
+			} else {
 				$wpdb->update(
-					$hashes_table,
+					$wpdb->prefix . 'sentinelwp_store_hashes',
 					array(
 						'hash_value' => $hash_value,
 						'updated_at' => current_time( 'mysql' ),
 					),
-					array( 'option_name' => $option_name )
+					array( 'option_name' => $option_name ),
+					array( '%s', '%s' ),
+					array( '%s' )
 				);
 			}
 		}
@@ -666,17 +667,15 @@ class SentinelWP_Ecommerce_Guard {
 	public function record_finding( $type, $severity, $source, $title, $details, $confidence = 'likely', $detector = 'ecommerce_guard', $remediation = '', $fp_risk = 'low' ) {
 		global $wpdb;
 
-		$findings_table = $wpdb->prefix . 'sentinelwp_findings';
-
 		$existing_id = $wpdb->get_var( $wpdb->prepare(
-			"SELECT id FROM {$findings_table} WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
+			"SELECT id FROM {$wpdb->prefix}sentinelwp_findings WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
 			$type,
 			$title
 		) );
 
 		if ( $existing_id ) {
 			$wpdb->update(
-				$findings_table,
+				$wpdb->prefix . 'sentinelwp_findings',
 				array( 'updated_at' => current_time( 'mysql' ) ),
 				array( 'id' => $existing_id ),
 				array( '%s' ),
@@ -686,7 +685,7 @@ class SentinelWP_Ecommerce_Guard {
 		}
 
 		$inserted = $wpdb->insert(
-			$findings_table,
+			$wpdb->prefix . 'sentinelwp_findings',
 			array(
 				'type'                => $type,
 				'severity'            => $severity,
