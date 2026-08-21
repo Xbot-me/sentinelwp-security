@@ -1,244 +1,127 @@
-<div align="center">
+# SentinelWP Security
 
-# 🛡️ SentinelWP Security
-### Enterprise WooCommerce Fraud Prevention & Pre-Gateway Threat Defense
+A WordPress security plugin built specifically for WooCommerce stores. It focuses on the attack patterns that actually cost store owners money: card testing, checkout skimmers, fake admin accounts, and gateway tampering, instead of generic file-scanning that most WP security plugins already do.
 
 [![CI Test Suite](https://github.com/Xbot-me/sentinelwp-security/actions/workflows/ci.yml/badge.svg)](https://github.com/Xbot-me/sentinelwp-security/actions/workflows/ci.yml)
-[![PHP Version](https://img.shields.io/badge/PHP-7.4%20|%208.0%20|%208.1%20|%208.2%20|%208.3%20|%208.4-777bb4.svg)](https://php.net)
+[![PHP](https://img.shields.io/badge/PHP-7.4%20|%208.0%20|%208.1%20|%208.2%20|%208.3%20|%208.4-777bb4.svg)](https://php.net)
 [![WordPress](https://img.shields.io/badge/WordPress-6.0%2B-21759b.svg)](https://wordpress.org)
 [![WooCommerce](https://img.shields.io/badge/WooCommerce-HPOS%20Ready-96588a.svg)](https://woocommerce.com)
-[![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
+[![License](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 
-**SentinelWP Security** is a high-performance security layer engineered specifically to protect WooCommerce stores, checkout funnels, and ecommerce revenue. 
+## Table of contents
 
-Unlike generic WordPress firewalls that only monitor basic web requests, SentinelWP laser-focuses on the specialized attack vectors that drain online store profits: **automated carding attacks**, **Magecart checkout script injections**, **stealth database administrators**, **fake order surges**, and **silent payment gateway hijacking**.
+- [Why this exists](#why-this-exists)
+- [What it does](#what-it-does)
+- [How requests flow through it](#how-requests-flow-through-it)
+- [Benchmarks](#benchmarks)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Testing](#testing)
+- [External services and privacy](#external-services-and-privacy)
+- [Contributing](#contributing)
+- [Security policy](#security-policy)
+- [License](#license)
 
----
+## Why this exists
 
-</div>
+Most WordPress security plugins were built for blogs, not checkout flows. They catch brute-force logins and known malware signatures, but they have no concept of what a checkout looks like, so they miss card-testing bursts, skimmer scripts injected into checkout JS, and orders that come from a fraud ring rotating through residential proxies. I built SentinelWP to sit in front of the payment gateway and catch that class of problem before it turns into chargebacks or a Stripe account review.
 
-## 📑 Table of Contents
+## What it does
 
-- [Key Differentiators](#-key-differentiators)
-- [Architecture & Threat Defense Capabilities](#-architecture--threat-defense-capabilities)
-  - [1. Pre-Gateway Risk Engine & Store API Guard](#1-pre-gateway-risk-engine--store-api-guard)
-  - [2. Magecart & Payment Skimmer Detection](#2-magecart--payment-skimmer-detection)
-  - [3. Automated Card-Testing & Checkout Abuse Shield](#3-automated-card-testing--checkout-abuse-shield)
-  - [4. Store Configuration & Pricing Integrity](#4-store-configuration--pricing-integrity)
-  - [5. Stealth Administrator & Privilege Escalation Guard](#5-stealth-administrator--privilege-escalation-guard)
-  - [6. Multi-Signal Attack Correlation Engine](#6-multi-signal-attack-correlation-engine)
-  - [7. Atomic Non-Destructive Quarantine Vault with 1-Click Rollback](#7-atomic-non-destructive-quarantine-vault-with-1-click-rollback)
-- [Performance & Scalability Benchmarks](#-performance--scalability-benchmarks)
-- [Installation](#-installation)
-- [Configuration Guide](#-configuration-guide)
-- [Testing & Quality Assurance](#-testing--quality-assurance)
-- [External Services & Privacy](#-external-services--privacy)
-- [Contributing](#-contributing)
-- [Security Policy](#-security-policy)
-- [License](#-license)
+**Pre-gateway risk scoring.** Checkout requests, both the classic `woocommerce_checkout_process` hook and the Store API's `/wc/store/v1/checkout` endpoint, get scored before the card is ever charged. The engine builds a 60-day rolling baseline of your store's own order values (p05/p50/p95) so a $5 order or a $2,000 VIP order doesn't get flagged just for being unusual in general. It also clusters session tokens, cart fingerprints, and billing details together, which catches coordinated attacks that rotate IPs but reuse the same session or cart pattern. You can run it in observe mode first and only switch to blocking once you trust the scores.
 
----
+**Skimmer and Magecart detection.** Scans theme and plugin JS for listeners on card and CVV fields, base64-encoded eval loaders, and exfiltration beacons disguised as image requests. It also walks `wp-content/uploads/` looking for files with image extensions that actually contain PHP.
 
-## ⚡ Key Differentiators
+**Card-testing defense.** Tracks failed payment bursts per IP and per email cluster, normalizes events from WooCommerce core, Stripe, PayPal, Authorize.Net, and Braintree into one format, and checks against a list of 200+ disposable email domains, since a lot of card-testing traffic uses throwaway addresses.
 
-| Capability | Generic Security Plugins | SentinelWP Security |
-| :--- | :--- | :--- |
-| **Card-Testing Defense** | ❌ None (Only generic IP rate limits) | ✅ **Pre-Gateway Evaluation** stops carding bots before payment processor dispatch, preventing gateway transaction fees and merchant dispute fines. |
-| **Identity Clustering** | ❌ IP-only (Defeated by proxy rotation) | ✅ **Multi-Signal Clustering** tracks session tokens, cart signatures, and disposable email domains across rotating IP subnets. |
-| **Checkout Skimmer Auditing** | ❌ Basic generic signature matches | ✅ **Real-Time JS AST & Heuristic Scanning** detects payment field scraping (`card`, `cvv`, `expir`), base64 beaconing, and fake image payloads. |
-| **WooCommerce Scalability** | ❌ Loads orders in memory (OOM crashes) | ✅ **Native HPOS (`wc_orders`) SQL Aggregations**; stays strictly bounded under `< 2MB` RAM even on 500k+ order stores. |
-| **Remediation Safety** | ❌ Hard `unlink()` with no safety net | ✅ **Two-Phase Atomic Quarantine** with SHA-256 state capture, permission preservation, and exact 1-Click Rollback. |
-| **Adversarial Resilience** | ❌ Vulnerable to proxy header poisoning | ✅ Sanitized reverse proxy resolution with RFC 1918 private IP protection and payload boundary enforcement. |
+**Configuration integrity.** Hashes your gateway settings, API keys, PayPal recipient, webhook secrets, so you get an alert the moment they change. Also flags $0.00 products and coupons created by anyone other than an admin, and watches refund volume against your own historical average.
 
----
+**Hidden admin detection.** Hooks `user_register` and `set_user_role` to block unauthorized privilege escalation, and separately queries `wp_users`/`wp_usermeta` directly, which catches admin accounts created via a filter bypass that hides them from the normal WP admin UI.
 
-## 🛡️ Architecture & Threat Defense Capabilities
+**Attack correlation.** Individual signals (traffic spikes, failed cards, disposable emails, file changes) get merged into a single incident when they line up, rather than firing five separate alerts for one attack. Scan history older than 30 days is purged automatically.
+
+**Quarantine with rollback.** Files get copied to a vault and checksummed before they're ever removed, not just deleted outright. Quarantine won't touch `wp-config.php`, `index.php`, or `.htaccess`, and can't be tricked into writing outside the WordPress root via `../` or symlinks. Rollback restores the original file, permissions included, and verifies the SHA-256 hash matches before calling it done.
+
+## How requests flow through it
 
 ```
-                       ┌──────────────────────────────────────────────┐
-                       │           Incoming HTTP / Store API Request  │
-                       └──────────────────────┬───────────────────────┘
-                                              ▼
-                         ┌──────────────────────────────────────────┐
-                         │   SentinelWP Reverse Proxy & IP Guard    │
-                         │ (Cloudflare / XFF Leftmost Sanitization) │
-                         └────────────────────┬─────────────────────┘
-                                              ▼
-                         ┌──────────────────────────────────────────┐
-                         │      Pre-Gateway Risk Engine v0.4        │
-                         │ ├─ Identity Clustering (Session/Subnet)  │
-                         │ ├─ Rolling 60d AOV Percentile Matrix     │
-                         │ ├─ Bot Velocity & Disposable Email Check │
-                         │ └─ OBSERVE / SOFT_BLOCK / PROTECT Mode   │
-                         └────────────────────┬─────────────────────┘
-                                              ▼
-              ┌───────────────────────────────┴───────────────────────────────┐
-              ▼                                                               ▼
-┌───────────────────────────┐                                   ┌───────────────────────────┐
-│     E-Commerce Guard      │                                   │   Attack Correlator       │
-│ ├─ Failed Payment Bursts  │                                   │ ├─ Synthesizes Multi-Tier │
-│ ├─ Order Anomaly Detector │                                   │    Security Incidents     │
-│ ├─ Gateway Config Hashing │                                   │ ├─ False Positive Filter  │
-│ └─ Zero-Price / Coupon    │                                   │ └─ Confidence Scorer      │
-└─────────────┬─────────────┘                                   └─────────────┬─────────────┘
-              ▼                                                               ▼
-┌───────────────────────────┐                                   ┌───────────────────────────┐
-│    Continuous Scanner     │                                   │    Atomic Quarantine      │
-│ ├─ JS Skimmer AST Analysis│                                   │ ├─ Two-Phase File Commit  │
-│ ├─ Fake Image Payload Scan│                                   │ ├─ SHA-256 State Capture  │
-│ ├─ Stealth Admin Audit    │                                   │ ├─ Protected Core Guard   │
-│ └─ Core & Plugin Vuln DB  │                                   │ └─ 1-Click Byte Rollback  │
-└───────────────────────────┘                                   └───────────────────────────┘
+request → reverse proxy / IP resolution (Cloudflare-aware, strips spoofed XFF)
+        → pre-gateway risk engine (clustering, AOV baseline, bot velocity)
+        → observe / soft-block / protect
+        → e-commerce guard (failed payment bursts, gateway hash check)
+        → attack correlator (merges signals into one incident)
+        → quarantine vault (two-phase commit, rollback available)
 ```
 
-### 1. Pre-Gateway Risk Engine & Store API Guard
-- **Pre-Gateway Interception**: Intercepts classic checkout (`woocommerce_checkout_process`) and modern Store API REST endpoints (`/wc/store/v1/checkout`) *prior* to charging cards.
-- **Identity Clustering**: Generates cryptographic cluster identifiers from session tokens, billing signatures, and cart fingerprints to detect coordinated distributed attacks across rotating residential IPs.
-- **Dynamic 60-Day Percentile Baseline**: Calculates store-specific baseline parameters (`p05`, `p50`, `p95` AOV) so legitimate micro-purchases or VIP high-ticket orders are not falsely flagged.
-- **Zero-Disruption OBSERVE Mode**: Runs passively in observe mode to evaluate risk scores without impacting real customers until you choose to switch to `protect` or `soft_block`.
+The continuous scanner (skimmer JS, fake image payloads, stealth admins, core/plugin CVE checks) runs on its own cron schedule, separate from the checkout path.
 
-### 2. Magecart & Payment Skimmer Detection
-- **JavaScript Form Scraper Detection**: Scans themes and plugins for unauthorized listeners targeting credit card fields, keyloggers, and external data exfiltration beacons.
-- **Fake Image Payload Detector**: Recursively inspects `wp-content/uploads/` for counterfeit images (`.png`, `.jpg`, `.svg`, `.webp`) carrying disguised PHP or script execution headers.
-- **Database Script Injection Scanner**: Audits `wp_options` and checkout post content for stealth script tags, base64 eval loaders, and obfuscated document writes.
+## Benchmarks
 
-### 3. Automated Card-Testing & Checkout Abuse Shield
-- **Rapid Failure Burst Detection**: Tracks failed payment events across configurable time windows per IP and email cluster.
-- **Canonical Payment Event Normalization**: Standardizes payment hooks from WooCommerce core, Stripe, PayPal, Authorize.Net, and Braintree into canonical event telemetry.
-- **Disposable Email Interception**: Built-in, high-speed dictionary of 200+ disposable/throwaway email providers to catch fraud farm orders.
+Tested against HPOS stores from 10,000 up to 500,000+ orders. Order aggregation queries stay under 0.015s, pre-gateway checkout scoring adds under 1.8ms, and peak memory during a fraud-pattern cron run stays under 2MB. These are the numbers I could reproduce consistently on my own test store; your mileage will vary with hosting and order volume.
 
-### 4. Store Configuration & Pricing Integrity
-- **Gateway Tamper Alarms**: Maintains cryptographic checksums of payment gateway settings (Stripe API keys, PayPal recipient accounts, webhook secrets) and alerts instantly if modified.
-- **Zero-Price & Coupon Guard**: Alerts on accidental or unauthorized product zero-pricing (`$0.00`) and coupon creation by non-administrator roles.
-- **Refund Spike Monitor**: Compares 7-day refund volumes against rolling historical averages.
+## Installation
 
-### 5. Stealth Administrator & Privilege Escalation Guard
-- **Real-Time Role Escalation Traps**: Intercepts `user_register` and `set_user_role` to block unauthorized administrator creation.
-- **Direct Database Auditor**: Queries `wp_users` and `wp_usermeta` directly to surface hidden administrative accounts that hook filter bypasses to conceal themselves from the WordPress admin UI.
+**WordPress admin:** download the latest `.zip` from [Releases](https://github.com/Xbot-me/sentinelwp-security/releases), then Plugins → Add New → Upload Plugin → Install → Activate.
 
-### 6. Multi-Signal Attack Correlation Engine
-- Synthesizes isolated signals (traffic rates, card failures, disposable emails, file modifications) into unified **High-Confidence Attack Incidents** (e.g. *Magecart Exfiltration Incident*, *Distributed Carding Bot Wave*, *Privilege Hijack Attempt*).
-- Auto-purges scan history logs and telemetry after 30 days to keep the database lightweight.
-
-### 7. Atomic Non-Destructive Quarantine Vault with 1-Click Rollback
-- **Two-Phase Atomic Commit**: Verifies vault copy integrity and checksum before ever unlinking the target file.
-- **Anti-Traversal Defense**: Strictly enforces boundary confinement within WordPress root, preventing path traversal (`../`) or symlink escapes.
-- **Protected Core Safeguard**: Prevents accidental quarantine of critical core files (`wp-config.php`, `index.php`, `.htaccess`).
-- **1-Click Rollback**: Restores quarantined files to their exact original path with identical file permissions and verified SHA-256 hashes.
-
----
-
-## 📊 Performance & Scalability Benchmarks
-
-SentinelWP is engineered from the ground up for high-throughput ecommerce stores:
-
-- **HPOS Scalability**: Tested on databases with **10,000+ to 500,000+ orders**; aggregation queries complete in under **0.015 seconds**.
-- **Memory Footprint**: Peak memory consumption during intensive fraud pattern cron runs stays strictly **< 2 MB**.
-- **Execution Overhead**: Pre-gateway checkout evaluation executes in **< 1.8 milliseconds**, adding negligible latency to the checkout experience.
-
----
-
-## 🚀 Installation
-
-### Via WordPress Admin Dashboard
-1. Download the latest release `.zip` from [Releases](https://github.com/Xbot-me/sentinelwp-security/releases).
-2. Go to **Plugins > Add New > Upload Plugin** in your WordPress Admin.
-3. Select the `.zip` file, click **Install Now**, and then **Activate**.
-
-### Via WP-CLI
+**WP-CLI:**
 ```bash
 wp plugin install https://github.com/Xbot-me/sentinelwp-security/archive/refs/heads/main.zip --activate
 ```
 
-### Via Git Submodule / Composer
+**Git:**
 ```bash
 cd wp-content/plugins/
 git clone https://github.com/Xbot-me/sentinelwp-security.git sentinelwp-security
 ```
 
----
+## Configuration
 
-## ⚙️ Configuration Guide
+Everything lives under **SentinelWP** in the WP admin sidebar:
 
-Navigate to **SentinelWP** in your WordPress Admin Sidebar:
+- **Dashboard** — live threat metrics, correlated incidents, recent scans.
+- **Scanner** — run phased scans on demand (core checksums, CVE database, malware, JS skimmers, nulled code, stealth admins).
+- **E-Commerce Guard** — set the risk engine to `observe` (I'd run this for at least a week before switching modes) or `protect`, tune failed-payment thresholds, toggle disposable email filtering, enable auto-hold on high-risk orders.
+- **Quarantine Vault** — inspect quarantined files, check their SHA-256 state, roll back with one click.
+- **Settings** — alert recipients, webhook endpoints (Slack, Discord, custom SIEM), and proxy resolution mode (Cloudflare, reverse proxy, or direct).
 
-1. **Dashboard**: View live threat metrics, active correlated incidents, and recent scan logs.
-2. **Scanner**: Run on-demand phased scans (Core checksums, Vulnerability DB, Malware, JS Skimmers, Nulled code, and Stealth Admins).
-3. **E-Commerce Guard**: 
-   - Choose Risk Engine Mode: `observe` (recommended for first 7 days) or `protect`.
-   - Configure card failure burst thresholds and disposable email filtering.
-   - Enable auto-hold for high-risk fraud orders.
-4. **Quarantine Vault**: View quarantined files, inspect checksums and state captures, or execute 1-Click Rollbacks.
-5. **Settings**: Configure alert email recipients, webhook endpoints (Slack, Discord, custom SIEM), and proxy resolution (Cloudflare, Reverse Proxy, or Direct).
+## Testing
 
----
-
-## 🧪 Testing & Quality Assurance
-
-SentinelWP includes a unified test runner with **15+ comprehensive test suites** covering unit logic, integration behavior, stress tests, and adversarial abuse resistance.
-
-Run the test suite locally:
+15+ suites covering unit logic, integration, stress, and adversarial abuse cases.
 
 ```bash
-# Execute the full unified test suite
+# full suite
 php tests/run-all-tests.php
-```
 
-### Running Individual Test Suites
-```bash
-# Risk Engine & Hard Negative Evaluation
+# individual suites
 php tests/test-risk-engine-phase1.php
-
-# Multi-Signal Attack Correlator
 php tests/test-attack-correlator.php
-
-# Adversarial Abuse & Attack Resistance
 php tests/test-adversarial-abuse-suite.php
-
-# Quarantine Vault Atomic Commit & Rollback
 php tests/test-quarantine-rollback.php
-
-# Malicious Corpus Detection & False Positive Benchmarks
 php tests/test-corpus-benchmark.php
-
-# WooCommerce HPOS Real Attack & Scalability Simulation
 php tests/test-woocommerce-attacks-and-scalability.php
-
-# Operational Chaos & Fault Recovery
 php tests/test-operational-chaos-suite.php
 ```
 
----
+## External services and privacy
 
-## 🔒 External Services & Privacy
+- `api.wordpress.org` is queried during scans to verify core, plugin, and theme checksums. No order or customer data goes out with those requests.
+- Patchstack/WPScan vulnerability lookups only happen if you add your own API key in Settings.
+- If you configure AI triage, flagged code snippets (never credentials or customer data) get sent out for plain-English remediation notes.
+- Webhook alerts go straight to the endpoint you configure. Nothing routes through a third-party relay.
 
-SentinelWP is designed with strict data privacy in mind:
+## Contributing
 
-1. **WordPress.org APIs** (`api.wordpress.org`): Used during scans to verify core, plugin, and theme checksums. No customer or order data is ever transmitted.
-2. **Optional Vulnerability Databases** (Patchstack / WPScan): Only queried if you explicitly provide your own API key in Settings.
-3. **Optional AI Triage**: When configured, flagged code snippets (never customer information or credentials) can be sent for plain-English remediation insights.
-4. **Alert Webhooks**: Notifications are sent directly to your configured webhook endpoint (e.g. Slack/Discord) without passing through intermediary servers.
+1. Fork the repo, branch off `feature/amazing-feature`.
+2. Run `php tests/run-all-tests.php` before opening a PR.
+3. Keep commits scoped and the message descriptive.
+4. Open the PR against `main`.
 
----
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more detail.
 
-## 🤝 Contributing
+## Security policy
 
-We welcome contributions from the community! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting Pull Requests.
+Found a vulnerability? Please don't open a public issue. Report it through [GitHub Security Advisories](https://github.com/Xbot-me/sentinelwp-security/security/advisories/new) or check [SECURITY.md](SECURITY.md) for other reporting options.
 
-1. Fork the repo and create your branch: `git checkout -b feature/amazing-feature`
-2. Run tests: `php tests/run-all-tests.php`
-3. Commit your changes: `git commit -m 'feat: add support for custom gateway normalization'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request.
+## License
 
----
-
-## 🛡️ Security Policy
-
-If you discover a security vulnerability, please review our [Security Policy](SECURITY.md) and report it responsibly via [GitHub Security Advisories](https://github.com/Xbot-me/sentinelwp-security/security/advisories/new).
-
----
-
-## 📄 License
-
-SentinelWP Security is open-source software licensed under the **[GNU General Public License v2.0 or later (GPL-2.0-or-later)](https://www.gnu.org/licenses/gpl-2.0.html)**.
+GPL-2.0-or-later. See [LICENSE](https://www.gnu.org/licenses/gpl-2.0.html).
