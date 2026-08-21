@@ -38,22 +38,46 @@
 	box-sizing: border-box;
 }
 
-/* ---------- Header: Single compact row ---------- */
+/* ---------- Header: Single compact row / Flex Layout ---------- */
+.head,
+.sentinelwp-head,
 .pagehead {
 	display: flex;
-	align-items: center;
-	gap: 12px;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin: 12px 0 16px;
 	flex-wrap: wrap;
-	margin: 8px 0 4px;
 }
 
+.sentinelwp-head-left {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.sentinelwp-head h1,
+.head h1,
 .pagehead h1 {
 	font-size: 23px;
-	font-weight: 400;
-	margin: 0;
+	font-weight: 500;
+	margin: 0 0 4px 0;
 	padding: 0;
 	line-height: 1.3;
 	color: var(--ink);
+}
+
+.sentinelwp-head-left .meta,
+.sentinelwp-head-left .sentinelwp-meta {
+	margin: 0;
+}
+
+.sentinelwp-actions,
+.head .actions,
+.pagehead .actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
 }
 
 .tag {
@@ -474,12 +498,23 @@ input[type="search"] {
 	font-size: 12.5px;
 }
 
+.sentinelwp-table-responsive {
+	width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	margin-bottom: 8px;
+	border: 1px solid var(--line);
+	background: #ffffff;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+}
+
 table.sentinelwp-findings-table {
 	width: 100%;
 	border-collapse: collapse;
 	background: #ffffff;
-	border: 1px solid var(--line);
-	box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+	border: none;
+	margin: 0;
+	min-width: 600px;
 }
 
 thead th {
@@ -1022,18 +1057,130 @@ footer a:hover {
 	text-decoration: underline;
 }
 
-/* Responsive */
+/* Responsive Styles for Tablets and Mobile Devices */
 @media (max-width: 1100px) {
 	.grid { grid-template-columns: repeat(2, 1fr); }
 	.sentinelwp-detail-grid { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 960px) {
+	.sentinelwp-wrap {
+		margin-right: 12px;
+	}
+	.alarm {
+		padding: 12px 14px;
+	}
+	.sentinelwp-head,
+	.head {
+		gap: 12px;
+	}
+}
+
 @media (max-width: 782px) {
-	.grid { grid-template-columns: 1fr; }
-	.alarm { flex-wrap: wrap; }
-	.alarm .num { margin-left: 0; width: 100%; justify-content: space-between; }
-	.pagehead { flex-direction: column; align-items: stretch; }
-	.pagehead .spacer { display: none; }
-	.sentinelwp-sticky-save { left: 0; }
+	.sentinelwp-wrap {
+		margin: 12px 10px 40px 0;
+	}
+	.head,
+	.sentinelwp-head,
+	.pagehead {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 12px;
+	}
+	.sentinelwp-actions,
+	.head .actions {
+		width: 100%;
+	}
+	.sentinelwp-actions .btn,
+	.head .actions .btn {
+		width: 100%;
+		justify-content: center;
+		padding: 10px 16px;
+		font-size: 14px;
+	}
+	.grid {
+		grid-template-columns: 1fr;
+	}
+	.alarm {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 12px;
+	}
+	.alarm .num {
+		margin-left: 0;
+		width: 100%;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 8px;
+		border-top: 1px solid rgba(0, 0, 0, 0.08);
+		padding-top: 10px;
+		text-align: center;
+	}
+	.alarm .num .k {
+		font-size: 10px;
+	}
+	.alarm .num .v {
+		font-size: 20px;
+	}
+	.tablenav {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 8px;
+	}
+	.tablenav select,
+	.tablenav input[type="search"],
+	.tablenav .btn {
+		width: 100%;
+		box-sizing: border-box;
+		min-height: 38px;
+	}
+	.tablenav .count {
+		margin-left: 0;
+		text-align: right;
+		width: 100%;
+	}
+	.subsub {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px 8px;
+		line-height: 1.8;
+	}
+	.sentinelwp-incident-header {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 6px;
+	}
+	.sentinelwp-sticky-save {
+		left: 0;
+	}
+	.sentinelwp-drawer-actions {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.sentinelwp-drawer-actions .btn {
+		width: 100%;
+		justify-content: center;
+	}
+	.sentinelwp-postbox {
+		margin-bottom: 16px;
+	}
+}
+
+@media (max-width: 480px) {
+	.alarm .num {
+		grid-template-columns: 1fr;
+		gap: 6px;
+	}
+	.alarm .num .sentinelwp-alarm-filter {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 6px 10px;
+		background: rgba(0, 0, 0, 0.02);
+		border-radius: 4px;
+	}
+	.alarm .num .v {
+		font-size: 16px;
+	}
 }
 

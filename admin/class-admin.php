@@ -129,7 +129,15 @@ class SentinelWP_Admin {
 		<div class="wrap sentinelwp-wrap sentinelwp-dashboard" id="sentinelwp-dashboard">
 			<!-- Top Action Header -->
 			<div class="head sentinelwp-head">
-				<h1><?php esc_html_e( 'SentinelWP Security', 'sentinelwp-security' ); ?></h1>
+				<div class="sentinelwp-head-left">
+					<h1><?php esc_html_e( 'SentinelWP Security', 'sentinelwp-security' ); ?></h1>
+					<p class="meta sentinelwp-meta">
+						<span class="dot sentinelwp-dot"></span>Last scan <b><?php echo esc_html( $relative_last_scan ); ?></b> &middot; <?php 
+						/* translators: %d: active engine count */
+						echo esc_html( sprintf( __( '%d engines online', 'sentinelwp-security' ), $engines_online ) ); 
+						?> &middot; <?php esc_html_e( 'next auto-scan in ~6h', 'sentinelwp-security' ); ?>
+					</p>
+				</div>
 				<div class="actions sentinelwp-actions">
 					<button type="button" class="btn btn-primary sentinelwp-btn sentinelwp-btn-primary" id="sentinelwp-btn-scan">
 						<span class="dashicons dashicons-shield"></span>
@@ -137,12 +145,6 @@ class SentinelWP_Admin {
 					</button>
 				</div>
 			</div>
-			<p class="meta sentinelwp-meta">
-				<span class="dot sentinelwp-dot"></span>Last scan <b><?php echo esc_html( $relative_last_scan ); ?></b> &middot; <?php 
-				/* translators: %d: active engine count */
-				echo esc_html( sprintf( __( '%d engines online', 'sentinelwp-security' ), $engines_online ) ); 
-				?> &middot; <?php esc_html_e( 'next auto-scan in ~6h', 'sentinelwp-security' ); ?>
-			</p>
 
 			<!-- Scan Progress Bar (Revealed during scan) -->
 			<div class="sentinelwp-progress-bar" id="sentinelwp-progress-bar" style="display:none;" aria-live="polite" role="progressbar">
@@ -324,6 +326,7 @@ class SentinelWP_Admin {
 			</div>
 
 			<!-- Findings List Table -->
+			<div class="sentinelwp-table-responsive">
 			<table class="sentinelwp-findings-table" id="sentinelwp-table">
 				<thead>
 					<tr>
@@ -475,6 +478,7 @@ class SentinelWP_Admin {
 				<?php endforeach; ?>
 				</tbody>
 			</table>
+			</div>
 
 			<!-- Tablenav Bottom -->
 			<div class="tablenav bottom sentinelwp-tablenav sentinelwp-tablenav-bottom">
