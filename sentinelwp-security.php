@@ -90,8 +90,6 @@ add_filter( 'cron_schedules', 'sentinelwp_add_cron_schedules' );
  * for conflicts / dependencies and load the text domain.
  */
 function sentinelwp_boot() {
-	load_plugin_textdomain( 'sentinelwp-security', false, dirname( SENTINELWP_BASENAME ) . '/languages' );
-
 	// Runtime schema check / upgrade.
 	SentinelWP_Activator::maybe_upgrade_schema();
 

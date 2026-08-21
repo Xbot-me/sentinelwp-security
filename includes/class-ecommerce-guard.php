@@ -64,6 +64,7 @@ class SentinelWP_Ecommerce_Guard {
 					'high',
 					'ecommerce_guard',
 					__( 'High order velocity from single IP detected', 'sentinelwp-security' ),
+					/* translators: %s: client IP hash prefix */
 					sprintf( __( 'More than 5 orders from client IP hash %s in 1 hour.', 'sentinelwp-security' ), esc_html( substr( $ip_hash, 0, 12 ) . '...' ) ),
 					'likely',
 					'ecommerce_guard',
@@ -88,6 +89,7 @@ class SentinelWP_Ecommerce_Guard {
 					'high',
 					'ecommerce_guard',
 					__( 'High order velocity from single email detected', 'sentinelwp-security' ),
+					/* translators: %d: order ID */
 					sprintf( __( 'More than 3 orders from same email in 1 hour (Order #%d).', 'sentinelwp-security' ), (int) $order_id ),
 					'likely',
 					'ecommerce_guard',
@@ -131,6 +133,7 @@ class SentinelWP_Ecommerce_Guard {
 					'critical',
 					'ecommerce_guard',
 					__( 'Card testing attack detected via IP', 'sentinelwp-security' ),
+					/* translators: %s: client IP hash prefix */
 					sprintf( __( 'More than 3 rapid payment failures from IP hash %s in 10 minutes.', 'sentinelwp-security' ), esc_html( substr( $ip_hash, 0, 12 ) . '...' ) ),
 					'confirmed',
 					'ecommerce_guard',
@@ -154,6 +157,7 @@ class SentinelWP_Ecommerce_Guard {
 					'high',
 					'ecommerce_guard',
 					__( 'Card testing attack detected via email', 'sentinelwp-security' ),
+					/* translators: %d: order ID */
 					sprintf( __( 'More than 5 payment failures from same billing email in 1 hour (Order #%d).', 'sentinelwp-security' ), (int) $order_id ),
 					'likely',
 					'ecommerce_guard',
@@ -190,6 +194,7 @@ class SentinelWP_Ecommerce_Guard {
 						'medium',
 						'ecommerce_guard',
 						__( 'Order placed using temporary disposable email domain', 'sentinelwp-security' ),
+						/* translators: %s: email domain */
 						sprintf( __( 'Domain "%s" is on the known disposable email list.', 'sentinelwp-security' ), esc_html( $domain ) ),
 						'likely',
 						'ecommerce_guard',
@@ -212,8 +217,8 @@ class SentinelWP_Ecommerce_Guard {
 		$orders_table = $wpdb->prefix . 'wc_orders';
 		$hpos_table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $orders_table ) ) === $orders_table;
 
-		$one_day_ago = date( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
-		$thirty_days_ago = date( 'Y-m-d H:i:s', time() - 30 * DAY_IN_SECONDS );
+		$one_day_ago = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
+		$thirty_days_ago = gmdate( 'Y-m-d H:i:s', time() - 30 * DAY_IN_SECONDS );
 
 		if ( $is_hpos && $hpos_table_exists ) {
 			// 1. HPOS Mode: 24h Order Velocity by Email Aggregation
@@ -236,7 +241,8 @@ class SentinelWP_Ecommerce_Guard {
 						'high',
 						'ecommerce_guard',
 						__( 'High 24h order volume from single email', 'sentinelwp-security' ),
-						sprintf( __( 'Email "%s" placed %d orders in the last 24 hours.', 'sentinelwp-security' ), esc_html( $row->billing_email ), (int) $row->order_count ),
+						/* translators: 1: email address, 2: order count */
+						sprintf( __( 'Email "%1$s" placed %2$d orders in the last 24 hours.', 'sentinelwp-security' ), esc_html( $row->billing_email ), (int) $row->order_count ),
 						'likely',
 						'ecommerce_guard',
 						__( 'Review customer orders for automated purchasing scripts or card testing.', 'sentinelwp-security' ),
@@ -265,7 +271,8 @@ class SentinelWP_Ecommerce_Guard {
 						'high',
 						'ecommerce_guard',
 						__( 'High 24h order volume from single IP', 'sentinelwp-security' ),
-						sprintf( __( 'IP "%s" placed %d orders in the last 24 hours.', 'sentinelwp-security' ), esc_html( $row->ip_address ), (int) $row->order_count ),
+						/* translators: 1: IP address, 2: order count */
+						sprintf( __( 'IP "%1$s" placed %2$d orders in the last 24 hours.', 'sentinelwp-security' ), esc_html( $row->ip_address ), (int) $row->order_count ),
 						'likely',
 						'ecommerce_guard',
 						__( 'Inspect IP for proxy or bot network activity.', 'sentinelwp-security' ),
@@ -305,7 +312,8 @@ class SentinelWP_Ecommerce_Guard {
 							'medium',
 							'ecommerce_guard',
 							__( 'Anomalous order amount or customer purchase spike', 'sentinelwp-security' ),
-							sprintf( __( 'Order #%d total ($%s) is more than 5x the 30-day average order value ($%s).', 'sentinelwp-security' ), (int) $ord->id, number_format( (float) $ord->total_amount, 2 ), number_format( $avg_order_value, 2 ) ),
+							/* translators: 1: order ID, 2: order total amount, 3: average order value */
+							sprintf( __( 'Order #%1$d total ($%2$s) is more than 5x the 30-day average order value ($%3$s).', 'sentinelwp-security' ), (int) $ord->id, number_format( (float) $ord->total_amount, 2 ), number_format( $avg_order_value, 2 ) ),
 							'suspicious',
 							'ecommerce_guard',
 							__( 'Verify high-value payment authorization with customer before shipping.', 'sentinelwp-security' ),
@@ -339,7 +347,8 @@ class SentinelWP_Ecommerce_Guard {
 						'high',
 						'ecommerce_guard',
 						__( 'High 24h order volume from single email', 'sentinelwp-security' ),
-						sprintf( __( 'Email "%s" placed %d orders in the last 24 hours.', 'sentinelwp-security' ), esc_html( $row->billing_email ), (int) $row->order_count ),
+						/* translators: 1: email address, 2: order count */
+						sprintf( __( 'Email "%1$s" placed %2$d orders in the last 24 hours.', 'sentinelwp-security' ), esc_html( $row->billing_email ), (int) $row->order_count ),
 						'likely',
 						'ecommerce_guard',
 						__( 'Review customer orders for automated purchasing scripts.', 'sentinelwp-security' ),
@@ -385,7 +394,8 @@ class SentinelWP_Ecommerce_Guard {
 							'medium',
 							'ecommerce_guard',
 							__( 'Anomalous order amount or customer purchase spike', 'sentinelwp-security' ),
-							sprintf( __( 'Order #%d total ($%s) is more than 5x the 30-day average order value ($%s).', 'sentinelwp-security' ), (int) $ord->id, number_format( (float) $ord->total_amount, 2 ), number_format( $avg_order_value, 2 ) ),
+							/* translators: 1: order ID, 2: order total amount, 3: average order value */
+							sprintf( __( 'Order #%1$d total ($%2$s) is more than 5x the 30-day average order value ($%3$s).', 'sentinelwp-security' ), (int) $ord->id, number_format( (float) $ord->total_amount, 2 ), number_format( $avg_order_value, 2 ) ),
 							'suspicious',
 							'ecommerce_guard',
 							__( 'Verify high-value payment authorization with customer before shipping.', 'sentinelwp-security' ),
@@ -396,16 +406,18 @@ class SentinelWP_Ecommerce_Guard {
 			}
 		}
 
-		// Bounded cursor sampling for nonsensical names (checks max 25 recent orders)
+		// 4. Heuristic Billing Field Anomaly Detection
 		$recent_sample_orders = $wpdb->get_results( $wpdb->prepare(
 			"SELECT p.ID, 
-				(SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_billing_first_name' LIMIT 1) as fn,
-				(SELECT meta_value FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_billing_last_name' LIMIT 1) as ln
+				MAX(CASE WHEN pm.meta_key = '_billing_first_name' THEN pm.meta_value END) as fn,
+				MAX(CASE WHEN pm.meta_key = '_billing_last_name' THEN pm.meta_value END) as ln
 			FROM {$wpdb->posts} p 
+			INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id 
 			WHERE p.post_type = 'shop_order' 
 			AND p.post_date_gmt >= %s 
-			ORDER BY p.ID DESC 
-			LIMIT 25",
+			AND pm.meta_key IN ('_billing_first_name', '_billing_last_name')
+			GROUP BY p.ID 
+			LIMIT 50",
 			$one_day_ago
 		) );
 
@@ -419,7 +431,8 @@ class SentinelWP_Ecommerce_Guard {
 						'medium',
 						'ecommerce_guard',
 						__( 'Nonsensical billing data detected', 'sentinelwp-security' ),
-						sprintf( __( 'Order #%d contains suspicious numeric or single-character billing name "%s %s".', 'sentinelwp-security' ), (int) $ord->ID, esc_html( $first_name ), esc_html( $last_name ) ),
+						/* translators: 1: order ID, 2: first name, 3: last name */
+						sprintf( __( 'Order #%1$d contains suspicious numeric or single-character billing name "%2$s %3$s".', 'sentinelwp-security' ), (int) $ord->ID, esc_html( $first_name ), esc_html( $last_name ) ),
 						'suspicious',
 						'ecommerce_guard',
 						__( 'Inspect order for automated testing before processing.', 'sentinelwp-security' ),
@@ -436,7 +449,7 @@ class SentinelWP_Ecommerce_Guard {
 	public function cron_monitor_complaint_patterns() {
 		global $wpdb;
 
-		$seven_days_ago = date( 'Y-m-d H:i:s', time() - 7 * DAY_IN_SECONDS );
+		$seven_days_ago = gmdate( 'Y-m-d H:i:s', time() - 7 * DAY_IN_SECONDS );
 		$is_hpos = class_exists( 'SentinelWP_Helper' ) && SentinelWP_Helper::is_hpos_enabled();
 		$orders_table = $wpdb->prefix . 'wc_orders';
 		$hpos_table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $orders_table ) ) === $orders_table;
@@ -465,16 +478,15 @@ class SentinelWP_Ecommerce_Guard {
 		if ( $refund_stats && (int) $refund_stats->total_orders > 20 ) {
 			$total_7d    = (int) $refund_stats->total_orders;
 			$refunded_7d = (int) $refund_stats->refunded_orders;
-			$rate        = (float) ( $refunded_7d / $total_7d );
-
-			// If refund rate exceeds 25% across >20 orders
+			$rate        = (float) ( $refunded_7d / $total_7d );			// If refund rate exceeds 25% across >20 orders
 			if ( $rate > 0.25 ) {
 				$this->record_finding(
 					'refund_spike',
 					'high',
 					'ecommerce_guard',
 					__( 'Spike in refunded orders', 'sentinelwp-security' ),
-					sprintf( __( 'The 7-day refund rate is %s%% (%d of %d orders refunded).', 'sentinelwp-security' ), number_format( $rate * 100, 1 ), $refunded_7d, $total_7d ),
+					/* translators: 1: refund percentage rate, 2: refunded order count, 3: total order count */
+					sprintf( __( 'The 7-day refund rate is %1$s%% (%2$d of %3$d orders refunded).', 'sentinelwp-security' ), number_format( $rate * 100, 1 ), $refunded_7d, $total_7d ),
 					'likely',
 					'ecommerce_guard',
 					__( 'Examine recent refunds for unauthorized transactions or disputed charges.', 'sentinelwp-security' ),
@@ -486,8 +498,10 @@ class SentinelWP_Ecommerce_Guard {
 		// Order note chargeback / dispute keywords query
 		$keywords = array( 'fraud', 'unauthorized', 'chargeback', 'stolen', 'dispute', 'not recognized', 'did not order' );
 		$like_clauses = array();
+		$params = array( $seven_days_ago );
 		foreach ( $keywords as $kw ) {
-			$like_clauses[] = $wpdb->prepare( 'comment_content LIKE %s', '%' . $wpdb->esc_like( $kw ) . '%' );
+			$like_clauses[] = 'comment_content LIKE %s';
+			$params[] = '%' . $wpdb->esc_like( $kw ) . '%';
 		}
 		
 		$query = "SELECT COUNT(*) FROM {$wpdb->comments} 
@@ -495,7 +509,7 @@ class SentinelWP_Ecommerce_Guard {
 			AND comment_date_gmt >= %s 
 			AND (" . implode( ' OR ', $like_clauses ) . ")";
 			
-		$suspicious_notes_count = (int) $wpdb->get_var( $wpdb->prepare( $query, $seven_days_ago ) );
+		$suspicious_notes_count = (int) $wpdb->get_var( $wpdb->prepare( $query, $params ) );
 
 		if ( $suspicious_notes_count > 3 ) {
 			$this->record_finding(
@@ -503,6 +517,7 @@ class SentinelWP_Ecommerce_Guard {
 				'critical',
 				'ecommerce_guard',
 				__( 'Suspicious customer complaint pattern detected', 'sentinelwp-security' ),
+				/* translators: %d: suspicious note count */
 				sprintf( __( 'Found %d order notes containing fraud or chargeback keywords in the last 7 days.', 'sentinelwp-security' ), $suspicious_notes_count ),
 				'likely',
 				'ecommerce_guard',
@@ -524,9 +539,9 @@ class SentinelWP_Ecommerce_Guard {
 			'woocommerce_checkout_page_id',
 			'woocommerce_cart_page_id',
 			'woocommerce_currency',
-			'woocommerce_default_country'
+			'woocommerce_default_country',
 		);
-		
+
 		$hashes_table = $wpdb->prefix . 'sentinelwp_store_hashes';
 
 		foreach ( $monitored_options as $option_name ) {
@@ -544,6 +559,7 @@ class SentinelWP_Ecommerce_Guard {
 					'high',
 					'ecommerce_guard',
 					__( 'Payment gateway or critical store configuration changed', 'sentinelwp-security' ),
+					/* translators: %s: WooCommerce setting name */
 					sprintf( __( 'The WooCommerce setting "%s" was modified.', 'sentinelwp-security' ), esc_html( $option_name ) ),
 					'confirmed',
 					'ecommerce_guard',
@@ -593,7 +609,8 @@ class SentinelWP_Ecommerce_Guard {
 						'high',
 						'ecommerce_guard',
 						__( 'Suspicious product price zeroing detected', 'sentinelwp-security' ),
-						sprintf( __( 'Product "%s" (#%d) is priced at $0.00 but has a regular price of $%s.', 'sentinelwp-security' ), esc_html( $product->post_title ), (int) $product->ID, esc_html( $regular_price ) ),
+						/* translators: 1: product title, 2: product ID, 3: regular price */
+						sprintf( __( 'Product "%1$s" (#%2$d) is priced at $0.00 but has a regular price of $%3$s.', 'sentinelwp-security' ), esc_html( $product->post_title ), (int) $product->ID, esc_html( $regular_price ) ),
 						'likely',
 						'ecommerce_guard',
 						__( 'Verify product price in WooCommerce products catalog.', 'sentinelwp-security' ),
@@ -604,7 +621,7 @@ class SentinelWP_Ecommerce_Guard {
 		}
 		
 		// Check for suspicious coupons created in last 24h
-		$one_day_ago = date( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
+		$one_day_ago = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
 		$coupons = $wpdb->get_results( $wpdb->prepare(
 			"SELECT ID, post_author, post_title FROM {$wpdb->posts} 
 			WHERE post_type = 'shop_coupon' 
@@ -631,7 +648,8 @@ class SentinelWP_Ecommerce_Guard {
 						'high',
 						'ecommerce_guard',
 						__( 'Suspicious high-value coupon created by non-admin', 'sentinelwp-security' ),
-						sprintf( __( 'Coupon "%s" with >50%% discount was created by non-administrator user #%d.', 'sentinelwp-security' ), esc_html( $coupon->post_title ), $author_id ),
+						/* translators: 1: coupon title, 2: author user ID */
+						sprintf( __( 'Coupon "%1$s" with >50%% discount was created by non-administrator user #%2$d.', 'sentinelwp-security' ), esc_html( $coupon->post_title ), $author_id ),
 						'likely',
 						'ecommerce_guard',
 						__( 'Inspect coupon settings and revoke unauthorized user permissions.', 'sentinelwp-security' ),

@@ -94,8 +94,10 @@ class SentinelWP_Flood_Monitor {
 					'flood_detected',
 					'high',
 					'flood_monitor',
-					sprintf( __( 'High request velocity on %s endpoint (%d req / 5min)', 'sentinelwp-security' ), ucfirst( $endpoint ), $hit_count ),
-					sprintf( __( 'Client IP hash %s exceeded threshold of %d requests on the %s route.', 'sentinelwp-security' ), esc_html( substr( $ip_hash, 0, 12 ) . '...' ), $threshold, esc_html( $endpoint ) ),
+					/* translators: 1: endpoint name, 2: hit count */
+					sprintf( __( 'High request velocity on %1$s endpoint (%2$d req / 5min)', 'sentinelwp-security' ), ucfirst( $endpoint ), $hit_count ),
+					/* translators: 1: IP hash prefix, 2: threshold count, 3: endpoint name */
+					sprintf( __( 'Client IP hash %1$s exceeded threshold of %2$d requests on the %3$s route.', 'sentinelwp-security' ), esc_html( substr( $ip_hash, 0, 12 ) . '...' ), $threshold, esc_html( $endpoint ) ),
 					'likely',
 					'flood_monitor',
 					__( 'Investigate traffic patterns from this client and enable edge firewall/WAF rate limits if abusive.', 'sentinelwp-security' ),
@@ -137,7 +139,8 @@ class SentinelWP_Flood_Monitor {
 				'critical',
 				'flood_monitor',
 				__( 'Aggregate application traffic surge detected across all routes', 'sentinelwp-security' ),
-				sprintf( __( 'Current 5-minute volume (%d requests) is over 3x the baseline average (%d requests).', 'sentinelwp-security' ), $total_requests, $avg_rate ),
+				/* translators: 1: current request count, 2: average request count */
+				sprintf( __( 'Current 5-minute volume (%1$d requests) is over 3x the baseline average (%2$d requests).', 'sentinelwp-security' ), $total_requests, $avg_rate ),
 				'likely',
 				'flood_monitor',
 				__( 'Check server access logs and upstream CDN/WAF metrics for distributed DDoS traffic.', 'sentinelwp-security' ),

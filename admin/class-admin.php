@@ -483,7 +483,7 @@ class SentinelWP_Admin {
 					<option value="export_csv"><?php esc_html_e( 'Export CSV', 'sentinelwp-security' ); ?></option>
 				</select>
 				<button type="button" class="btn btn-sec sentinelwp-btn-sec" id="sentinelwp-doaction2"><?php esc_html_e( 'Apply', 'sentinelwp-security' ); ?></button>
-				<span class="count sentinelwp-count" id="sentinelwp-bottom-item-count"><?php echo esc_html( sprintf( _n( '%d item', '%d items', $total_open, 'sentinelwp-security' ), $total_open ) ); ?></span>
+				<span class="count sentinelwp-count" id="sentinelwp-bottom-item-count"><?php /* translators: %d: open finding count */ echo esc_html( sprintf( _n( '%d item', '%d items', $total_open, 'sentinelwp-security' ), $total_open ) ); ?></span>
 			</div>
 
 			<!-- Threat Protection Modules Section -->
@@ -491,7 +491,7 @@ class SentinelWP_Admin {
 
 			<!-- Footer Meta -->
 			<footer>
-				<span><?php echo esc_html( sprintf( __( 'SentinelWP Security v%s', 'sentinelwp-security' ), SENTINELWP_VERSION ) ); ?></span> &middot;
+				<span><?php /* translators: %s: plugin version string */ echo esc_html( sprintf( __( 'SentinelWP Security v%s', 'sentinelwp-security' ), SENTINELWP_VERSION ) ); ?></span> &middot;
 				<span><?php esc_html_e( 'Definitions 2026.08-rev1', 'sentinelwp-security' ); ?></span> &middot;
 				<a href="https://sentinelwp.io/docs" target="_blank"><?php esc_html_e( 'Documentation', 'sentinelwp-security' ); ?></a> &middot;
 				<a href="https://sentinelwp.io/support" target="_blank"><?php esc_html_e( 'Support', 'sentinelwp-security' ); ?></a>
@@ -567,7 +567,7 @@ class SentinelWP_Admin {
 		?>
 		<div class="sec-head sentinelwp-sec-head" style="margin-top: 28px;">
 			<h2><?php esc_html_e( 'Threat Detection Modules', 'sentinelwp-security' ); ?></h2>
-			<p><?php echo esc_html( sprintf( __( 'Active security engine status &middot; %d of %d active engines', 'sentinelwp-security' ), $active_module_count, count( $modules_raw ) ) ); ?></p>
+			<p><?php /* translators: 1: active module count, 2: total module count */ echo esc_html( sprintf( __( 'Active security engine status &middot; %1$d of %2$d active engines', 'sentinelwp-security' ), $active_module_count, count( $modules_raw ) ) ); ?></p>
 			<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelwp-security-settings&tab=modules' ) ); ?>">
 				<?php esc_html_e( 'Manage in settings ›', 'sentinelwp-security' ); ?>
 			</a>
@@ -583,7 +583,7 @@ class SentinelWP_Admin {
 						<span class="nm"><?php echo esc_html( $mod['title'] ); ?></span>
 						<?php if ( $has_issues ) : ?>
 							<span class="chip bad">
-								<?php echo esc_html( sprintf( _n( '%d finding', '%d findings', $count, 'sentinelwp-security' ), $count ) ); ?>
+								<?php /* translators: %d: findings count */ echo esc_html( sprintf( _n( '%d finding', '%d findings', $count, 'sentinelwp-security' ), $count ) ); ?>
 							</span>
 						<?php else : ?>
 							<span class="chip ok"><?php esc_html_e( 'Clear', 'sentinelwp-security' ); ?></span>
@@ -837,7 +837,7 @@ class SentinelWP_Admin {
 					<tr>
 						<th scope="row">
 							<label><?php esc_html_e( 'Automated Scan Frequency', 'sentinelwp-security' ); ?></label>
-							<p class="description"><?php echo esc_html( sprintf( __( 'Site timezone: %s', 'sentinelwp-security' ), wp_timezone_string() ) ); ?></p>
+							<p class="description"><?php /* translators: %s: site timezone string */ echo esc_html( sprintf( __( 'Site timezone: %s', 'sentinelwp-security' ), wp_timezone_string() ) ); ?></p>
 						</th>
 						<td>
 							<select name="sentinelwp_scan_schedule">
@@ -969,7 +969,7 @@ class SentinelWP_Admin {
 										<?php if ( ! empty( $run['critical_count'] ) ) : ?>
 											<span class="badge badge-critical" style="font-size:11px; padding:2px 6px;"><?php echo esc_html( $run['critical_count'] . ' Critical' ); ?></span>
 										<?php endif; ?>
-										<span><?php echo esc_html( sprintf( __( '%d open', 'sentinelwp-security' ), $run['open_findings'] ?? 0 ) ); ?></span>
+										<span><?php /* translators: %d: open finding count */ echo esc_html( sprintf( __( '%d open', 'sentinelwp-security' ), $run['open_findings'] ?? 0 ) ); ?></span>
 									</td>
 									<td>
 										<?php
@@ -979,7 +979,7 @@ class SentinelWP_Admin {
 												$dur = isset( $pdata['duration'] ) ? sprintf( '%.2fs', $pdata['duration'] ) : '';
 												$phase_badges[] = '<code style="font-size:11px; margin-right:4px;">' . esc_html( ucfirst( $pkey ) . ': ' . $dur ) . '</code>';
 											}
-											echo implode( ' ', $phase_badges );
+											echo wp_kses_post( implode( ' ', $phase_badges ) );
 										} else {
 											esc_html_e( 'All 6 core phases completed', 'sentinelwp-security' );
 										}
@@ -1364,12 +1364,15 @@ class SentinelWP_Admin {
 			return __( 'Just now', 'sentinelwp-security' );
 		} elseif ( $diff < 3600 ) {
 			$mins = round( $diff / 60 );
+			/* translators: %d: elapsed minutes */
 			return sprintf( _n( '%d minute ago', '%d minutes ago', $mins, 'sentinelwp-security' ), $mins );
 		} elseif ( $diff < 86400 ) {
 			$hours = round( $diff / 3600 );
+			/* translators: %d: elapsed hours */
 			return sprintf( _n( '%d hour ago', '%d hours ago', $hours, 'sentinelwp-security' ), $hours );
 		} else {
 			$days = round( $diff / 86400 );
+			/* translators: %d: elapsed days */
 			return sprintf( _n( '%d day ago', '%d days ago', $days, 'sentinelwp-security' ), $days );
 		}
 	}
@@ -1384,9 +1387,11 @@ class SentinelWP_Admin {
 				return __( 'Unauthorized script injection in database option', 'sentinelwp-security' );
 			case 'nulled_malicious_file':
 				if ( preg_match( '/found in ([^:]+):/i', $title, $m ) ) {
+					/* translators: %s: component name */
 					return sprintf( __( 'Nulled theme file found in %s', 'sentinelwp-security' ), $m[1] );
 				}
 				if ( ! empty( $source ) && false === strpos( $source, '/' ) ) {
+					/* translators: %s: component source path */
 					return sprintf( __( 'Nulled theme/plugin backdoor file in %s', 'sentinelwp-security' ), $source );
 				}
 				return __( 'Nulled theme or plugin backdoor file found', 'sentinelwp-security' );
@@ -1405,6 +1410,7 @@ class SentinelWP_Admin {
 				return __( 'Unauthorized administrator privilege elevation detected', 'sentinelwp-security' );
 			case 'suspicious_admin_username':
 				if ( preg_match( '/"([^"]+)"/', $title, $m ) ) {
+					/* translators: %s: administrator username */
 					return sprintf( __( 'Unrecognised administrator account “%s”', 'sentinelwp-security' ), $m[1] );
 				}
 				return __( 'Unrecognised administrator account in database', 'sentinelwp-security' );
@@ -1414,6 +1420,7 @@ class SentinelWP_Admin {
 				return __( 'Hidden admin user query filter detected in active theme/plugin', 'sentinelwp-security' );
 			case 'malware_signature':
 				if ( preg_match( '/Pattern match \((.*)\) in/i', $title, $m ) ) {
+					/* translators: %s: malware pattern name */
 					return sprintf( __( 'Obfuscated backdoor — %s', 'sentinelwp-security' ), $m[1] );
 				}
 				return __( 'Obfuscated backdoor — eval(base64_decode()) pattern', 'sentinelwp-security' );
@@ -1643,12 +1650,14 @@ class SentinelWP_Admin {
 		}
 
 		$to = get_option( 'sentinelwp_alert_email', get_option( 'admin_email' ) );
+		/* translators: %s: site name */
 		$subject = sprintf( __( '[%s] SentinelWP Security Test Notification', 'sentinelwp-security' ), get_bloginfo( 'name' ) );
 		$body = __( "This is a test notification from SentinelWP Security.\n\nYour alert dispatch channel is operational.", 'sentinelwp-security' );
 
 		$sent = wp_mail( $to, $subject, $body );
 
 		if ( $sent ) {
+			/* translators: %s: recipient email address */
 			wp_send_json_success( array( 'message' => sprintf( __( 'Test email sent to %s', 'sentinelwp-security' ), $to ) ) );
 		} else {
 			wp_send_json_error( array( 'message' => __( 'wp_mail() returned false. Check mail server configuration.', 'sentinelwp-security' ) ) );

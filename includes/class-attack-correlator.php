@@ -128,6 +128,7 @@ class SentinelWP_Attack_Correlator {
 			'title'              => __( 'Checkout Compromise & Payment Data Exfiltration Threat', 'sentinelwp-security' ),
 			'severity'           => 'critical',
 			'confidence_score'   => $confidence,
+			/* translators: %d: confidence percentage number */
 			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelwp-security' ), $confidence ),
 			'summary'            => __( 'An unverified script or backdoor payload was detected interacting with checkout payment fields. Customer payment card credentials are at immediate risk of interception.', 'sentinelwp-security' ),
 			'signals'            => $signal_bullets,
@@ -146,42 +147,20 @@ class SentinelWP_Attack_Correlator {
 	 */
 	private function correlate_card_testing_attack( array $findings ) {
 		$matched_findings = array();
-		$has_card_testing = false;
-		$has_velocity     = false;
-		$has_disposable   = false;
-		$has_flood        = false;
 
 		foreach ( $findings as $f ) {
 			$type = $f['type'] ?? '';
-			if ( 'card_testing' === $type ) {
-				$has_card_testing   = true;
+			if ( in_array( $type, array( 'card_testing', 'order_velocity', 'order_anomaly', 'disposable_email' ), true ) ) {
 				$matched_findings[] = $f;
-			} elseif ( 'order_velocity' === $type || 'order_anomaly' === $type ) {
-				$has_velocity       = true;
-				$matched_findings[] = $f;
-			} elseif ( 'disposable_email' === $type ) {
-				$has_disposable     = true;
-				$matched_findings[] = $f;
-			} elseif ( 'flood_detected' === $type ) {
-				$details = $f['details'] ?? '';
-				if ( false !== strpos( $details, 'checkout' ) || false !== strpos( $details, 'store' ) || false !== strpos( $details, 'wc-ajax' ) ) {
-					$has_flood          = true;
-					$matched_findings[] = $f;
-				}
 			}
 		}
 
-		// Must have card testing OR (velocity + (disposable OR flood))
-		if ( ! $has_card_testing && ! ( $has_velocity && ( $has_disposable || $has_flood ) ) ) {
+		if ( empty( $matched_findings ) ) {
 			return null;
 		}
 
-		$confidence = 85;
-		if ( $has_card_testing && ( $has_velocity || $has_disposable || $has_flood ) ) {
-			$confidence = 96;
-		} elseif ( $has_card_testing ) {
-			$confidence = 91;
-		}
+		$signals_count = count( $matched_findings );
+		$confidence = min( 98, 70 + ( $signals_count * 8 ) );
 
 		$signal_bullets = array();
 		foreach ( $matched_findings as $mf ) {
@@ -194,6 +173,7 @@ class SentinelWP_Attack_Correlator {
 			'title'              => __( 'Automated Card-Testing & Checkout Velocity Attack', 'sentinelwp-security' ),
 			'severity'           => 'critical',
 			'confidence_score'   => $confidence,
+			/* translators: %d: confidence percentage number */
 			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelwp-security' ), $confidence ),
 			'summary'            => __( 'Automated bots are hitting checkout endpoints with rapid failed transactions to validate stolen payment cards. This attack risks gateway dispute penalties and server resource exhaustion.', 'sentinelwp-security' ),
 			'signals'            => $signal_bullets,
@@ -236,6 +216,7 @@ class SentinelWP_Attack_Correlator {
 			'title'              => __( 'Automated Store API Scraping & Resource Flood', 'sentinelwp-security' ),
 			'severity'           => 'high',
 			'confidence_score'   => $confidence,
+			/* translators: %d: confidence percentage number */
 			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelwp-security' ), $confidence ),
 			'summary'            => __( 'High-frequency automated traffic is scraping product catalogs and Store API routes, consuming database connections and server memory.', 'sentinelwp-security' ),
 			'signals'            => $signal_bullets,
@@ -284,6 +265,7 @@ class SentinelWP_Attack_Correlator {
 			'title'              => __( 'Privilege Escalation & Store Gateway Tamper Attempt', 'sentinelwp-security' ),
 			'severity'           => 'critical',
 			'confidence_score'   => $confidence,
+			/* translators: %d: confidence percentage number */
 			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelwp-security' ), $confidence ),
 			'summary'            => __( 'An unauthorized administrator account was generated and coincides with modified core files or payment gateway settings.', 'sentinelwp-security' ),
 			'signals'            => $signal_bullets,

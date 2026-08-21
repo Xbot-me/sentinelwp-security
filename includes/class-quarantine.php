@@ -62,7 +62,7 @@ class SentinelWP_Quarantine {
 			wp_mkdir_p( $vault_dir );
 		}
 
-		if ( ! is_dir( $vault_dir ) || ! is_writable( $vault_dir ) ) {
+		if ( ! is_dir( $vault_dir ) || ! wp_is_writable( $vault_dir ) ) {
 			return false;
 		}
 
@@ -142,6 +142,7 @@ class SentinelWP_Quarantine {
 		if ( ! file_exists( $canonical_path ) ) {
 			return array(
 				'success' => false,
+				/* translators: %s: file path */
 				'message' => sprintf( __( 'File not found on filesystem: %s', 'sentinelwp-security' ), esc_html( (string) $file_path ) ),
 			);
 		}
@@ -184,7 +185,7 @@ class SentinelWP_Quarantine {
 			if ( $fs ) {
 				$fs->delete( $vault_dest );
 			} else {
-				@unlink( $vault_dest );
+				wp_delete_file( $vault_dest );
 			}
 			return array(
 				'success' => false,
@@ -213,7 +214,7 @@ class SentinelWP_Quarantine {
 			if ( $fs ) {
 				$fs->delete( $vault_dest );
 			} else {
-				@unlink( $vault_dest );
+				wp_delete_file( $vault_dest );
 			}
 			return array(
 				'success' => false,
@@ -227,7 +228,7 @@ class SentinelWP_Quarantine {
 		if ( $fs ) {
 			$fs->delete( $canonical_path );
 		} else {
-			@unlink( $canonical_path );
+			wp_delete_file( $canonical_path );
 		}
 
 		if ( $finding_id ) {
@@ -274,6 +275,7 @@ class SentinelWP_Quarantine {
 		if ( 'quarantined' !== $record->status ) {
 			return array(
 				'success' => false,
+				/* translators: %s: record status */
 				'message' => sprintf( __( 'File is not in quarantined state (current status: %s).', 'sentinelwp-security' ), $record->status ),
 			);
 		}
@@ -311,9 +313,10 @@ class SentinelWP_Quarantine {
 			wp_mkdir_p( $orig_dir );
 		}
 
-		if ( ! is_writable( $orig_dir ) ) {
+		if ( ! wp_is_writable( $orig_dir ) ) {
 			return array(
 				'success' => false,
+				/* translators: %s: directory path */
 				'message' => sprintf( __( 'Restore destination directory is not writable (%s). Vault copy preserved.', 'sentinelwp-security' ), esc_html( $orig_dir ) ),
 			);
 		}
@@ -340,7 +343,7 @@ class SentinelWP_Quarantine {
 		if ( $fs ) {
 			$fs->delete( $vault_file );
 		} else {
-			@unlink( $vault_file );
+			wp_delete_file( $vault_file );
 		}
 
 		// Update quarantine record
@@ -401,7 +404,7 @@ class SentinelWP_Quarantine {
 			if ( $fs ) {
 				$fs->delete( $vault_file );
 			} else {
-				@unlink( $vault_file );
+				wp_delete_file( $vault_file );
 			}
 		}
 

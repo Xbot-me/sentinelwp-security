@@ -283,7 +283,7 @@ class SentinelWP_Scan_Coordinator {
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}sentinelwp_request_rates WHERE window_id < %d", $rate_cutoff ) );
 
 		// 3. Purge resolved findings older than cutoff
-		$finding_cutoff = date( 'Y-m-d H:i:s', $cutoff_time );
+		$finding_cutoff = gmdate( 'Y-m-d H:i:s', $cutoff_time );
 		$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'resolved' AND updated_at < %s", $finding_cutoff ) );
 
 		return $purged_runs;

@@ -105,10 +105,6 @@ class SentinelWP_Activator {
 		if ( function_exists( 'dbDelta' ) ) {
 			dbDelta( $sql );
 		}
-
-		if ( ! empty( $wpdb->last_error ) ) {
-			error_log( 'SentinelWP Database Creation Error: ' . $wpdb->last_error );
-		}
 	}
 
 	/**

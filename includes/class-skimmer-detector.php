@@ -60,14 +60,14 @@ class SentinelWP_Skimmer_Detector {
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'sentinelwp_findings';
 
-		$query = $wpdb->prepare(
-			"SELECT id FROM {$table_name} WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
-			$type,
-			$title
+		$existing = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT id FROM {$table_name} WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
+				$type,
+				$title
+			)
 		);
 		
-		$existing = $wpdb->get_var( $query );
-
 		if ( $existing ) {
 			$wpdb->update(
 				$table_name,
@@ -112,6 +112,11 @@ class SentinelWP_Skimmer_Detector {
 			return;
 		}
 
+		$signatures = $this->load_signatures();
+		if ( empty( $signatures ) ) {
+			return;
+		}
+
 		try {
 			$iterator = new RecursiveIteratorIterator(
 				new RecursiveDirectoryIterator( $dir, FilesystemIterator::SKIP_DOTS ),
@@ -123,13 +128,8 @@ class SentinelWP_Skimmer_Detector {
 		}
 
 		$count    = 0;
-		$signatures = $this->load_signatures();
-		if ( empty( $signatures ) ) {
-			return;
-		}
-
 		foreach ( $iterator as $file ) {
-			if ( $file->getExtension() !== 'js' ) {
+			if ( $file->isDir() || strtolower( $file->getExtension() ) !== 'js' ) {
 				continue;
 			}
 			$path = $file->getPathname();
@@ -138,16 +138,16 @@ class SentinelWP_Skimmer_Detector {
 				continue;
 			}
 
-			if ( $file->getSize() > 2 * 1024 * 1024 ) {
-				continue;
-			}
-
 			$count++;
 			if ( $count > 5000 ) {
 				break;
 			}
 
-			$content = file_get_contents( $path );
+			if ( $file->getSize() > 2097152 ) { // 2MB limit
+				continue;
+			}
+
+			$content = @file_get_contents( $path );
 			if ( empty( $content ) ) {
 				continue;
 			}
@@ -159,6 +159,7 @@ class SentinelWP_Skimmer_Detector {
 					$start   = max( 0, $match_offset - 80 );
 					$snippet = substr( $content, $start, 240 );
 
+					/* translators: %s: script file basename */
 					$title      = sprintf( esc_html__( 'Magecart / card skimmer script detected in %s', 'sentinelwp-security' ), basename( $path ) );
 					$rel_path   = str_replace( ABSPATH, '', $path );
 					$finding_id = $this->record_finding(
@@ -215,12 +216,10 @@ class SentinelWP_Skimmer_Detector {
 				break;
 			}
 
-			$handle = @fopen( $path, 'r' );
-			if ( $handle ) {
-				$content = fread( $handle, 8192 );
-				fclose( $handle );
-
+			$content = @file_get_contents( $path, false, null, 0, 8192 );
+			if ( false !== $content && '' !== $content ) {
 				if ( strpos( $content, '<?php' ) !== false || strpos( $content, '<script' ) !== false || strpos( $content, '<%' ) !== false ) {
+					/* translators: %s: file basename */
 					$title    = sprintf( esc_html__( 'Fake image payload detected: %s', 'sentinelwp-security' ), basename( $path ) );
 					$rel_path = str_replace( ABSPATH, '', $path );
 					$this->record_finding(
@@ -245,12 +244,15 @@ class SentinelWP_Skimmer_Detector {
 		$safe_options = array( 'active_plugins', 'cron', 'rewrite_rules', 'widget_text' );
 		$placeholders = implode( ',', array_fill( 0, count( $safe_options ), '%s' ) );
 		
-		$query = "SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name NOT IN ({$placeholders}) AND (option_value LIKE %s OR option_value LIKE %s OR option_value LIKE %s OR option_value LIKE %s)";
-		$params = array_merge( $safe_options, array( '%<script%', '%atob(%', '%eval(%', '%document.write(%' ) );
-		$results = $wpdb->get_results( $wpdb->prepare( $query, $params ) );
+		$query = $wpdb->prepare(
+			"SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name NOT IN ({$placeholders}) AND (option_value LIKE %s OR option_value LIKE %s OR option_value LIKE %s OR option_value LIKE %s)",
+			array_merge( $safe_options, array( '%<script%', '%atob(%', '%eval(%', '%document.write(%' ) )
+		);
+		$results = $wpdb->get_results( $query );
 		
 		if ( $results ) {
 			foreach ( $results as $row ) {
+				/* translators: %s: database option name */
 				$title = sprintf( esc_html__( 'Database script injection in option: %s', 'sentinelwp-security' ), $row->option_name );
 				$this->record_finding(
 					'db_script_injection',
@@ -331,6 +333,7 @@ class SentinelWP_Skimmer_Detector {
 				$has_other_wc_stuff = ( strpos( $content, 'WC_Product' ) !== false || strpos( $content, 'WC_Order' ) !== false || preg_match( '/add_action\(\s*[\'"](?:init|admin_menu|wp_enqueue_scripts|woocommerce_init)[\'"]/', $content ) );
 				
 				if ( ! $has_other_wc_stuff ) {
+					/* translators: %s: plugin file basename */
 					$title = sprintf( esc_html__( 'Unusual checkout hook handler in plugin: %s', 'sentinelwp-security' ), $plugin_file );
 					$this->record_finding(
 						'rogue_checkout_plugin',

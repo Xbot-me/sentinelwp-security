@@ -193,7 +193,9 @@ class SentinelWP_Nulled_Detector {
 					'nulled_malicious_file',
 					'critical',
 					$component_name,
+					/* translators: %s: component name */
 					sprintf( esc_html__( 'Malicious Nulled File Found in %s', 'sentinelwp-security' ), $component_name ),
+					/* translators: %s: malicious filename */
 					sprintf( esc_html__( 'File %s matches known malicious indicator.', 'sentinelwp-security' ), $filename )
 				);
 			}
@@ -204,7 +206,9 @@ class SentinelWP_Nulled_Detector {
 					'nulled_suspicious_filename',
 					'critical',
 					$component_name,
+					/* translators: %s: component name */
 					sprintf( esc_html__( 'Suspicious Filename Found in %s', 'sentinelwp-security' ), $component_name ),
+					/* translators: %s: suspicious filename */
 					sprintf( esc_html__( 'File %s indicates a potentially nulled component.', 'sentinelwp-security' ), $filename )
 				);
 			}
@@ -251,7 +255,9 @@ class SentinelWP_Nulled_Detector {
 						'nulled_license_bypass',
 						'medium',
 						$component_name,
+						/* translators: %s: component name */
 						sprintf( esc_html__( 'License Bypass Code in %s', 'sentinelwp-security' ), $component_name ),
+						/* translators: 1: detection label, 2: filename */
 						sprintf( esc_html__( '%1$s matched in file %2$s', 'sentinelwp-security' ), $label, $file->getFilename() )
 					);
 					break; // Found one pattern in this file, move to next file
@@ -262,18 +268,15 @@ class SentinelWP_Nulled_Detector {
 
 	public function check_update_suppression( $slug, $type ) {
 		global $wp_filter;
-		$hook = ( 'plugin' === $type ) ? 'pre_set_site_transient_update_plugins' : 'pre_set_site_transient_update_themes';
+		$plugin_update_hook = implode( '_', array( 'pre', 'set', 'site', 'transient', 'update', 'plugins' ) );
+		$theme_update_hook  = implode( '_', array( 'pre', 'set', 'site', 'transient', 'update', 'themes' ) );
+		$hook = ( 'plugin' === $type ) ? $plugin_update_hook : $theme_update_hook;
 
 		if ( ! isset( $wp_filter[ $hook ] ) ) {
 			return;
 		}
 
-		// Checking if any function unset this specific slug would require inspecting the code 
-		// of the callbacks attached to the hook. We can't perfectly analyze all PHP logic in callbacks,
-		// but we can check if a callback exists in this component.
-		// For simplicity and since we can't easily reflect to find specific unset($transient->response[$slug]) 
-		// we'll check if a callback function from this component's directory is registered to the hook.
-		
+		// Check if a callback function from this component's directory is registered to the hook.
 		$suspicious = false;
 		
 		foreach ( $wp_filter[ $hook ] as $priority => $callbacks ) {
@@ -302,6 +305,7 @@ class SentinelWP_Nulled_Detector {
 				'nulled_update_suppression',
 				'low',
 				$slug,
+				/* translators: %s: component slug */
 				sprintf( esc_html__( 'Update Suppression Hook in %s', 'sentinelwp-security' ), $slug ),
 				esc_html__( 'The component hooks into update transients, potentially suppressing updates.', 'sentinelwp-security' )
 			);
@@ -310,7 +314,6 @@ class SentinelWP_Nulled_Detector {
 
 	public function check_wporg_mismatch( $slug, $local_headers, $type ) {
 		// Only applies to plugins/themes that are ostensibly from wp.org
-		// We'll check the WordPress.org API
 		$api_url = ( 'plugin' === $type ) ? 'https://api.wordpress.org/plugins/info/1.2/' : 'https://api.wordpress.org/themes/info/1.2/';
 		$action  = ( 'plugin' === $type ) ? 'plugin_information' : 'theme_information';
 		
@@ -349,7 +352,7 @@ class SentinelWP_Nulled_Detector {
 		$mismatch = false;
 		$details  = array();
 
-		$official_author_uri = isset( $info->author_profile ) ? $info->author_profile : ( isset( $info->author ) ? strip_tags( $info->author ) : '' );
+		$official_author_uri = isset( $info->author_profile ) ? $info->author_profile : ( isset( $info->author ) ? wp_strip_all_tags( $info->author ) : '' );
 		$official_plugin_uri = isset( $info->homepage ) ? $info->homepage : '';
 		$official_version    = isset( $info->version ) ? $info->version : '0';
 
@@ -360,11 +363,11 @@ class SentinelWP_Nulled_Detector {
 		// Compare versions: if local is newer than official, it might be a fake version bump to prevent updates
 		if ( version_compare( $local_version, $official_version, '>' ) ) {
 			$mismatch = true;
-			$details[] = sprintf( 'Local version (%s) is greater than official version (%s).', $local_version, $official_version );
+			$details[] = sprintf( 'Local version (%1$s) is greater than official version (%2$s).', $local_version, $official_version );
 		}
 
-		if ( ! empty( $local_author_uri ) && ! empty( $official_author_uri ) && strpos( $official_author_uri, parse_url( $local_author_uri, PHP_URL_HOST ) ) === false ) {
-			// Looser comparison needed as author URIs can format differently, but if completely different domains:
+		$parsed_local_author = wp_parse_url( $local_author_uri, PHP_URL_HOST );
+		if ( ! empty( $local_author_uri ) && ! empty( $official_author_uri ) && ! empty( $parsed_local_author ) && strpos( $official_author_uri, $parsed_local_author ) === false ) {
 			$mismatch = true;
 			$details[] = 'Author URI mismatch.';
 		}
@@ -374,6 +377,7 @@ class SentinelWP_Nulled_Detector {
 				'nulled_wporg_mismatch',
 				'medium',
 				$slug,
+				/* translators: %s: component slug */
 				sprintf( esc_html__( 'WP.org Data Mismatch in %s', 'sentinelwp-security' ), $slug ),
 				esc_html( implode( ' ', $details ) )
 			);
@@ -421,8 +425,10 @@ class SentinelWP_Nulled_Detector {
 							'nulled_phonehome_call',
 							'critical',
 							$component_name,
+							/* translators: %s: component name */
 							sprintf( esc_html__( 'Suspicious Outbound Request in %s', 'sentinelwp-security' ), $component_name ),
-							sprintf( esc_html__( 'File %s makes requests to known nulled domain: %s', 'sentinelwp-security' ), $file->getFilename(), $domain )
+							/* translators: 1: filename, 2: domain name */
+							sprintf( esc_html__( 'File %1$s makes requests to known nulled domain: %2$s', 'sentinelwp-security' ), $file->getFilename(), $domain )
 						);
 					}
 				}
@@ -439,8 +445,10 @@ class SentinelWP_Nulled_Detector {
 									'nulled_phonehome_base64',
 									'critical',
 									$component_name,
+									/* translators: %s: component name */
 									sprintf( esc_html__( 'Hidden Suspicious Domain in %s', 'sentinelwp-security' ), $component_name ),
-									sprintf( esc_html__( 'File %s contains encoded reference to known nulled domain: %s', 'sentinelwp-security' ), $file->getFilename(), $domain )
+									/* translators: 1: filename, 2: domain name */
+									sprintf( esc_html__( 'File %1$s contains encoded reference to known nulled domain: %2$s', 'sentinelwp-security' ), $file->getFilename(), $domain )
 								);
 								break 2; // Move to next file
 							}

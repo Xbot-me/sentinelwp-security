@@ -218,7 +218,7 @@ class SentinelWP_Event_Normalizer {
 		);
 
 		$amounts = array();
-		$cutoff  = date( 'Y-m-d H:i:s', time() - ( 60 * DAY_IN_SECONDS ) );
+		$cutoff  = gmdate( 'Y-m-d H:i:s', time() - ( 60 * DAY_IN_SECONDS ) );
 
 		if ( class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' ) && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ) {
 			$orders_table = $wpdb->prefix . 'wc_orders';

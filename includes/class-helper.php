@@ -22,18 +22,17 @@ class SentinelWP_Helper {
 		if ( $allow_proxy_headers ) {
 			// 1. Cloudflare header
 			if ( ! empty( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) {
-				$raw_cf = (string) $_SERVER['HTTP_CF_CONNECTING_IP'];
+				$raw_cf = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) );
 				if ( strlen( $raw_cf ) <= 64 && strpos( $raw_cf, "\0" ) === false ) {
-					$cf_ip = sanitize_text_field( wp_unslash( $raw_cf ) );
-					if ( self::is_valid_ip( $cf_ip ) ) {
-						return $cf_ip;
+					if ( self::is_valid_ip( $raw_cf ) ) {
+						return $raw_cf;
 					}
 				}
 			}
 
 			// 2. Standard X-Forwarded-For (leftmost public IP)
 			if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-				$raw_xff = (string) $_SERVER['HTTP_X_FORWARDED_FOR'];
+				$raw_xff = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
 				// Length & Character Guard: reject poisoned headers containing injection syntax
 				if ( strlen( $raw_xff ) <= 512 && 
 				     strpos( $raw_xff, "\0" ) === false && 
@@ -42,8 +41,7 @@ class SentinelWP_Helper {
 				     strpos( $raw_xff, '"' ) === false && 
 				     strpos( $raw_xff, '<' ) === false && 
 				     strpos( $raw_xff, '>' ) === false ) {
-					$sanitized_xff = sanitize_text_field( wp_unslash( $raw_xff ) );
-					$ips           = explode( ',', $sanitized_xff );
+					$ips = explode( ',', $raw_xff );
 					foreach ( $ips as $candidate ) {
 						$candidate = trim( $candidate );
 						if ( self::is_valid_ip( $candidate ) ) {
@@ -55,11 +53,10 @@ class SentinelWP_Helper {
 
 			// 3. X-Real-IP
 			if ( ! empty( $_SERVER['HTTP_X_REAL_IP'] ) ) {
-				$raw_real = (string) $_SERVER['HTTP_X_REAL_IP'];
+				$raw_real = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_REAL_IP'] ) );
 				if ( strlen( $raw_real ) <= 64 && strpos( $raw_real, "\0" ) === false ) {
-					$real_ip = sanitize_text_field( wp_unslash( $raw_real ) );
-					if ( self::is_valid_ip( $real_ip ) ) {
-						return $real_ip;
+					if ( self::is_valid_ip( $raw_real ) ) {
+						return $raw_real;
 					}
 				}
 			}
