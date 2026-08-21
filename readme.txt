@@ -78,6 +78,9 @@ Yes. The plugin uses canonical payment event translation that hooks into standar
 1. The SentinelWP Security Dashboard showing active risk assessments.
 2. Checkout protection mode configuration and risk thresholds.
 3. Quarantine vault managing safely isolated suspicious files.
+4. Comprehensive multi-engine security scan results with confidence metrics.
+5. Multi-signal attack correlation and actionable threat mitigation.
+
 == Changelog ==
 
 = 0.4.1 =

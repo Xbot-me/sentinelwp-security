@@ -1617,12 +1617,22 @@ class SentinelWP_Admin {
 		}
 
 		global $wpdb;
-		$id_list = implode( ',', array_map( 'intval', $ids ) );
+		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
 
 		if ( 'resolve' === $bulk_action ) {
-			$wpdb->query( "UPDATE {$wpdb->prefix}sentinelwp_findings SET status = 'resolved', updated_at = NOW() WHERE id IN ({$id_list})" );
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$wpdb->prefix}sentinelwp_findings SET status = 'resolved', updated_at = %s WHERE id IN ($placeholders)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					array_merge( array( current_time( 'mysql' ) ), $ids )
+				)
+			);
 		} elseif ( 'false_positive' === $bulk_action || 'ignore' === $bulk_action ) {
-			$wpdb->query( "UPDATE {$wpdb->prefix}sentinelwp_findings SET status = 'acknowledged', updated_at = NOW() WHERE id IN ({$id_list})" );
+			$wpdb->query(
+				$wpdb->prepare(
+					"UPDATE {$wpdb->prefix}sentinelwp_findings SET status = 'acknowledged', updated_at = %s WHERE id IN ($placeholders)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					array_merge( array( current_time( 'mysql' ) ), $ids )
+				)
+			);
 		} elseif ( 'quarantine' === $bulk_action ) {
 			if ( class_exists( 'SentinelWP_Quarantine' ) ) {
 				$quarantine = SentinelWP_Quarantine::instance();
