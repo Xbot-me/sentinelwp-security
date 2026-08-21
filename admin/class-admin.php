@@ -117,7 +117,9 @@ class SentinelWP_Admin {
 
 		$crit_count = $counts['critical'];
 		$high_count = $counts['high'];
-		$total_open = $crit_count + $high_count + $counts['medium'] + $counts['low'];
+		$med_count  = $counts['medium'];
+		$low_count  = $counts['low'];
+		$total_open = $crit_count + $high_count + $med_count + $low_count;
 
 		$last_scan_time     = (int) get_option( 'sentinelwp_last_scan_time', 0 );
 		$relative_last_scan = $last_scan_time ? $this->get_relative_time( $last_scan_time ) : __( 'Never', 'sentinelwp-security' );
