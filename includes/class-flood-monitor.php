@@ -58,7 +58,6 @@ class SentinelWP_Flood_Monitor {
 			set_transient( $transient_key, $hit_count, 300 );
 		} else {
 			global $wpdb;
-			$table_name = $wpdb->prefix . 'sentinelwp_request_rates';
 
 			// Atomic UPSERT that also reads back the post-increment count in
 			// a single round trip via MySQL's LAST_INSERT_ID(expr) trick —
@@ -72,7 +71,7 @@ class SentinelWP_Flood_Monitor {
 			// `id` column), so $wpdb->insert_id reads it back for free.
 			$wpdb->query(
 				$wpdb->prepare(
-					"INSERT INTO {$table_name} (ip_hash, endpoint, hit_count, window_id) 
+					"INSERT INTO {$wpdb->prefix}sentinelwp_request_rates (ip_hash, endpoint, hit_count, window_id) 
 					VALUES (%s, %s, LAST_INSERT_ID(1), %d) 
 					ON DUPLICATE KEY UPDATE hit_count = LAST_INSERT_ID(hit_count + 1)",
 					$ip_hash,
@@ -121,12 +120,11 @@ class SentinelWP_Flood_Monitor {
 		}
 
 		global $wpdb;
-		$table_name = $wpdb->prefix . 'sentinelwp_request_rates';
 		$window_id  = (int) floor( time() / 300 );
 
 		$total_requests = (int) $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT SUM(hit_count) FROM {$table_name} WHERE window_id = %d",
+				"SELECT SUM(hit_count) FROM {$wpdb->prefix}sentinelwp_request_rates WHERE window_id = %d",
 				$window_id
 			)
 		);
@@ -163,12 +161,11 @@ class SentinelWP_Flood_Monitor {
 	 */
 	public function cron_prune_old_data() {
 		global $wpdb;
-		$table_name   = $wpdb->prefix . 'sentinelwp_request_rates';
 		$two_hours_ago_window = (int) floor( ( time() - 2 * HOUR_IN_SECONDS ) / 300 );
 
 		$wpdb->query(
 			$wpdb->prepare(
-				"DELETE FROM {$table_name} WHERE window_id < %d",
+				"DELETE FROM {$wpdb->prefix}sentinelwp_request_rates WHERE window_id < %d",
 				$two_hours_ago_window
 			)
 		);
@@ -233,17 +230,15 @@ class SentinelWP_Flood_Monitor {
 	private function record_finding( $type, $severity, $source, $title, $details, $confidence = 'likely', $detector = 'flood_monitor', $remediation = '', $fp_risk = 'low' ) {
 		global $wpdb;
 
-		$findings_table = $wpdb->prefix . 'sentinelwp_findings';
-
 		$existing_id = $wpdb->get_var( $wpdb->prepare(
-			"SELECT id FROM {$findings_table} WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
+			"SELECT id FROM {$wpdb->prefix}sentinelwp_findings WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
 			$type,
 			$title
 		) );
 
 		if ( $existing_id ) {
 			$wpdb->update(
-				$findings_table,
+				$wpdb->prefix . 'sentinelwp_findings',
 				array( 'updated_at' => current_time( 'mysql' ) ),
 				array( 'id' => $existing_id ),
 				array( '%s' ),
@@ -253,7 +248,7 @@ class SentinelWP_Flood_Monitor {
 		}
 
 		$inserted = $wpdb->insert(
-			$findings_table,
+			$wpdb->prefix . 'sentinelwp_findings',
 			array(
 				'type'                => $type,
 				'severity'            => $severity,

@@ -334,11 +334,10 @@ class SentinelWP_Admin_Guard {
 	 */
 	private function record_finding( $type, $severity, $source, $title, $details, $confidence = 'confirmed', $detector = 'admin_guard', $remediation = '', $fp_risk = 'low' ) {
 		global $wpdb;
-		$table = $wpdb->prefix . 'sentinelwp_findings';
 
 		$existing = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT id FROM {$table} WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
+				"SELECT id FROM {$wpdb->prefix}sentinelwp_findings WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
 				$type,
 				$title
 			)
@@ -346,7 +345,7 @@ class SentinelWP_Admin_Guard {
 
 		if ( $existing ) {
 			$wpdb->update(
-				$table,
+				$wpdb->prefix . 'sentinelwp_findings',
 				array( 'updated_at' => current_time( 'mysql' ) ),
 				array( 'id' => $existing ),
 				array( '%s' ),
@@ -357,7 +356,7 @@ class SentinelWP_Admin_Guard {
 
 		$now = current_time( 'mysql' );
 		$ok  = $wpdb->insert(
-			$table,
+			$wpdb->prefix . 'sentinelwp_findings',
 			array(
 				'type'                => $type,
 				'severity'            => $severity,

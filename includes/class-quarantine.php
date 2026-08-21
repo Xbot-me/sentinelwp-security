@@ -117,7 +117,7 @@ class SentinelWP_Quarantine {
 
 		// Resolve file path from finding if not explicitly provided
 		if ( empty( $file_path ) && $finding_id ) {
-			$finding = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$findings_table} WHERE id = %d", $finding_id ) );
+			$finding = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}sentinelwp_findings WHERE id = %d", $finding_id ) );
 			if ( ! $finding ) {
 				return array(
 					'success' => false,
@@ -264,7 +264,7 @@ class SentinelWP_Quarantine {
 		$quarantine_table = $wpdb->prefix . 'sentinelwp_quarantine';
 		$findings_table   = $wpdb->prefix . 'sentinelwp_findings';
 
-		$record = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$quarantine_table} WHERE id = %d", $quarantine_id ) );
+		$record = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}sentinelwp_quarantine WHERE id = %d", $quarantine_id ) );
 		if ( ! $record ) {
 			return array(
 				'success' => false,
@@ -330,13 +330,9 @@ class SentinelWP_Quarantine {
 			);
 		}
 
-		// Restore permissions
-		if ( ! empty( $record->permissions ) ) {
-			if ( $fs ) {
-				$fs->chmod( $record->original_path, octdec( $record->permissions ) );
-			} else {
-				@chmod( $record->original_path, octdec( $record->permissions ) );
-			}
+		// Restore permissions via WP_Filesystem
+		if ( ! empty( $record->permissions ) && $fs ) {
+			$fs->chmod( $record->original_path, octdec( $record->permissions ) );
 		}
 
 		// Remove from vault only after successful restore
@@ -389,7 +385,7 @@ class SentinelWP_Quarantine {
 		global $wpdb;
 
 		$quarantine_table = $wpdb->prefix . 'sentinelwp_quarantine';
-		$record = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$quarantine_table} WHERE id = %d", $quarantine_id ) );
+		$record = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}sentinelwp_quarantine WHERE id = %d", $quarantine_id ) );
 
 		if ( ! $record ) {
 			return array(

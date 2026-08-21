@@ -214,8 +214,7 @@ class SentinelWP_Ecommerce_Guard {
 		global $wpdb;
 
 		$is_hpos = class_exists( 'SentinelWP_Helper' ) && SentinelWP_Helper::is_hpos_enabled();
-		$orders_table = $wpdb->prefix . 'wc_orders';
-		$hpos_table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $orders_table ) ) === $orders_table;
+		$hpos_table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->prefix . 'wc_orders' ) ) === ( $wpdb->prefix . 'wc_orders' );
 
 		$one_day_ago = gmdate( 'Y-m-d H:i:s', time() - DAY_IN_SECONDS );
 		$thirty_days_ago = gmdate( 'Y-m-d H:i:s', time() - 30 * DAY_IN_SECONDS );
@@ -224,7 +223,7 @@ class SentinelWP_Ecommerce_Guard {
 			// 1. HPOS Mode: 24h Order Velocity by Email Aggregation
 			$email_spikes = $wpdb->get_results( $wpdb->prepare(
 				"SELECT billing_email, COUNT(*) as order_count 
-				FROM {$orders_table} 
+				FROM {$wpdb->prefix}wc_orders 
 				WHERE date_created_gmt >= %s 
 				AND status NOT IN ('wc-cancelled', 'wc-trash')
 				AND billing_email != ''
@@ -254,7 +253,7 @@ class SentinelWP_Ecommerce_Guard {
 			// 2. HPOS Mode: 24h Order Velocity by IP Aggregation
 			$ip_spikes = $wpdb->get_results( $wpdb->prepare(
 				"SELECT ip_address, COUNT(*) as order_count 
-				FROM {$orders_table} 
+				FROM {$wpdb->prefix}wc_orders 
 				WHERE date_created_gmt >= %s 
 				AND status NOT IN ('wc-cancelled', 'wc-trash')
 				AND ip_address != ''
@@ -284,7 +283,7 @@ class SentinelWP_Ecommerce_Guard {
 			// 3. HPOS Mode: 30-day Average Order Value SQL Aggregation
 			$aov_data = $wpdb->get_row( $wpdb->prepare(
 				"SELECT AVG(total_amount) as avg_val, COUNT(*) as total_orders 
-				FROM {$orders_table} 
+				FROM {$wpdb->prefix}wc_orders 
 				WHERE date_created_gmt >= %s 
 				AND status IN ('wc-completed', 'wc-processing')",
 				$thirty_days_ago
@@ -296,7 +295,7 @@ class SentinelWP_Ecommerce_Guard {
 
 				$large_orders = $wpdb->get_results( $wpdb->prepare(
 					"SELECT id, total_amount 
-					FROM {$orders_table} 
+					FROM {$wpdb->prefix}wc_orders 
 					WHERE date_created_gmt >= %s 
 					AND status IN ('wc-completed', 'wc-processing') 
 					AND total_amount > %f 
@@ -451,15 +450,14 @@ class SentinelWP_Ecommerce_Guard {
 
 		$seven_days_ago = gmdate( 'Y-m-d H:i:s', time() - 7 * DAY_IN_SECONDS );
 		$is_hpos = class_exists( 'SentinelWP_Helper' ) && SentinelWP_Helper::is_hpos_enabled();
-		$orders_table = $wpdb->prefix . 'wc_orders';
-		$hpos_table_exists = $wpdb->get_var( $wpdb->prepare( "SHOW TABLES LIKE %s", $orders_table ) ) === $orders_table;
+		$hpos_table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->prefix . 'wc_orders' ) ) === ( $wpdb->prefix . 'wc_orders' );
 
 		if ( $is_hpos && $hpos_table_exists ) {
 			$refund_stats = $wpdb->get_row( $wpdb->prepare(
 				"SELECT 
 					COUNT(*) as total_orders,
 					COUNT(CASE WHEN status = 'wc-refunded' THEN 1 END) as refunded_orders 
-				FROM {$orders_table} 
+				FROM {$wpdb->prefix}wc_orders 
 				WHERE date_created_gmt >= %s",
 				$seven_days_ago
 			) );
@@ -478,7 +476,7 @@ class SentinelWP_Ecommerce_Guard {
 		if ( $refund_stats && (int) $refund_stats->total_orders > 20 ) {
 			$total_7d    = (int) $refund_stats->total_orders;
 			$refunded_7d = (int) $refund_stats->refunded_orders;
-			$rate        = (float) ( $refunded_7d / $total_7d );			// If refund rate exceeds 25% across >20 orders
+			$rate        = (float) ( $refunded_7d / $total_7d );
 			if ( $rate > 0.25 ) {
 				$this->record_finding(
 					'refund_spike',
@@ -496,20 +494,22 @@ class SentinelWP_Ecommerce_Guard {
 		}
 
 		// Order note chargeback / dispute keywords query
-		$keywords = array( 'fraud', 'unauthorized', 'chargeback', 'stolen', 'dispute', 'not recognized', 'did not order' );
-		$like_clauses = array();
-		$params = array( $seven_days_ago );
-		foreach ( $keywords as $kw ) {
-			$like_clauses[] = 'comment_content LIKE %s';
-			$params[] = '%' . $wpdb->esc_like( $kw ) . '%';
-		}
-		
-		$query = "SELECT COUNT(*) FROM {$wpdb->comments} 
-			WHERE comment_type = 'order_note' 
-			AND comment_date_gmt >= %s 
-			AND (" . implode( ' OR ', $like_clauses ) . ")";
-			
-		$suspicious_notes_count = (int) $wpdb->get_var( $wpdb->prepare( $query, $params ) );
+		$suspicious_notes_count = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$wpdb->comments} 
+				WHERE comment_type = 'order_note' 
+				AND comment_date_gmt >= %s 
+				AND (comment_content LIKE %s OR comment_content LIKE %s OR comment_content LIKE %s OR comment_content LIKE %s OR comment_content LIKE %s OR comment_content LIKE %s OR comment_content LIKE %s)",
+				$seven_days_ago,
+				'%fraud%',
+				'%unauthorized%',
+				'%chargeback%',
+				'%stolen%',
+				'%dispute%',
+				'%not recognized%',
+				'%did not order%'
+			)
+		);
 
 		if ( $suspicious_notes_count > 3 ) {
 			$this->record_finding(

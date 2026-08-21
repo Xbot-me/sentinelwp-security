@@ -40,12 +40,11 @@ class SentinelWP_Nulled_Detector {
 
 	private function record_finding( $type, $severity, $source, $title, $details, $confidence = 'confirmed', $detector = 'nulled_detector', $remediation = '', $fp_risk = 'low' ) {
 		global $wpdb;
-		$table_name = $wpdb->prefix . 'sentinelwp_findings';
 
 		// De-duplicate check
 		$existing = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT id FROM {$table_name} WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
+				"SELECT id FROM {$wpdb->prefix}sentinelwp_findings WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
 				$type,
 				$title
 			)
@@ -53,7 +52,7 @@ class SentinelWP_Nulled_Detector {
 
 		if ( $existing ) {
 			$wpdb->update(
-				$table_name,
+				$wpdb->prefix . 'sentinelwp_findings',
 				array( 'updated_at' => current_time( 'mysql' ) ),
 				array( 'id' => $existing ),
 				array( '%s' ),

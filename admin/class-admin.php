@@ -91,16 +91,13 @@ class SentinelWP_Admin {
 	public function render_dashboard() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You do not have permission to access this page.', 'sentinelwp-security' ) );
-		}
-
-		global $wpdb;
-		$table = $wpdb->prefix . 'sentinelwp_findings';
+		}		global $wpdb;
 
 		// All open findings
-		$findings = $wpdb->get_results( "SELECT * FROM {$table} WHERE status != 'resolved' ORDER BY FIELD(severity,'critical','high','medium','low'), created_at DESC LIMIT 200" );
+		$findings = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}sentinelwp_findings WHERE status != 'resolved' ORDER BY FIELD(severity,'critical','high','medium','low'), created_at DESC LIMIT 200" );
 		
 		// Resolved count
-		$resolved_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE status = 'resolved'" );
+		$resolved_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'resolved'" );
 
 		$counts = array(
 			'all'      => count( $findings ),
@@ -118,39 +115,31 @@ class SentinelWP_Admin {
 			}
 		}
 
-		$total_open  = $counts['all'];
-		$crit_count  = $counts['critical'];
-		$high_count  = $counts['high'];
-		$med_count   = $counts['medium'];
-		$low_count   = $counts['low'];
+		$crit_count = $counts['critical'];
+		$high_count = $counts['high'];
+		$total_open = $crit_count + $high_count + $counts['medium'] + $counts['low'];
 
-		$is_pro = class_exists( 'SentinelWP_Freemium' ) && SentinelWP_Freemium::is_pro();
-		$engines_online = class_exists( 'WooCommerce' ) ? 16 : 12;
-		$last_scan_time = get_option( 'sentinelwp_last_scan_time', time() );
-		$relative_last_scan = $this->get_relative_time( $last_scan_time );
+		$last_scan_time     = (int) get_option( 'sentinelwp_last_scan_time', 0 );
+		$relative_last_scan = $last_scan_time ? $this->get_relative_time( $last_scan_time ) : __( 'Never', 'sentinelwp-security' );
+		$engines_online     = 6;
 
 		?>
-		<div class="wrap sentinelwp-wrap">
-			<!-- Header: Single compact row -->
-			<div class="pagehead sentinelwp-pagehead">
+		<div class="wrap sentinelwp-wrap sentinelwp-dashboard" id="sentinelwp-dashboard">
+			<!-- Top Action Header -->
+			<div class="head sentinelwp-head">
 				<h1><?php esc_html_e( 'SentinelWP Security', 'sentinelwp-security' ); ?></h1>
-				<span class="tag sentinelwp-tag"><?php echo esc_html( 'v' . SENTINELWP_VERSION ); ?></span>
-				<?php if ( $is_pro ) : ?>
-					<span class="tag sentinelwp-tag sentinelwp-tag-pro"><?php esc_html_e( 'Pro Active', 'sentinelwp-security' ); ?></span>
-				<?php else : ?>
-					<span class="tag sentinelwp-tag"><?php esc_html_e( 'Free Edition', 'sentinelwp-security' ); ?></span>
-				<?php endif; ?>
-				<span class="spacer"></span>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelwp-security-settings&tab=scanning#sentinelwp-scan-history-box' ) ); ?>" class="btn btn-sec sentinelwp-btn-sec">
-					<?php esc_html_e( 'Scan history', 'sentinelwp-security' ); ?>
-				</a>
-				<button type="button" class="btn btn-primary sentinelwp-btn-primary" id="sentinelwp-scan-now">
-					<span class="dashicons dashicons-update sentinelwp-scan-icon"></span>
-					<span id="sentinelwp-scan-btn-text"><?php esc_html_e( 'Run deep scan', 'sentinelwp-security' ); ?></span>
-				</button>
+				<div class="actions sentinelwp-actions">
+					<button type="button" class="btn btn-primary sentinelwp-btn sentinelwp-btn-primary" id="sentinelwp-btn-scan">
+						<span class="dashicons dashicons-shield"></span>
+						<span class="btn-text"><?php esc_html_e( 'Scan Site Now', 'sentinelwp-security' ); ?></span>
+					</button>
+				</div>
 			</div>
 			<p class="meta sentinelwp-meta">
-				<span class="dot sentinelwp-dot"></span>Last scan <b><?php echo esc_html( $relative_last_scan ); ?></b> &middot; <?php echo esc_html( sprintf( __( '%d engines online', 'sentinelwp-security' ), $engines_online ) ); ?> &middot; <?php esc_html_e( 'next auto-scan in ~6h', 'sentinelwp-security' ); ?>
+				<span class="dot sentinelwp-dot"></span>Last scan <b><?php echo esc_html( $relative_last_scan ); ?></b> &middot; <?php 
+				/* translators: %d: active engine count */
+				echo esc_html( sprintf( __( '%d engines online', 'sentinelwp-security' ), $engines_online ) ); 
+				?> &middot; <?php esc_html_e( 'next auto-scan in ~6h', 'sentinelwp-security' ); ?>
 			</p>
 
 			<!-- Scan Progress Bar (Revealed during scan) -->
@@ -207,17 +196,23 @@ class SentinelWP_Admin {
 				if ( $crit_count > 0 ) {
 					$alarm_class = 'alarm-crit';
 					$alarm_icon  = '!';
+					/* translators: %d: critical finding count */
 					$alarm_title = sprintf( _n( '%d critical finding needs action', '%d critical findings need action', $crit_count, 'sentinelwp-security' ), $crit_count );
+					/* translators: %d: open finding count */
 					$alarm_sub   = sprintf( _n( '%d open finding detected. Critical items indicate active compromise, skimmers, or backdoors requiring immediate containment.', '%d open findings detected. Critical items indicate active compromise, skimmers, or backdoors requiring immediate containment.', $total_open, 'sentinelwp-security' ), $total_open );
 				} elseif ( $high_count > 0 ) {
 					$alarm_class = 'alarm-high';
 					$alarm_icon  = '!';
+					/* translators: %d: high threat count */
 					$alarm_title = sprintf( _n( '%d high threat needs action', '%d high threats need action', $high_count, 'sentinelwp-security' ), $high_count );
+					/* translators: %d: open finding count */
 					$alarm_sub   = sprintf( _n( '%d open finding detected. High-priority items indicate suspicious accounts, order velocity bursts, or altered store settings.', '%d open findings detected. High-priority items indicate suspicious accounts, order velocity bursts, or altered store settings.', $total_open, 'sentinelwp-security' ), $total_open );
 				} else {
 					$alarm_class = 'alarm-med';
 					$alarm_icon  = 'i';
+					/* translators: %d: security recommendation count */
 					$alarm_title = sprintf( _n( '%d security recommendation requires review', '%d security recommendations require review', $total_open, 'sentinelwp-security' ), $total_open );
+					/* translators: %d: open recommendation count */
 					$alarm_sub   = sprintf( _n( '%d open recommendation. Medium and low severity items are hardening best-practices and version update advisories.', '%d open recommendations. Medium and low severity items are hardening best-practices and version update advisories.', $total_open, 'sentinelwp-security' ), $total_open );
 				}
 				?>
@@ -320,7 +315,10 @@ class SentinelWP_Admin {
 				</select>
 
 				<input type="search" id="sentinelwp-search-input" placeholder="<?php esc_attr_e( 'Search findings…', 'sentinelwp-security' ); ?>" />
-				<span class="count sentinelwp-count" id="sentinelwp-displaying-num"><?php echo esc_html( sprintf( _n( '%d item', '%d items', $total_open, 'sentinelwp-security' ), $total_open ) ); ?></span>
+				<span class="count sentinelwp-count" id="sentinelwp-displaying-num"><?php 
+				/* translators: %d: open item count */
+				echo esc_html( sprintf( _n( '%d item', '%d items', $total_open, 'sentinelwp-security' ), $total_open ) ); 
+				?></span>
 			</div>
 
 			<!-- Findings List Table -->
@@ -341,7 +339,10 @@ class SentinelWP_Admin {
 							<?php esc_html_e( 'No open findings.', 'sentinelwp-security' ); ?>
 							<?php if ( $resolved_count > 0 ) : ?>
 								<a href="#resolved" class="sentinelwp-tab-filter" data-filter="resolved" style="margin-left: 8px; color: var(--wp-blue);">
-									<?php echo esc_html( sprintf( __( 'View %d resolved findings &rsaquo;', 'sentinelwp-security' ), $resolved_count ) ); ?>
+									<?php 
+									/* translators: %d: resolved findings count */
+									echo esc_html( sprintf( __( 'View %d resolved findings &rsaquo;', 'sentinelwp-security' ), $resolved_count ) ); 
+									?>
 								</a>
 							<?php endif; ?>
 						</td>
@@ -544,14 +545,10 @@ class SentinelWP_Admin {
 		$modules = array();
 		$active_module_count = 0;
 		foreach ( $modules_raw as $k => $mod ) {
-			$placeholders = implode( ',', array_fill( 0, count( $mod['types'] ), '%s' ) );
-			$count = (int) $wpdb->get_var(
-				$wpdb->prepare(
-					"SELECT COUNT(*) FROM {$table} WHERE type IN ({$placeholders}) AND status != 'resolved'",
-					$mod['types']
-				)
-			);
-			$mod['count'] = $count;
+			$escaped_types = array_map( 'esc_sql', $mod['types'] );
+			$in_clause     = "'" . implode( "','", $escaped_types ) . "'";
+			$count         = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE type IN ({$in_clause}) AND status != 'resolved'" );
+			$mod['count']  = $count;
 			$modules[ $k ] = $mod;
 			$active_module_count++;
 		}
@@ -650,7 +647,7 @@ class SentinelWP_Admin {
 			wp_die( esc_html__( 'You do not have permission to access this page.', 'sentinelwp-security' ) );
 		}
 
-		$current_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
+		$current_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'general';
 		$valid_tabs  = array( 'general', 'scanning', 'modules', 'notifications', 'advanced' );
 		if ( ! in_array( $current_tab, $valid_tabs, true ) ) {
 			$current_tab = 'general';
@@ -1614,22 +1611,12 @@ class SentinelWP_Admin {
 		}
 
 		global $wpdb;
-		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+		$id_list = implode( ',', array_map( 'intval', $ids ) );
 
 		if ( 'resolve' === $bulk_action ) {
-			$wpdb->query(
-				$wpdb->prepare(
-					"UPDATE {$wpdb->prefix}sentinelwp_findings SET status = 'resolved', updated_at = NOW() WHERE id IN ($placeholders)",
-					$ids
-				)
-			);
+			$wpdb->query( "UPDATE {$wpdb->prefix}sentinelwp_findings SET status = 'resolved', updated_at = NOW() WHERE id IN ({$id_list})" );
 		} elseif ( 'false_positive' === $bulk_action || 'ignore' === $bulk_action ) {
-			$wpdb->query(
-				$wpdb->prepare(
-					"UPDATE {$wpdb->prefix}sentinelwp_findings SET status = 'acknowledged', updated_at = NOW() WHERE id IN ($placeholders)",
-					$ids
-				)
-			);
+			$wpdb->query( "UPDATE {$wpdb->prefix}sentinelwp_findings SET status = 'acknowledged', updated_at = NOW() WHERE id IN ({$id_list})" );
 		} elseif ( 'quarantine' === $bulk_action ) {
 			if ( class_exists( 'SentinelWP_Quarantine' ) ) {
 				$quarantine = SentinelWP_Quarantine::instance();

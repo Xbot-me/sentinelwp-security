@@ -221,8 +221,7 @@ class SentinelWP_Event_Normalizer {
 		$cutoff  = gmdate( 'Y-m-d H:i:s', time() - ( 60 * DAY_IN_SECONDS ) );
 
 		if ( class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' ) && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ) {
-			$orders_table = $wpdb->prefix . 'wc_orders';
-			$rows = $wpdb->get_col( $wpdb->prepare( "SELECT total_amount FROM {$orders_table} WHERE status = 'wc-completed' AND date_created_gmt >= %s ORDER BY date_created_gmt DESC LIMIT 1000", $cutoff ) );
+			$rows = $wpdb->get_col( $wpdb->prepare( "SELECT total_amount FROM {$wpdb->prefix}wc_orders WHERE status = 'wc-completed' AND date_created_gmt >= %s ORDER BY date_created_gmt DESC LIMIT 1000", $cutoff ) );
 			if ( is_array( $rows ) ) {
 				foreach ( $rows as $r ) {
 					if ( is_numeric( $r ) && (float) $r > 0 ) {

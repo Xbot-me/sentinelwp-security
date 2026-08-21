@@ -58,11 +58,10 @@ class SentinelWP_Skimmer_Detector {
 
 	private function record_finding( $type, $severity, $source, $title, $details = '', $confidence = 'confirmed', $detector = 'skimmer_detector', $remediation = '', $fp_risk = 'low' ) {
 		global $wpdb;
-		$table_name = $wpdb->prefix . 'sentinelwp_findings';
 
 		$existing = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT id FROM {$table_name} WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
+				"SELECT id FROM {$wpdb->prefix}sentinelwp_findings WHERE type = %s AND title = %s AND status != 'resolved' LIMIT 1",
 				$type,
 				$title
 			)
@@ -70,7 +69,7 @@ class SentinelWP_Skimmer_Detector {
 		
 		if ( $existing ) {
 			$wpdb->update(
-				$table_name,
+				$wpdb->prefix . 'sentinelwp_findings',
 				array( 'updated_at' => current_time( 'mysql' ) ),
 				array( 'id' => $existing ),
 				array( '%s' ),
@@ -241,14 +240,15 @@ class SentinelWP_Skimmer_Detector {
 	public function scan_database_injections() {
 		global $wpdb;
 
-		$safe_options = array( 'active_plugins', 'cron', 'rewrite_rules', 'widget_text' );
-		$placeholders = implode( ',', array_fill( 0, count( $safe_options ), '%s' ) );
-		
-		$query = $wpdb->prepare(
-			"SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name NOT IN ({$placeholders}) AND (option_value LIKE %s OR option_value LIKE %s OR option_value LIKE %s OR option_value LIKE %s)",
-			array_merge( $safe_options, array( '%<script%', '%atob(%', '%eval(%', '%document.write(%' ) )
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name NOT IN ('active_plugins', 'cron', 'rewrite_rules', 'widget_text') AND (option_value LIKE %s OR option_value LIKE %s OR option_value LIKE %s OR option_value LIKE %s)",
+				'%<script%',
+				'%atob(%',
+				'%eval(%',
+				'%document.write(%'
+			)
 		);
-		$results = $wpdb->get_results( $query );
 		
 		if ( $results ) {
 			foreach ( $results as $row ) {

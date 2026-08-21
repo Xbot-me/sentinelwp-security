@@ -35,9 +35,8 @@ class SentinelWP_Attack_Correlator {
 		global $wpdb;
 
 		// Fetch all open findings
-		$findings_table = $wpdb->prefix . 'sentinelwp_findings';
-		$open_findings  = $wpdb->get_results(
-			"SELECT * FROM {$findings_table} WHERE status = 'open' ORDER BY created_at DESC",
+		$open_findings = $wpdb->get_results(
+			"SELECT * FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'open' ORDER BY created_at DESC",
 			ARRAY_A
 		);
 
