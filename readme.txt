@@ -1,5 +1,5 @@
 === SentinelWP Security — Ecommerce & Checkout Protection ===
-Contributors: sentinelwp
+Contributors: sentinelwp, xbot-me
 Tags: ecommerce, security, fraud prevention, malware scanner, firewall
 Requires at least: 6.0
 Tested up to: 7.1
