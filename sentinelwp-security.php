@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       SentinelWP Security — Ecommerce & Checkout Protection
- * Plugin URI:        https://sentinelwp.io
+ * Plugin URI:        https://sentinelwp.io/security
  * Description:       Dedicated security layer for ecommerce revenue, checkout integrity, and payment flows. Magecart skimmer defense, card-testing prevention, stealth admin detection, and core integrity.
  * Version:           0.4.1
  * Requires at least: 6.0
