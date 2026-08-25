@@ -1,11 +1,11 @@
 <?php
 /**
- * SentinelWP Canonical Payment Event Adapter
+ * SentinelGuard Canonical Payment Event Adapter
  *
  * Maps disparate gateway hooks and WooCommerce order transitions into standard,
  * canonical payment lifecycle events for uniform risk evaluation.
  *
- * @package SentinelWP
+ * @package SentinelGuard
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

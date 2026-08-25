@@ -1,5 +1,5 @@
 === SentinelGuard — Ecommerce & Checkout Protection ===
-Contributors: mustafizurdev, xbot-me, sentinelwp
+Contributors: mustafizurdev
 Tags: ecommerce, security, fraud prevention, malware scanner, firewall
 Requires at least: 6.0
 Tested up to: 7.1
@@ -111,7 +111,7 @@ Yes. The plugin uses canonical payment event translation that hooks into standar
 
 == Screenshots ==
 
-1. The SentinelWP Security Dashboard showing active security alarms, engine statuses, and live findings.
+1. The SentinelGuard Dashboard showing active security alarms, engine statuses, and live findings.
 2. General Protection Profile configuration and baseline WordPress security hardening.
 3. Vulnerability intelligence feeds and persistent 30-day scan history telemetry.
 4. Automated scan scheduling, path exclusion rules, and execution resource limits.

@@ -102,7 +102,7 @@ class SentinelWP_Ecommerce_Guard {
 		$is_fraud_auto_hold_enabled = get_option( 'sentinelwp_fraud_auto_hold', false );
 		if ( $is_fraud_auto_hold_enabled ) {
 			if ( ( $ip_hash && $ip_count > 5 ) || ( ! empty( $email ) && $email_count > 3 ) ) {
-				$order->update_status( 'on-hold', __( 'SentinelWP Security: Order automatically placed on hold due to high order velocity.', 'sentinelguard-ecommerce-protection' ) );
+				$order->update_status( 'on-hold', __( 'SentinelGuard: Order automatically placed on hold due to high order velocity.', 'sentinelguard-ecommerce-protection' ) );
 			}
 		}
 	}

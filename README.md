@@ -1,4 +1,4 @@
-# SentinelWP Security
+# SentinelGuard — Ecommerce & Checkout Protection
 
 A WordPress security plugin built specifically for WooCommerce stores. It focuses on the attack patterns that actually cost store owners money: card testing, checkout skimmers, fake admin accounts, and gateway tampering, instead of generic file-scanning that most WP security plugins already do.
 
@@ -24,7 +24,7 @@ A WordPress security plugin built specifically for WooCommerce stores. It focuse
 
 ## Why this exists
 
-Most WordPress security plugins were built for blogs, not checkout flows. They catch brute-force logins and known malware signatures, but they have no concept of what a checkout looks like, so they miss card-testing bursts, skimmer scripts injected into checkout JS, and orders that come from a fraud ring rotating through residential proxies. I built SentinelWP to sit in front of the payment gateway and catch that class of problem before it turns into chargebacks or a Stripe account review.
+Most WordPress security plugins were built for blogs, not checkout flows. They catch brute-force logins and known malware signatures, but they have no concept of what a checkout looks like, so they miss card-testing bursts, skimmer scripts injected into checkout JS, and orders that come from a fraud ring rotating through residential proxies. I built SentinelGuard to sit in front of the payment gateway and catch that class of problem before it turns into chargebacks or a Stripe account review.
 
 ## What it does
 
@@ -76,7 +76,7 @@ git clone https://github.com/Xbot-me/sentinelwp-security.git sentinelwp-security
 
 ## Configuration
 
-Everything lives under **SentinelWP** in the WP admin sidebar:
+Everything lives under **SentinelGuard** in the WP admin sidebar:
 
 - **Dashboard** — live threat metrics, correlated incidents, recent scans.
 - **Scanner** — run phased scans on demand (core checksums, CVE database, malware, JS skimmers, nulled code, stealth admins).

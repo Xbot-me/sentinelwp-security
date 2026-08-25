@@ -71,7 +71,7 @@ class SentinelWP_Quarantine {
 		// 1. Write .htaccess to block direct HTTP access
 		$htaccess_file = trailingslashit( $vault_dir ) . '.htaccess';
 		if ( ! file_exists( $htaccess_file ) ) {
-			$htaccess_content = "# SentinelWP Quarantine Vault - Deny All Access\n<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n    Order deny,allow\n    Deny from all\n</IfModule>\n";
+			$htaccess_content = "# SentinelGuard Quarantine Vault - Deny All Access\n<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n    Order deny,allow\n    Deny from all\n</IfModule>\n";
 			if ( $fs ) {
 				$fs->put_contents( $htaccess_file, $htaccess_content, FS_CHMOD_FILE );
 			} else {

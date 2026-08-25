@@ -42,7 +42,7 @@ class SentinelWP_Skimmer_Detector {
 	private function is_safe_directory( $path ) {
 		$path      = wp_normalize_path( $path );
 		$safe_dirs = array(
-			'/wp-content/plugins/sentinelwp-security/',
+			'/wp-content/plugins/sentinelguard-ecommerce-protection/',
 			'/wp-content/plugins/woocommerce/',
 			'/wp-content/plugins/jetpack/',
 			'/node_modules/',

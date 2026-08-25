@@ -1,11 +1,11 @@
 <?php
 /**
- * SentinelWP Event Normalizer
+ * SentinelGuard Event Normalizer
  *
  * Extracts and normalizes contextual identity, journey, cart, and request signals
  * into a standardized event context for the Pre-Gateway Risk Engine.
  *
- * @package SentinelWP
+ * @package SentinelGuard
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

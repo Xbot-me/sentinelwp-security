@@ -38,8 +38,8 @@ class SentinelWP_Admin {
 
 	public function register_menu() {
 		add_menu_page(
-			__( 'SentinelWP Security', 'sentinelguard-ecommerce-protection' ),
-			__( 'SentinelWP', 'sentinelguard-ecommerce-protection' ),
+			__( 'SentinelGuard', 'sentinelguard-ecommerce-protection' ),
+			__( 'SentinelGuard', 'sentinelguard-ecommerce-protection' ),
 			'manage_options',
 			'sentinelguard-ecommerce-protection',
 			array( $this, 'render_dashboard' ),
@@ -61,7 +61,7 @@ class SentinelWP_Admin {
 			__( 'Settings', 'sentinelguard-ecommerce-protection' ),
 			__( 'Settings', 'sentinelguard-ecommerce-protection' ),
 			'manage_options',
-			'sentinelwp-security-settings',
+			'sentinelguard-settings',
 			array( $this, 'render_settings' )
 		);
 	}
@@ -130,7 +130,7 @@ class SentinelWP_Admin {
 			<!-- Top Action Header -->
 			<div class="head sentinelwp-head">
 				<div class="sentinelwp-head-left">
-					<h1><?php esc_html_e( 'SentinelWP Security', 'sentinelguard-ecommerce-protection' ); ?></h1>
+					<h1><?php esc_html_e( 'SentinelGuard', 'sentinelguard-ecommerce-protection' ); ?></h1>
 					<p class="meta sentinelwp-meta">
 						<span class="dot sentinelwp-dot"></span>Last scan <b><?php echo esc_html( $relative_last_scan ); ?></b> &middot; <?php 
 						/* translators: %d: active engine count */
@@ -498,7 +498,7 @@ class SentinelWP_Admin {
 
 			<!-- Footer Meta -->
 			<footer>
-				<span><?php /* translators: %s: plugin version string */ echo esc_html( sprintf( __( 'SentinelWP Security v%s', 'sentinelguard-ecommerce-protection' ), SENTINELWP_VERSION ) ); ?></span> &middot;
+				<span><?php /* translators: %s: plugin version string */ echo esc_html( sprintf( __( 'SentinelGuard v%s', 'sentinelguard-ecommerce-protection' ), SENTINELWP_VERSION ) ); ?></span> &middot;
 				<span><?php esc_html_e( 'Definitions 2026.08-rev1', 'sentinelguard-ecommerce-protection' ); ?></span> &middot;
 				<a href="https://sentinelwp.io/docs" target="_blank"><?php esc_html_e( 'Documentation', 'sentinelguard-ecommerce-protection' ); ?></a> &middot;
 				<a href="https://sentinelwp.io/support" target="_blank"><?php esc_html_e( 'Support', 'sentinelguard-ecommerce-protection' ); ?></a>
@@ -577,7 +577,7 @@ class SentinelWP_Admin {
 		<div class="sec-head sentinelwp-sec-head" style="margin-top: 28px;">
 			<h2><?php esc_html_e( 'Threat Detection Modules', 'sentinelguard-ecommerce-protection' ); ?></h2>
 			<p><?php /* translators: 1: active module count, 2: total module count */ echo esc_html( sprintf( __( 'Active security engine status &middot; %1$d of %2$d active engines', 'sentinelguard-ecommerce-protection' ), $active_module_count, count( $modules_raw ) ) ); ?></p>
-			<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelwp-security-settings&tab=modules' ) ); ?>">
+			<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelguard-settings&tab=modules' ) ); ?>">
 				<?php esc_html_e( 'Manage in settings ›', 'sentinelguard-ecommerce-protection' ); ?>
 			</a>
 		</div>
@@ -606,7 +606,7 @@ class SentinelWP_Admin {
 								<?php esc_html_e( 'View findings ›', 'sentinelguard-ecommerce-protection' ); ?>
 							</a>
 						<?php else : ?>
-							<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelwp-security-settings&tab=modules' ) ); ?>">
+							<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelguard-settings&tab=modules' ) ); ?>">
 								<?php esc_html_e( 'Configure ›', 'sentinelguard-ecommerce-protection' ); ?>
 							</a>
 						<?php endif; ?>
@@ -666,23 +666,23 @@ class SentinelWP_Admin {
 		}
 		?>
 		<div class="wrap sentinelwp-wrap sentinelwp-settings-wrap">
-			<h1 class="wp-heading-inline"><?php esc_html_e( 'SentinelWP Settings', 'sentinelguard-ecommerce-protection' ); ?></h1>
+			<h1 class="wp-heading-inline"><?php esc_html_e( 'SentinelGuard Settings', 'sentinelguard-ecommerce-protection' ); ?></h1>
 			<hr class="wp-header-end">
 
 			<nav class="nav-tab-wrapper sentinelwp-nav-tab-wrapper" aria-label="<?php esc_attr_e( 'Settings Tabs', 'sentinelguard-ecommerce-protection' ); ?>">
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelwp-security-settings&tab=general' ) ); ?>" class="nav-tab <?php echo 'general' === $current_tab ? 'nav-tab-active' : ''; ?>">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelguard-settings&tab=general' ) ); ?>" class="nav-tab <?php echo 'general' === $current_tab ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'General', 'sentinelguard-ecommerce-protection' ); ?>
 				</a>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelwp-security-settings&tab=scanning' ) ); ?>" class="nav-tab <?php echo 'scanning' === $current_tab ? 'nav-tab-active' : ''; ?>">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelguard-settings&tab=scanning' ) ); ?>" class="nav-tab <?php echo 'scanning' === $current_tab ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Scanning', 'sentinelguard-ecommerce-protection' ); ?>
 				</a>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelwp-security-settings&tab=modules' ) ); ?>" class="nav-tab <?php echo 'modules' === $current_tab ? 'nav-tab-active' : ''; ?>">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelguard-settings&tab=modules' ) ); ?>" class="nav-tab <?php echo 'modules' === $current_tab ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Modules', 'sentinelguard-ecommerce-protection' ); ?>
 				</a>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelwp-security-settings&tab=notifications' ) ); ?>" class="nav-tab <?php echo 'notifications' === $current_tab ? 'nav-tab-active' : ''; ?>">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelguard-settings&tab=notifications' ) ); ?>" class="nav-tab <?php echo 'notifications' === $current_tab ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Notifications', 'sentinelguard-ecommerce-protection' ); ?>
 				</a>
-				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelwp-security-settings&tab=advanced' ) ); ?>" class="nav-tab <?php echo 'advanced' === $current_tab ? 'nav-tab-active' : ''; ?>">
+				<a href="<?php echo esc_url( admin_url( 'admin.php?page=sentinelguard-settings&tab=advanced' ) ); ?>" class="nav-tab <?php echo 'advanced' === $current_tab ? 'nav-tab-active' : ''; ?>">
 					<?php esc_html_e( 'Advanced', 'sentinelguard-ecommerce-protection' ); ?>
 				</a>
 			</nav>
@@ -1025,7 +1025,7 @@ class SentinelWP_Admin {
 			</div>
 			<div class="inside">
 				<p class="description" style="margin-bottom:14px; font-size:13px;">
-					<?php esc_html_e( 'Controls how SentinelWP responds when high-confidence card testing or distributed bot clusters are detected at the Store API preflight gate.', 'sentinelguard-ecommerce-protection' ); ?>
+					<?php esc_html_e( 'Controls how SentinelGuard responds when high-confidence card testing or distributed bot clusters are detected at the Store API preflight gate.', 'sentinelguard-ecommerce-protection' ); ?>
 				</p>
 				<table class="form-table sentinelwp-form-table">
 					<tr>
@@ -1309,7 +1309,7 @@ class SentinelWP_Admin {
 						<td>
 							<label>
 								<input type="checkbox" name="sentinelwp_remove_data_on_uninstall" value="1" <?php checked( $uninstall ); ?> />
-								<?php esc_html_e( 'Delete all SentinelWP database tables and options on plugin deletion', 'sentinelguard-ecommerce-protection' ); ?>
+								<?php esc_html_e( 'Delete all SentinelGuard database tables and options on plugin deletion', 'sentinelguard-ecommerce-protection' ); ?>
 							</label>
 						</td>
 					</tr>
@@ -1660,8 +1660,8 @@ class SentinelWP_Admin {
 
 		$to = get_option( 'sentinelwp_alert_email', get_option( 'admin_email' ) );
 		/* translators: %s: site name */
-		$subject = sprintf( __( '[%s] SentinelWP Security Test Notification', 'sentinelguard-ecommerce-protection' ), get_bloginfo( 'name' ) );
-		$body = __( "This is a test notification from SentinelWP Security.\n\nYour alert dispatch channel is operational.", 'sentinelguard-ecommerce-protection' );
+		$subject = sprintf( __( '[%s] SentinelGuard Test Notification', 'sentinelguard-ecommerce-protection' ), get_bloginfo( 'name' ) );
+		$body = __( "This is a test notification from SentinelGuard.\n\nYour alert dispatch channel is operational.", 'sentinelguard-ecommerce-protection' );
 
 		$sent = wp_mail( $to, $subject, $body );
 

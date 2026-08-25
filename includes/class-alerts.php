@@ -35,7 +35,7 @@ class SentinelWP_Alerts {
 
 		$subject = sprintf(
 			/* translators: 1: site name, 2: severity */
-			__( '[%1$s] SentinelWP: %2$s security finding', 'sentinelguard-ecommerce-protection' ),
+			__( '[%1$s] SentinelGuard: %2$s security finding', 'sentinelguard-ecommerce-protection' ),
 			wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
 			ucfirst( $severity )
 		);
@@ -46,9 +46,9 @@ class SentinelWP_Alerts {
 			sprintf(
 				/* translators: %s: admin URL */
 				__( 'Review it here: %s', 'sentinelguard-ecommerce-protection' ),
-				esc_url_raw( admin_url( 'admin.php?page=sentinelwp-security&finding=' . (int) $id ) )
+				esc_url_raw( admin_url( 'admin.php?page=sentinelguard-ecommerce-protection&finding=' . (int) $id ) )
 			),
-			__( 'This is an automated alert from SentinelWP Security.', 'sentinelguard-ecommerce-protection' )
+			__( 'This is an automated alert from SentinelGuard.', 'sentinelguard-ecommerce-protection' )
 		);
 
 		wp_mail( $to, $subject, $body );

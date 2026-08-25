@@ -1,11 +1,11 @@
 <?php
 /**
- * SentinelWP Store API Guard
+ * SentinelGuard Store API Guard
  *
  * Intercepts WooCommerce Store API and classic checkout lifecycle events,
  * evaluates pre-gateway risk before processor dispatch, and augments native rate limiting.
  *
- * @package SentinelWP
+ * @package SentinelGuard
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

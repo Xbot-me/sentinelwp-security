@@ -1,6 +1,6 @@
 # Security Policy
 
-The SentinelWP Security team takes security issues seriously and appreciates the responsible disclosure of vulnerabilities.
+The SentinelGuard team takes security issues seriously and appreciates the responsible disclosure of vulnerabilities.
 
 ---
 
@@ -17,7 +17,7 @@ We actively provide security patches and updates for the following versions:
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in **SentinelWP Security**, please report it responsibly:
+If you discover a security vulnerability in **SentinelGuard**, please report it responsibly:
 
 1. **GitHub Security Advisory (Preferred)**:
    Submit a private advisory via [GitHub Security Advisories](https://github.com/Xbot-me/sentinelwp-security/security/advisories/new).

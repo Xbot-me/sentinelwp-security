@@ -1,11 +1,11 @@
 <?php
 /**
- * SentinelWP Security Uninstall Handler
+ * SentinelGuard Uninstall Handler
  *
  * Cleans up options, database tables, and scheduled cron events
  * when the plugin is deleted and remove_data_on_uninstall is enabled.
  *
- * @package SentinelWP
+ * @package SentinelGuard
  */
 
 // If uninstall.php isn't called directly by WordPress, bail.
@@ -69,7 +69,7 @@ foreach ( $sentinelwp_options as $sentinelwp_opt ) {
 	delete_option( $sentinelwp_opt );
 }
 
-// Custom tables created by SentinelWP
+// Custom tables created by SentinelGuard
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}sentinelwp_findings" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.NotPrepared
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}sentinelwp_quarantine" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.NotPrepared
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}sentinelwp_ai_log" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.NotPrepared

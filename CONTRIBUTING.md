@@ -1,6 +1,6 @@
-# Contributing to SentinelWP Security
+# Contributing to SentinelGuard
 
-Thank you for your interest in contributing to **SentinelWP Security**! We welcome bug fixes, documentation enhancements, feature proposals, and security improvements.
+Thank you for your interest in contributing to **SentinelGuard**! We welcome bug fixes, documentation enhancements, feature proposals, and security improvements.
 
 ---
 
@@ -52,7 +52,7 @@ We are committed to providing a welcoming, inclusive, and harassment-free enviro
 
 ## Development & Testing Workflow
 
-SentinelWP includes a self-contained, high-performance mock testing harness that runs without requiring a full WordPress or database installation:
+SentinelGuard includes a self-contained, high-performance mock testing harness that runs without requiring a full WordPress or database installation:
 
 ```bash
 # Run all unit, integration, and security verification tests

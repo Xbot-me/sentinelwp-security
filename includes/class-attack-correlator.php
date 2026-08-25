@@ -1,12 +1,12 @@
 <?php
 /**
- * SentinelWP Attack Correlator
+ * SentinelGuard Attack Correlator
  *
  * Synthesizes disparate signals (traffic rate anomalies, failed payment bursts,
  * checkout velocity, disposable emails, JavaScript skimmers, and store config changes)
  * into high-confidence, actionable attack incidents.
  *
- * @package SentinelWP
+ * @package SentinelGuard
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

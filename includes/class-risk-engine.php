@@ -1,12 +1,12 @@
 <?php
 /**
- * SentinelWP Risk Engine
+ * SentinelGuard Risk Engine
  *
  * Evaluates contextual checkout and payment signals, calculates additive threat scores,
  * assigns machine-readable reason codes, and returns policy decisions based on a dual
  * Risk + Confidence matrix.
  *
- * @package SentinelWP
+ * @package SentinelGuard
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
