@@ -1,5 +1,5 @@
-=== SentinelWP Security — Ecommerce & Checkout Protection ===
-Contributors: sentinelwp, xbot-me
+=== SentinelGuard — Ecommerce & Checkout Protection ===
+Contributors: mustafizurdev, xbot-me, sentinelwp
 Tags: ecommerce, security, fraud prevention, malware scanner, firewall
 Requires at least: 6.0
 Tested up to: 7.1
@@ -12,7 +12,7 @@ Dedicated security layer designed specifically to protect ecommerce revenue, che
 
 == Description ==
 
-SentinelWP Security is the dedicated security layer engineered to protect ecommerce revenue, checkout funnels, and customer payment data. Rather than competing as another generic WordPress firewall, SentinelWP laser-focuses on the threats that drain ecommerce store revenue: card testing attacks, Magecart checkout skimmers, stealth database administrators, fake order surges, and silent gateway credential changes.
+SentinelGuard is the dedicated security layer engineered to protect ecommerce revenue, checkout funnels, and customer payment data. Rather than competing as another generic WordPress firewall, SentinelGuard laser-focuses on the threats that drain ecommerce store revenue: card testing attacks, Magecart checkout skimmers, stealth database administrators, fake order surges, and silent gateway credential changes.
 
 = 1. Pre-Gateway Risk Engine & Store API Guard =
 * **Pre-Gateway Evaluation** — Evaluates checkout requests before payment processor dispatch, preventing gateway API fees and merchant dispute penalties.
@@ -46,29 +46,65 @@ SentinelWP Security is the dedicated security layer engineered to protect ecomme
 * **Automatic 30-Day History Purge** — Automatically purges scan history and request telemetry older than 30 days.
 
 = 7. High-Performance Order Storage (HPOS) Native =
-SentinelWP runs SQL database aggregations (`COUNT`, `SUM`, `AVG`, `GROUP BY`) compatible with both WooCommerce HPOS (`wc_orders`) and legacy `wp_posts`. It never loads orders in-memory, keeping memory usage `< 2MB` even on 500k+ order stores.
+SentinelGuard runs SQL database aggregations (`COUNT`, `SUM`, `AVG`, `GROUP BY`) compatible with both WooCommerce HPOS (`wc_orders`) and legacy `wp_posts`. It never loads orders in-memory, keeping memory usage `< 2MB` even on 500k+ order stores.
 
 = External Services Disclosure =
 This plugin connects to external services to provide specific security features:
-1. **WordPress.org APIs** (`api.wordpress.org`): Used during scans to compare local WordPress core, plugin, and theme files/versions against official releases — specifically the Core Checksums API (`/core/checksums/1.0/`), Core Version Check API (`/core/version-check/1.7/`), and Plugins/Themes Info API (`/plugins/info/1.2/`, `/themes/info/1.2/`). No API key required; results are cached for 6–24 hours to minimize requests. Privacy policy: https://wordpress.org/about/privacy/
-2. **Optional Patchstack Vulnerability Database** (`api.patchstack.com`): Only contacted if you enter your own Patchstack API key in Settings, to cross-reference installed plugins/themes/core against known CVEs. Privacy policy: https://patchstack.com/privacy-policy/
-3. **Optional WPScan Vulnerability Database** (`wpscan.com`): Only contacted if you enter your own WPScan API key in Settings, for the same purpose as above. Privacy policy: https://wpscan.com/privacy-policy/
-4. **Optional AI Triage Service** (OpenAI / Anthropic / Gemini): When you provide your own API key in Settings, flagged code snippets (never customer data or credentials) can be sent for plain-English remediation advice. Each provider's own privacy policy applies to data you choose to send.
-5. **Your own alert webhook** (Pro): If you configure a webhook URL under Notifications, a short JSON alert summary (site name, severity, finding title) is sent to that URL when a new finding is recorded. This is a destination you control, not a SentinelWP-operated service.
+
+1. **WordPress.org APIs** (`api.wordpress.org`):
+   - What data is sent: WordPress core version, locale, installed plugin/theme slugs & versions.
+   - When data is sent: During manual or daily scheduled security scans to verify core checksums and check for official plugin/theme updates.
+   - Endpoints used: Core Checksums (`/core/checksums/1.0/`), Core Version Check (`/core/version-check/1.7/`), and Plugins/Themes Info (`/plugins/info/1.2/`, `/themes/info/1.2/`).
+   - Terms of Service & Privacy: https://wordpress.org/about/privacy/
+
+2. **Patchstack Vulnerability Database** (`api.patchstack.com` — Optional):
+   - What data is sent: Installed WordPress version and plugin/theme slugs/versions.
+   - When data is sent: Only when the administrator explicitly enters their own Patchstack API key in Settings.
+   - Terms of Service: https://patchstack.com/terms-of-service/
+   - Privacy Policy: https://patchstack.com/privacy-policy/
+
+3. **WPScan Vulnerability Database** (`wpscan.com` — Optional):
+   - What data is sent: Installed WordPress version and plugin/theme slugs/versions.
+   - When data is sent: Only when the administrator explicitly enters their own WPScan API key in Settings.
+   - Terms of Service: https://wpscan.com/terms/
+   - Privacy Policy: https://automattic.com/privacy/
+
+4. **OpenAI API** (`api.openai.com` — Optional):
+   - What data is sent: Obfuscated code snippets of flagged suspicious files for AI-assisted triage analysis (never customer data, credentials, or order information).
+   - When data is sent: Only when the administrator enters their own OpenAI API key and requests triage for a finding.
+   - Terms of Use: https://openai.com/policies/terms-of-use/
+   - Privacy Policy: https://openai.com/policies/privacy-policy/
+
+5. **Anthropic Claude API** (`api.anthropic.com` — Optional):
+   - What data is sent: Obfuscated code snippets of flagged suspicious files for AI-assisted triage analysis (never customer data, credentials, or order information).
+   - When data is sent: Only when the administrator enters their own Anthropic API key and requests triage for a finding.
+   - Terms of Service: https://www.anthropic.com/legal/commercial-terms
+   - Privacy Policy: https://www.anthropic.com/legal/privacy
+
+6. **Google Gemini API** (`generativelanguage.googleapis.com` — Optional):
+   - What data is sent: Obfuscated code snippets of flagged suspicious files for AI-assisted triage analysis (never customer data, credentials, or order information).
+   - When data is sent: Only when the administrator enters their own Google Gemini API key and requests triage for a finding.
+   - Terms of Service: https://ai.google.dev/gemini-api/terms
+   - Privacy Policy: https://policies.google.com/privacy
+
+7. **Custom Alert Webhook** (Optional):
+   - What data is sent: Finding notification payload (site URL, finding title, severity, timestamp).
+   - When data is sent: Only when a new security finding is recorded and the site administrator has configured a custom webhook URL under Notifications.
+   - Destination: User-controlled destination (not operated by SentinelGuard).
 
 == Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/sentinelwp-security`, or install through the WordPress Plugins screen.
+1. Upload the plugin files to `/wp-content/plugins/sentinelguard-ecommerce-protection`, or install through the WordPress Plugins screen.
 2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Navigate to 'SentinelWP' in the admin menu to review the dashboard and run your first deep scan.
+3. Navigate to 'SentinelGuard' in the admin menu to review the dashboard and run your first deep scan.
 
 == Frequently Asked Questions ==
 
-= Does SentinelWP slow down checkout? =
+= Does SentinelGuard slow down checkout? =
 No. The risk engine is designed for <0.5ms overhead during checkout by avoiding unnecessary database writes and using memory-efficient fingerprinting.
 
 = Does this replace my firewall? =
-SentinelWP works perfectly alongside perimeter firewalls (WAFs) like Cloudflare. While WAFs block known malicious IPs, SentinelWP analyzes behavioral patterns and application-level intent that WAFs cannot see.
+SentinelGuard is designed to complement perimeter firewalls (WAFs) like Cloudflare. While perimeter WAFs block known malicious IPs at the DNS and edge layer, SentinelGuard analyzes application-level ecommerce intent, checkout skimmers, payment failure velocity, and database integrity inside WordPress.
 
 = Is this compatible with custom WooCommerce gateways? =
 Yes. The plugin uses canonical payment event translation that hooks into standard WooCommerce core actions, making it compatible with Stripe, PayPal, Authorize.net, and most other gateways.

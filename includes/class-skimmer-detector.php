@@ -289,10 +289,6 @@ class SentinelWP_Skimmer_Detector {
 	}
 
 	public function scan_rogue_checkout_plugins() {
-		if ( ! function_exists( 'get_plugins' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		}
-		
 		$active_plugins = get_option( 'active_plugins', array() );
 		if ( empty( $active_plugins ) || ! is_array( $active_plugins ) ) {
 			return;

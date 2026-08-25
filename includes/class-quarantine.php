@@ -171,17 +171,21 @@ class SentinelWP_Quarantine {
 		$vault_name  = sanitize_file_name( basename( $canonical_path ) ) . '.' . $unique_code . '.quarantine';
 		$vault_dest  = trailingslashit( $this->get_vault_dir() ) . $vault_name;
 
-		// --- PHASE 1: Durable Copy & Checksum Verification ---
-		$copied = $fs ? $fs->copy( $canonical_path, $vault_dest, true ) : @copy( $canonical_path, $vault_dest );
-		if ( ! $copied || ! file_exists( $vault_dest ) ) {
+		// --- PHASE 1: Durable Encoded Storage & Checksum Verification ---
+		$header = "<?php exit('Direct execution prohibited.'); ?>\n";
+		$vault_payload = $header . base64_encode( (string) $file_content );
+		$written = $fs ? $fs->put_contents( $vault_dest, $vault_payload ) : @file_put_contents( $vault_dest, $vault_payload );
+		if ( ! $written || ! file_exists( $vault_dest ) ) {
 			return array(
 				'success' => false,
 				'message' => __( 'Failed to write file into quarantine vault (possible disk full or permission error).', 'sentinelwp-security' ),
 			);
 		}
 
-		$vault_content = $fs ? $fs->get_contents( $vault_dest ) : @file_get_contents( $vault_dest );
-		if ( hash( 'sha256', (string) $vault_content ) !== $file_hash ) {
+		$vault_raw = $fs ? $fs->get_contents( $vault_dest ) : @file_get_contents( $vault_dest );
+		$decoded_payload = (string) substr( (string) $vault_raw, strlen( $header ) );
+		$decoded_content = base64_decode( $decoded_payload );
+		if ( hash( 'sha256', (string) $decoded_content ) !== $file_hash ) {
 			if ( $fs ) {
 				$fs->delete( $vault_dest );
 			} else {
@@ -299,8 +303,16 @@ class SentinelWP_Quarantine {
 		}
 
 		// Verify vault file integrity against original hash
-		$vault_content = $fs ? $fs->get_contents( $vault_file ) : @file_get_contents( $vault_file );
-		if ( hash( 'sha256', (string) $vault_content ) !== $record->file_hash ) {
+		$header = "<?php exit('Direct execution prohibited.'); ?>\n";
+		$vault_raw = $fs ? $fs->get_contents( $vault_file ) : @file_get_contents( $vault_file );
+		if ( 0 !== strpos( (string) $vault_raw, $header ) ) {
+			$decoded_content = (string) $vault_raw;
+		} else {
+			$decoded_payload = (string) substr( (string) $vault_raw, strlen( $header ) );
+			$decoded_content = base64_decode( $decoded_payload );
+		}
+
+		if ( hash( 'sha256', (string) $decoded_content ) !== $record->file_hash ) {
 			return array(
 				'success' => false,
 				'message' => __( 'Quarantined file failed integrity hash check.', 'sentinelwp-security' ),
@@ -322,7 +334,7 @@ class SentinelWP_Quarantine {
 		}
 
 		// Restore file to original path
-		$restored = $fs ? $fs->copy( $vault_file, $record->original_path, true ) : @copy( $vault_file, $record->original_path );
+		$restored = $fs ? $fs->put_contents( $record->original_path, $decoded_content ) : @file_put_contents( $record->original_path, $decoded_content );
 		if ( ! $restored || ! file_exists( $record->original_path ) ) {
 			return array(
 				'success' => false,

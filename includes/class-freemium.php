@@ -31,20 +31,10 @@ class SentinelWP_Freemium {
 	}
 
 	public static function ai_quota_remaining() {
-		if ( self::is_pro() ) {
-			return PHP_INT_MAX;
-		}
-
-		$used = (int) get_transient( 'sentinelwp_ai_used_this_month' );
-		return max( 0, 100 - $used );
+		return PHP_INT_MAX;
 	}
 
 	public static function record_ai_use() {
-		if ( self::is_pro() ) {
-			return;
-		}
-
-		$used = (int) get_transient( 'sentinelwp_ai_used_this_month' );
-		set_transient( 'sentinelwp_ai_used_this_month', $used + 1, 30 * DAY_IN_SECONDS );
+		// Fully uncapped for self-hosted API keys.
 	}
 }
