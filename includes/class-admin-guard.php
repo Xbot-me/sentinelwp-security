@@ -111,7 +111,7 @@ class SentinelWP_Admin_Guard {
 				'admin-guard-realtime',
 				sprintf(
 					/* translators: 1: username, 2: action type */
-					__( 'CRITICAL: Unauthorized administrator privilege escalation for user "%1$s" via %2$s', 'sentinelwp-security' ),
+					__( 'CRITICAL: Unauthorized administrator privilege escalation for user "%1$s" via %2$s', 'sentinelguard-ecommerce-protection' ),
 					$user->user_login,
 					$action
 				),
@@ -139,7 +139,7 @@ class SentinelWP_Admin_Guard {
 				'admin-guard-realtime',
 				sprintf(
 					/* translators: 1: username, 2: actor username */
-					__( 'Administrator role assigned to user "%1$s" by "%2$s"', 'sentinelwp-security' ),
+					__( 'Administrator role assigned to user "%1$s" by "%2$s"', 'sentinelguard-ecommerce-protection' ),
 					$user->user_login,
 					$actor_login
 				),
@@ -208,7 +208,7 @@ class SentinelWP_Admin_Guard {
 						'database-audit',
 						sprintf(
 							/* translators: 1: username, 2: user ID */
-							__( 'CRITICAL: Hidden administrator account "%1$s" (ID: %2$d) detected in database but hidden from WordPress user list!', 'sentinelwp-security' ),
+							__( 'CRITICAL: Hidden administrator account "%1$s" (ID: %2$d) detected in database but hidden from WordPress user list!', 'sentinelguard-ecommerce-protection' ),
 							$db_admin->user_login,
 							$admin_id
 						),
@@ -238,7 +238,7 @@ class SentinelWP_Admin_Guard {
 						'database-audit',
 						sprintf(
 							/* translators: %s: username */
-							__( 'Suspicious administrator username "%s" found in database.', 'sentinelwp-security' ),
+							__( 'Suspicious administrator username "%s" found in database.', 'sentinelguard-ecommerce-protection' ),
 							$db_admin->user_login
 						),
 						wp_json_encode(
@@ -275,7 +275,7 @@ class SentinelWP_Admin_Guard {
 					'database-audit',
 					sprintf(
 						/* translators: %d: orphaned user ID */
-						__( 'Orphaned administrator capability found in database for deleted or ghost user ID %d.', 'sentinelwp-security' ),
+						__( 'Orphaned administrator capability found in database for deleted or ghost user ID %d.', 'sentinelguard-ecommerce-protection' ),
 						(int) $orphan->user_id
 					),
 					wp_json_encode(
@@ -303,7 +303,7 @@ class SentinelWP_Admin_Guard {
 								'runtime-audit',
 								sprintf(
 									/* translators: 1: hook name, 2: callback name */
-									__( 'Suspicious filter callback "%1$s" attached to hook "%2$s" that may hide users.', 'sentinelwp-security' ),
+									__( 'Suspicious filter callback "%1$s" attached to hook "%2$s" that may hide users.', 'sentinelguard-ecommerce-protection' ),
 									$cb_name,
 									$hook_name
 								),

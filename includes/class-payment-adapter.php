@@ -92,13 +92,13 @@ class SentinelWP_Payment_Adapter {
 
 	public function on_payment_failed( $order_id ) {
 		$this->record_payment_event( self::EVENT_DECLINED, $order_id, array(
-			'error_msg' => __( 'Payment processing failed or card declined by gateway.', 'sentinelwp-security' ),
+			'error_msg' => __( 'Payment processing failed or card declined by gateway.', 'sentinelguard-ecommerce-protection' ),
 		) );
 	}
 
 	public function on_payment_cancelled( $order_id ) {
 		$this->record_payment_event( self::EVENT_ERROR, $order_id, array(
-			'error_msg' => __( 'Payment cancelled or abandoned.', 'sentinelwp-security' ),
+			'error_msg' => __( 'Payment cancelled or abandoned.', 'sentinelguard-ecommerce-protection' ),
 		) );
 	}
 

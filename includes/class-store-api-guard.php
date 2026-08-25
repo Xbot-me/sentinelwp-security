@@ -63,7 +63,7 @@ class SentinelWP_Store_API_Guard {
 		if ( SentinelWP_Risk_Engine::DECISION_HARD_BLOCK === $decision['decision'] ) {
 			return new WP_Error(
 				'sentinelwp_checkout_blocked',
-				__( 'Checkout request blocked by security policy.', 'sentinelwp-security' ),
+				__( 'Checkout request blocked by security policy.', 'sentinelguard-ecommerce-protection' ),
 				array(
 					'status'     => 403,
 					'reasons'    => $decision['reasons'],
@@ -75,7 +75,7 @@ class SentinelWP_Store_API_Guard {
 		if ( SentinelWP_Risk_Engine::DECISION_SOFT_BLOCK === $decision['decision'] ) {
 			return new WP_Error(
 				'sentinelwp_checkout_throttled',
-				__( 'Too many checkout attempts. Please wait a moment and try again.', 'sentinelwp-security' ),
+				__( 'Too many checkout attempts. Please wait a moment and try again.', 'sentinelguard-ecommerce-protection' ),
 				array(
 					'status'     => 429,
 					'reasons'    => $decision['reasons'],
@@ -95,9 +95,9 @@ class SentinelWP_Store_API_Guard {
 		$decision = SentinelWP_Risk_Engine::instance()->evaluate_payment_attempt( $context );
 
 		if ( SentinelWP_Risk_Engine::DECISION_HARD_BLOCK === $decision['decision'] ) {
-			wc_add_notice( __( 'Unable to process checkout. Please contact store support.', 'sentinelwp-security' ), 'error' );
+			wc_add_notice( __( 'Unable to process checkout. Please contact store support.', 'sentinelguard-ecommerce-protection' ), 'error' );
 		} elseif ( SentinelWP_Risk_Engine::DECISION_SOFT_BLOCK === $decision['decision'] ) {
-			wc_add_notice( __( 'Too many checkout attempts. Please wait a moment and try again.', 'sentinelwp-security' ), 'error' );
+			wc_add_notice( __( 'Too many checkout attempts. Please wait a moment and try again.', 'sentinelguard-ecommerce-protection' ), 'error' );
 		}
 	}
 

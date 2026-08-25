@@ -30,28 +30,28 @@ class SentinelWP_Scan_Coordinator {
 	public function get_phases() {
 		return array(
 			'core'       => array(
-				'label'       => __( 'WordPress Core Integrity', 'sentinelwp-security' ),
-				'description' => __( 'Compares core files against official WordPress.org release checksums.', 'sentinelwp-security' ),
+				'label'       => __( 'WordPress Core Integrity', 'sentinelguard-ecommerce-protection' ),
+				'description' => __( 'Compares core files against official WordPress.org release checksums.', 'sentinelguard-ecommerce-protection' ),
 			),
 			'vulns'      => array(
-				'label'       => __( 'Vulnerability & Version Audit', 'sentinelwp-security' ),
-				'description' => __( 'Audits installed plugins and active themes against known CVE databases.', 'sentinelwp-security' ),
+				'label'       => __( 'Vulnerability & Version Audit', 'sentinelguard-ecommerce-protection' ),
+				'description' => __( 'Audits installed plugins and active themes against known CVE databases.', 'sentinelguard-ecommerce-protection' ),
 			),
 			'skimmer'    => array(
-				'label'       => __( 'Magecart & Skimmer Scan', 'sentinelwp-security' ),
-				'description' => __( 'Inspects JavaScript assets and media uploads for payment form harvesters.', 'sentinelwp-security' ),
+				'label'       => __( 'Magecart & Skimmer Scan', 'sentinelguard-ecommerce-protection' ),
+				'description' => __( 'Inspects JavaScript assets and media uploads for payment form harvesters.', 'sentinelguard-ecommerce-protection' ),
 			),
 			'nulled'     => array(
-				'label'       => __( 'Nulled & Pirated Software Detector', 'sentinelwp-security' ),
-				'description' => __( 'Detects backdoor indicators, pirated files, and license bypass routines.', 'sentinelwp-security' ),
+				'label'       => __( 'Nulled & Pirated Software Detector', 'sentinelguard-ecommerce-protection' ),
+				'description' => __( 'Detects backdoor indicators, pirated files, and license bypass routines.', 'sentinelguard-ecommerce-protection' ),
 			),
 			'admin'      => array(
-				'label'       => __( 'Admin Account & Privilege Auditor', 'sentinelwp-security' ),
-				'description' => __( 'Performs low-level database audit for hidden or orphaned administrator accounts.', 'sentinelwp-security' ),
+				'label'       => __( 'Admin Account & Privilege Auditor', 'sentinelguard-ecommerce-protection' ),
+				'description' => __( 'Performs low-level database audit for hidden or orphaned administrator accounts.', 'sentinelguard-ecommerce-protection' ),
 			),
 			'commerce'   => array(
-				'label'       => __( 'Commerce & Store Integrity Guard', 'sentinelwp-security' ),
-				'description' => __( 'HPOS-optimized analysis of order velocity, card testing bursts, and pricing changes.', 'sentinelwp-security' ),
+				'label'       => __( 'Commerce & Store Integrity Guard', 'sentinelguard-ecommerce-protection' ),
+				'description' => __( 'HPOS-optimized analysis of order velocity, card testing bursts, and pricing changes.', 'sentinelguard-ecommerce-protection' ),
 			),
 		);
 	}
@@ -69,7 +69,7 @@ class SentinelWP_Scan_Coordinator {
 		if ( $existing_lock && ( time() - (int) $existing_lock ) < 300 ) {
 			$current_state = $this->get_state();
 			$current_state['status']  = 'running';
-			$current_state['message'] = __( 'A scan is already in progress.', 'sentinelwp-security' );
+			$current_state['message'] = __( 'A scan is already in progress.', 'sentinelguard-ecommerce-protection' );
 			return $current_state;
 		}
 

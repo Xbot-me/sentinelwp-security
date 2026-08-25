@@ -134,13 +134,13 @@ class SentinelWP_Scanner {
 				'wordpress.org-checksums',
 				sprintf(
 					/* translators: %d: number of mismatched core files */
-					_n( '%d WordPress core file differs from the official release', '%d WordPress core files differ from the official release', count( $mismatches ), 'sentinelwp-security' ),
+					_n( '%d WordPress core file differs from the official release', '%d WordPress core files differ from the official release', count( $mismatches ), 'sentinelguard-ecommerce-protection' ),
 					count( $mismatches )
 				),
 				wp_json_encode( array_slice( $mismatches, 0, 50 ) ),
 				'confirmed',
 				'core_checksums',
-				__( 'Reinstall WordPress core files from the Updates screen to overwrite modified files.', 'sentinelwp-security' ),
+				__( 'Reinstall WordPress core files from the Updates screen to overwrite modified files.', 'sentinelguard-ecommerce-protection' ),
 				'low'
 			);
 		}
@@ -184,7 +184,7 @@ class SentinelWP_Scanner {
 					wp_json_encode( $vuln ),
 					'likely',
 					'vuln_db',
-					__( 'Update this component immediately to the latest patched release.', 'sentinelwp-security' ),
+					__( 'Update this component immediately to the latest patched release.', 'sentinelguard-ecommerce-protection' ),
 					'low'
 				);
 			}
@@ -195,7 +195,7 @@ class SentinelWP_Scanner {
 				$result->source,
 				sprintf(
 					/* translators: 1: item name, 2: installed version, 3: latest version */
-					__( '%1$s is outdated (%2$s installed, %3$s available)', 'sentinelwp-security' ),
+					__( '%1$s is outdated (%2$s installed, %3$s available)', 'sentinelguard-ecommerce-protection' ),
 					$name,
 					$result->current_version,
 					$result->latest_version
@@ -203,7 +203,7 @@ class SentinelWP_Scanner {
 				'',
 				'confirmed',
 				'version_checker',
-				__( 'Update to the latest version to ensure security patches are applied.', 'sentinelwp-security' ),
+				__( 'Update to the latest version to ensure security patches are applied.', 'sentinelguard-ecommerce-protection' ),
 				'low'
 			);
 		}
@@ -264,13 +264,13 @@ class SentinelWP_Scanner {
 				'filesystem_audit',
 				sprintf(
 					/* translators: %s: relative file path */
-					__( 'PHP file found inside uploads directory: %s', 'sentinelwp-security' ),
+					__( 'PHP file found inside uploads directory: %s', 'sentinelguard-ecommerce-protection' ),
 					str_replace( ABSPATH, '', $file->getPathname() )
 				),
 				'',
 				'likely',
 				'filesystem_audit',
-				__( 'PHP scripts should never exist in the media uploads folder. Inspect and quarantine the file.', 'sentinelwp-security' ),
+				__( 'PHP scripts should never exist in the media uploads folder. Inspect and quarantine the file.', 'sentinelguard-ecommerce-protection' ),
 				'low'
 			);
 
@@ -301,14 +301,14 @@ class SentinelWP_Scanner {
 					'local-heuristic',
 					sprintf(
 						/* translators: 1: signature label, 2: relative file path */
-						__( 'Suspicious code pattern (%1$s) in %2$s', 'sentinelwp-security' ),
+						__( 'Suspicious code pattern (%1$s) in %2$s', 'sentinelguard-ecommerce-protection' ),
 						$label,
 						str_replace( ABSPATH, '', $path )
 					),
 					wp_json_encode( array( 'signature' => $label ) ),
 					'suspicious',
 					'local_heuristic',
-					__( 'Review the flagged code snippet to verify whether it belongs to legitimate obfuscation or a web shell.', 'sentinelwp-security' ),
+					__( 'Review the flagged code snippet to verify whether it belongs to legitimate obfuscation or a web shell.', 'sentinelguard-ecommerce-protection' ),
 					'medium'
 				);
 
@@ -357,11 +357,11 @@ class SentinelWP_Scanner {
 					'weak_username',
 					'medium',
 					'admin_audit',
-					__( 'Default administrator username "admin" detected', 'sentinelwp-security' ),
+					__( 'Default administrator username "admin" detected', 'sentinelguard-ecommerce-protection' ),
 					wp_json_encode( array( 'user_id' => $admin->ID ) ),
 					'heuristic',
 					'admin_audit',
-					__( 'Create a new admin user with a unique username and delete or downgrade the "admin" user.', 'sentinelwp-security' ),
+					__( 'Create a new admin user with a unique username and delete or downgrade the "admin" user.', 'sentinelguard-ecommerce-protection' ),
 					'low'
 				);
 			}

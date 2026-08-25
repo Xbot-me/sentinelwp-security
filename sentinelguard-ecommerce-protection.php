@@ -78,7 +78,7 @@ function sentinelwp_add_cron_schedules( $schedules ) {
 	if ( ! isset( $schedules['every_five_minutes'] ) ) {
 		$schedules['every_five_minutes'] = array(
 			'interval' => 300,
-			'display'  => __( 'Every 5 Minutes', 'sentinelwp-security' ),
+			'display'  => __( 'Every 5 Minutes', 'sentinelguard-ecommerce-protection' ),
 		);
 	}
 	return $schedules;

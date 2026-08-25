@@ -108,7 +108,7 @@ class SentinelWP_Quarantine {
 		if ( ! $this->init_vault() ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Unable to initialize quarantine vault directory (check filesystem permissions).', 'sentinelwp-security' ),
+				'message' => __( 'Unable to initialize quarantine vault directory (check filesystem permissions).', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -121,7 +121,7 @@ class SentinelWP_Quarantine {
 			if ( ! $finding ) {
 				return array(
 					'success' => false,
-					'message' => __( 'Security finding not found.', 'sentinelwp-security' ),
+					'message' => __( 'Security finding not found.', 'sentinelguard-ecommerce-protection' ),
 				);
 			}
 
@@ -143,7 +143,7 @@ class SentinelWP_Quarantine {
 			return array(
 				'success' => false,
 				/* translators: %s: file path */
-				'message' => sprintf( __( 'File not found on filesystem: %s', 'sentinelwp-security' ), esc_html( (string) $file_path ) ),
+				'message' => sprintf( __( 'File not found on filesystem: %s', 'sentinelguard-ecommerce-protection' ), esc_html( (string) $file_path ) ),
 			);
 		}
 
@@ -151,7 +151,7 @@ class SentinelWP_Quarantine {
 		if ( $this->is_protected_system_file( $canonical_path ) ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Action blocked: Protected system file cannot be quarantined.', 'sentinelwp-security' ),
+				'message' => __( 'Action blocked: Protected system file cannot be quarantined.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -160,7 +160,7 @@ class SentinelWP_Quarantine {
 		if ( false === $file_content || null === $file_content ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Failed to read source file for quarantine.', 'sentinelwp-security' ),
+				'message' => __( 'Failed to read source file for quarantine.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -178,7 +178,7 @@ class SentinelWP_Quarantine {
 		if ( ! $written || ! file_exists( $vault_dest ) ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Failed to write file into quarantine vault (possible disk full or permission error).', 'sentinelwp-security' ),
+				'message' => __( 'Failed to write file into quarantine vault (possible disk full or permission error).', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -193,7 +193,7 @@ class SentinelWP_Quarantine {
 			}
 			return array(
 				'success' => false,
-				'message' => __( 'Quarantine aborted: Checksum verification failed between source and vault artifact.', 'sentinelwp-security' ),
+				'message' => __( 'Quarantine aborted: Checksum verification failed between source and vault artifact.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -222,7 +222,7 @@ class SentinelWP_Quarantine {
 			}
 			return array(
 				'success' => false,
-				'message' => __( 'Quarantine aborted: Failed to commit metadata record to database. Original file preserved.', 'sentinelwp-security' ),
+				'message' => __( 'Quarantine aborted: Failed to commit metadata record to database. Original file preserved.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -251,7 +251,7 @@ class SentinelWP_Quarantine {
 		return array(
 			'success'       => true,
 			'quarantine_id' => $quarantine_id,
-			'message'       => __( 'File securely quarantined. State captured for 1-click rollback.', 'sentinelwp-security' ),
+			'message'       => __( 'File securely quarantined. State captured for 1-click rollback.', 'sentinelguard-ecommerce-protection' ),
 		);
 	}
 
@@ -272,7 +272,7 @@ class SentinelWP_Quarantine {
 		if ( ! $record ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Quarantine record not found.', 'sentinelwp-security' ),
+				'message' => __( 'Quarantine record not found.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -280,7 +280,7 @@ class SentinelWP_Quarantine {
 			return array(
 				'success' => false,
 				/* translators: %s: record status */
-				'message' => sprintf( __( 'File is not in quarantined state (current status: %s).', 'sentinelwp-security' ), $record->status ),
+				'message' => sprintf( __( 'File is not in quarantined state (current status: %s).', 'sentinelguard-ecommerce-protection' ), $record->status ),
 			);
 		}
 
@@ -289,7 +289,7 @@ class SentinelWP_Quarantine {
 		if ( ! $validation_result['safe'] ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Action blocked: Restore path violates boundary policy.', 'sentinelwp-security' ),
+				'message' => __( 'Action blocked: Restore path violates boundary policy.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -298,7 +298,7 @@ class SentinelWP_Quarantine {
 		if ( ! file_exists( $vault_file ) ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Quarantined file missing from vault.', 'sentinelwp-security' ),
+				'message' => __( 'Quarantined file missing from vault.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -315,7 +315,7 @@ class SentinelWP_Quarantine {
 		if ( hash( 'sha256', (string) $decoded_content ) !== $record->file_hash ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Quarantined file failed integrity hash check.', 'sentinelwp-security' ),
+				'message' => __( 'Quarantined file failed integrity hash check.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -329,7 +329,7 @@ class SentinelWP_Quarantine {
 			return array(
 				'success' => false,
 				/* translators: %s: directory path */
-				'message' => sprintf( __( 'Restore destination directory is not writable (%s). Vault copy preserved.', 'sentinelwp-security' ), esc_html( $orig_dir ) ),
+				'message' => sprintf( __( 'Restore destination directory is not writable (%s). Vault copy preserved.', 'sentinelguard-ecommerce-protection' ), esc_html( $orig_dir ) ),
 			);
 		}
 
@@ -338,7 +338,7 @@ class SentinelWP_Quarantine {
 		if ( ! $restored || ! file_exists( $record->original_path ) ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Failed to restore file to original path (check filesystem permissions). Vault copy preserved.', 'sentinelwp-security' ),
+				'message' => __( 'Failed to restore file to original path (check filesystem permissions). Vault copy preserved.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -383,7 +383,7 @@ class SentinelWP_Quarantine {
 
 		return array(
 			'success' => true,
-			'message' => __( 'File successfully restored to original location with original permissions.', 'sentinelwp-security' ),
+			'message' => __( 'File successfully restored to original location with original permissions.', 'sentinelguard-ecommerce-protection' ),
 		);
 	}
 
@@ -402,7 +402,7 @@ class SentinelWP_Quarantine {
 		if ( ! $record ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Quarantine record not found.', 'sentinelwp-security' ),
+				'message' => __( 'Quarantine record not found.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
@@ -426,7 +426,7 @@ class SentinelWP_Quarantine {
 
 		return array(
 			'success' => true,
-			'message' => __( 'Quarantined file permanently purged.', 'sentinelwp-security' ),
+			'message' => __( 'Quarantined file permanently purged.', 'sentinelguard-ecommerce-protection' ),
 		);
 	}
 
@@ -439,12 +439,12 @@ class SentinelWP_Quarantine {
 	 */
 	public function validate_safe_path( $path, $is_restore = false ) {
 		if ( empty( $path ) || ! is_string( $path ) ) {
-			return array( 'safe' => false, 'error' => __( 'Invalid or empty file path.', 'sentinelwp-security' ) );
+			return array( 'safe' => false, 'error' => __( 'Invalid or empty file path.', 'sentinelguard-ecommerce-protection' ) );
 		}
 
 		// 1. Check for null byte injection
 		if ( strpos( $path, "\0" ) !== false ) {
-			return array( 'safe' => false, 'error' => __( 'Malicious null byte detected in file path.', 'sentinelwp-security' ) );
+			return array( 'safe' => false, 'error' => __( 'Malicious null byte detected in file path.', 'sentinelguard-ecommerce-protection' ) );
 		}
 
 		// 2. Normalize separators
@@ -452,7 +452,7 @@ class SentinelWP_Quarantine {
 
 		// 3. Reject directory traversal sequences
 		if ( strpos( $normalized, '../' ) !== false || strpos( $normalized, '..\\' ) !== false ) {
-			return array( 'safe' => false, 'error' => __( 'Directory traversal sequence (../) detected in path.', 'sentinelwp-security' ) );
+			return array( 'safe' => false, 'error' => __( 'Directory traversal sequence (../) detected in path.', 'sentinelguard-ecommerce-protection' ) );
 		}
 
 		// 4. Resolve canonical realpath
@@ -463,7 +463,7 @@ class SentinelWP_Quarantine {
 		if ( ! $is_restore && file_exists( $normalized ) ) {
 			$real = wp_normalize_path( realpath( $normalized ) );
 			if ( false === $real ) {
-				return array( 'safe' => false, 'error' => __( 'Unable to resolve canonical file path.', 'sentinelwp-security' ) );
+				return array( 'safe' => false, 'error' => __( 'Unable to resolve canonical file path.', 'sentinelguard-ecommerce-protection' ) );
 			}
 
 			$real_lower = strtolower( $real );
@@ -471,7 +471,7 @@ class SentinelWP_Quarantine {
 			// Reject symlinks pointing outside webroot
 			if ( is_link( $normalized ) ) {
 				if ( strpos( $real_lower, $abspath ) !== 0 && strpos( $real_lower, $content_dir ) !== 0 ) {
-					return array( 'safe' => false, 'error' => __( 'Action blocked: Symlink points outside WordPress root.', 'sentinelwp-security' ) );
+					return array( 'safe' => false, 'error' => __( 'Action blocked: Symlink points outside WordPress root.', 'sentinelguard-ecommerce-protection' ) );
 				}
 			}
 
@@ -484,7 +484,7 @@ class SentinelWP_Quarantine {
 
 		// 5. Enforce boundary containment inside ABSPATH or WP_CONTENT_DIR
 		if ( strpos( $canonical_lower, $abspath ) !== 0 && strpos( $canonical_lower, $content_dir ) !== 0 ) {
-			return array( 'safe' => false, 'error' => __( 'Action blocked: Path is outside allowed WordPress directory boundary.', 'sentinelwp-security' ) );
+			return array( 'safe' => false, 'error' => __( 'Action blocked: Path is outside allowed WordPress directory boundary.', 'sentinelguard-ecommerce-protection' ) );
 		}
 
 		return array(

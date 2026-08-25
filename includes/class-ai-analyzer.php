@@ -123,7 +123,7 @@ class SentinelWP_AI_Analyzer {
 			'confidence'    => 'low',
 			'reason'        => sprintf(
 				/* translators: %s: matched signature label */
-				__( 'Matched pattern "%s". AI triage unavailable — flagged for manual review.', 'sentinelwp-security' ),
+				__( 'Matched pattern "%s". AI triage unavailable — flagged for manual review.', 'sentinelguard-ecommerce-protection' ),
 				$signature_label
 			),
 			'fallback_used' => true,

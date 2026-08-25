@@ -159,7 +159,7 @@ class SentinelWP_Skimmer_Detector {
 					$snippet = substr( $content, $start, 240 );
 
 					/* translators: %s: script file basename */
-					$title      = sprintf( esc_html__( 'Magecart / card skimmer script detected in %s', 'sentinelwp-security' ), basename( $path ) );
+					$title      = sprintf( esc_html__( 'Magecart / card skimmer script detected in %s', 'sentinelguard-ecommerce-protection' ), basename( $path ) );
 					$rel_path   = str_replace( ABSPATH, '', $path );
 					$finding_id = $this->record_finding(
 						'checkout_skimmer',
@@ -169,7 +169,7 @@ class SentinelWP_Skimmer_Detector {
 						$label,
 						'confirmed',
 						'skimmer_detector',
-						__( 'Quarantine or delete this script immediately to protect customer card details.', 'sentinelwp-security' ),
+						__( 'Quarantine or delete this script immediately to protect customer card details.', 'sentinelguard-ecommerce-protection' ),
 						'low'
 					);
 					
@@ -219,17 +219,17 @@ class SentinelWP_Skimmer_Detector {
 			if ( false !== $content && '' !== $content ) {
 				if ( strpos( $content, '<?php' ) !== false || strpos( $content, '<script' ) !== false || strpos( $content, '<%' ) !== false ) {
 					/* translators: %s: file basename */
-					$title    = sprintf( esc_html__( 'Fake image payload detected: %s', 'sentinelwp-security' ), basename( $path ) );
+					$title    = sprintf( esc_html__( 'Fake image payload detected: %s', 'sentinelguard-ecommerce-protection' ), basename( $path ) );
 					$rel_path = str_replace( ABSPATH, '', $path );
 					$this->record_finding(
 						'fake_image_payload',
 						'critical',
 						$rel_path,
 						$title,
-						esc_html__( 'Image file contains executable PHP or JavaScript code signatures.', 'sentinelwp-security' ),
+						esc_html__( 'Image file contains executable PHP or JavaScript code signatures.', 'sentinelguard-ecommerce-protection' ),
 						'confirmed',
 						'fake_image_detector',
-						__( 'Delete the counterfeit image file from wp-content/uploads.', 'sentinelwp-security' ),
+						__( 'Delete the counterfeit image file from wp-content/uploads.', 'sentinelguard-ecommerce-protection' ),
 						'low'
 					);
 				}
@@ -253,16 +253,16 @@ class SentinelWP_Skimmer_Detector {
 		if ( $results ) {
 			foreach ( $results as $row ) {
 				/* translators: %s: database option name */
-				$title = sprintf( esc_html__( 'Database script injection in option: %s', 'sentinelwp-security' ), $row->option_name );
+				$title = sprintf( esc_html__( 'Database script injection in option: %s', 'sentinelguard-ecommerce-protection' ), $row->option_name );
 				$this->record_finding(
 					'db_script_injection',
 					'critical',
 					'db_option:' . $row->option_name,
 					$title,
-					esc_html__( 'Option contains injected script tags or JavaScript execution code.', 'sentinelwp-security' ),
+					esc_html__( 'Option contains injected script tags or JavaScript execution code.', 'sentinelguard-ecommerce-protection' ),
 					'confirmed',
 					'db_injection_scanner',
-					__( 'Inspect and sanitize the option value in wp_options.', 'sentinelwp-security' ),
+					__( 'Inspect and sanitize the option value in wp_options.', 'sentinelguard-ecommerce-protection' ),
 					'low'
 				);
 			}
@@ -272,16 +272,16 @@ class SentinelWP_Skimmer_Detector {
 		if ( $checkout_page_id ) {
 			$post = get_post( $checkout_page_id );
 			if ( $post && ( strpos( $post->post_content, '<script' ) !== false || strpos( $post->post_content, 'atob(' ) !== false || strpos( $post->post_content, 'eval(' ) !== false || strpos( $post->post_content, 'document.write(' ) !== false ) ) {
-				$title = esc_html__( 'Script injection detected on WooCommerce Checkout Page', 'sentinelwp-security' );
+				$title = esc_html__( 'Script injection detected on WooCommerce Checkout Page', 'sentinelguard-ecommerce-protection' );
 				$this->record_finding(
 					'db_script_injection',
 					'critical',
 					'db_post:' . $checkout_page_id,
 					$title,
-					esc_html__( 'Suspicious scripts or eval calls found in checkout page post_content.', 'sentinelwp-security' ),
+					esc_html__( 'Suspicious scripts or eval calls found in checkout page post_content.', 'sentinelguard-ecommerce-protection' ),
 					'confirmed',
 					'db_injection_scanner',
-					__( 'Edit the Checkout page in the WordPress admin to remove injected script tags.', 'sentinelwp-security' ),
+					__( 'Edit the Checkout page in the WordPress admin to remove injected script tags.', 'sentinelguard-ecommerce-protection' ),
 					'low'
 				);
 			}
@@ -330,16 +330,16 @@ class SentinelWP_Skimmer_Detector {
 				
 				if ( ! $has_other_wc_stuff ) {
 					/* translators: %s: plugin file basename */
-					$title = sprintf( esc_html__( 'Unusual checkout hook handler in plugin: %s', 'sentinelwp-security' ), $plugin_file );
+					$title = sprintf( esc_html__( 'Unusual checkout hook handler in plugin: %s', 'sentinelguard-ecommerce-protection' ), $plugin_file );
 					$this->record_finding(
 						'rogue_checkout_plugin',
 						'medium',
 						$full_path,
 						$title,
-						esc_html__( 'Plugin exclusively registers WooCommerce checkout hooks and was recently installed.', 'sentinelwp-security' ),
+						esc_html__( 'Plugin exclusively registers WooCommerce checkout hooks and was recently installed.', 'sentinelguard-ecommerce-protection' ),
 						'suspicious',
 						'rogue_plugin_heuristic',
-						__( 'Review the source code of this plugin to confirm if it was intentionally installed.', 'sentinelwp-security' ),
+						__( 'Review the source code of this plugin to confirm if it was intentionally installed.', 'sentinelguard-ecommerce-protection' ),
 						'high'
 					);
 				}

@@ -124,16 +124,16 @@ class SentinelWP_Attack_Correlator {
 		return array(
 			'id'                 => 'incident_checkout_compromise',
 			'type'               => 'checkout_compromise',
-			'title'              => __( 'Checkout Compromise & Payment Data Exfiltration Threat', 'sentinelwp-security' ),
+			'title'              => __( 'Checkout Compromise & Payment Data Exfiltration Threat', 'sentinelguard-ecommerce-protection' ),
 			'severity'           => 'critical',
 			'confidence_score'   => $confidence,
 			/* translators: %d: confidence percentage number */
-			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelwp-security' ), $confidence ),
-			'summary'            => __( 'An unverified script or backdoor payload was detected interacting with checkout payment fields. Customer payment card credentials are at immediate risk of interception.', 'sentinelwp-security' ),
+			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelguard-ecommerce-protection' ), $confidence ),
+			'summary'            => __( 'An unverified script or backdoor payload was detected interacting with checkout payment fields. Customer payment card credentials are at immediate risk of interception.', 'sentinelguard-ecommerce-protection' ),
 			'signals'            => $signal_bullets,
 			'matched_count'      => $signals_count,
 			'finding_ids'        => wp_list_pluck( $matched_findings, 'id' ),
-			'recommended_action' => __( '1-Click Quarantine the flagged script file immediately and verify payment gateway API settings.', 'sentinelwp-security' ),
+			'recommended_action' => __( '1-Click Quarantine the flagged script file immediately and verify payment gateway API settings.', 'sentinelguard-ecommerce-protection' ),
 			'action_type'        => 'quarantine',
 		);
 	}
@@ -169,16 +169,16 @@ class SentinelWP_Attack_Correlator {
 		return array(
 			'id'                 => 'incident_card_testing_attack',
 			'type'               => 'card_testing_attack',
-			'title'              => __( 'Automated Card-Testing & Checkout Velocity Attack', 'sentinelwp-security' ),
+			'title'              => __( 'Automated Card-Testing & Checkout Velocity Attack', 'sentinelguard-ecommerce-protection' ),
 			'severity'           => 'critical',
 			'confidence_score'   => $confidence,
 			/* translators: %d: confidence percentage number */
-			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelwp-security' ), $confidence ),
-			'summary'            => __( 'Automated bots are hitting checkout endpoints with rapid failed transactions to validate stolen payment cards. This attack risks gateway dispute penalties and server resource exhaustion.', 'sentinelwp-security' ),
+			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelguard-ecommerce-protection' ), $confidence ),
+			'summary'            => __( 'Automated bots are hitting checkout endpoints with rapid failed transactions to validate stolen payment cards. This attack risks gateway dispute penalties and server resource exhaustion.', 'sentinelguard-ecommerce-protection' ),
 			'signals'            => $signal_bullets,
 			'matched_count'      => count( $matched_findings ),
 			'finding_ids'        => wp_list_pluck( $matched_findings, 'id' ),
-			'recommended_action' => __( 'Enable 429 Checkout Throttling in Flood Protection settings and review flagged order IDs.', 'sentinelwp-security' ),
+			'recommended_action' => __( 'Enable 429 Checkout Throttling in Flood Protection settings and review flagged order IDs.', 'sentinelguard-ecommerce-protection' ),
 			'action_type'        => 'throttle',
 		);
 	}
@@ -206,22 +206,22 @@ class SentinelWP_Attack_Correlator {
 		$confidence = 88;
 		$signal_bullets = array();
 		foreach ( $matched_findings as $mf ) {
-			$signal_bullets[] = sprintf( '%s: %s', __( 'Traffic Anomaly', 'sentinelwp-security' ), $mf['title'] );
+			$signal_bullets[] = sprintf( '%s: %s', __( 'Traffic Anomaly', 'sentinelguard-ecommerce-protection' ), $mf['title'] );
 		}
 
 		return array(
 			'id'                 => 'incident_store_scraping_flood',
 			'type'               => 'store_scraping_flood',
-			'title'              => __( 'Automated Store API Scraping & Resource Flood', 'sentinelwp-security' ),
+			'title'              => __( 'Automated Store API Scraping & Resource Flood', 'sentinelguard-ecommerce-protection' ),
 			'severity'           => 'high',
 			'confidence_score'   => $confidence,
 			/* translators: %d: confidence percentage number */
-			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelwp-security' ), $confidence ),
-			'summary'            => __( 'High-frequency automated traffic is scraping product catalogs and Store API routes, consuming database connections and server memory.', 'sentinelwp-security' ),
+			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelguard-ecommerce-protection' ), $confidence ),
+			'summary'            => __( 'High-frequency automated traffic is scraping product catalogs and Store API routes, consuming database connections and server memory.', 'sentinelguard-ecommerce-protection' ),
 			'signals'            => $signal_bullets,
 			'matched_count'      => count( $matched_findings ),
 			'finding_ids'        => wp_list_pluck( $matched_findings, 'id' ),
-			'recommended_action' => __( 'Enable Form Shield and adjust rate limits under Settings -> Modules -> Flood Protection.', 'sentinelwp-security' ),
+			'recommended_action' => __( 'Enable Form Shield and adjust rate limits under Settings -> Modules -> Flood Protection.', 'sentinelguard-ecommerce-protection' ),
 			'action_type'        => 'settings',
 		);
 	}
@@ -261,16 +261,16 @@ class SentinelWP_Attack_Correlator {
 		return array(
 			'id'                 => 'incident_store_hijack_attempt',
 			'type'               => 'store_hijack_attempt',
-			'title'              => __( 'Privilege Escalation & Store Gateway Tamper Attempt', 'sentinelwp-security' ),
+			'title'              => __( 'Privilege Escalation & Store Gateway Tamper Attempt', 'sentinelguard-ecommerce-protection' ),
 			'severity'           => 'critical',
 			'confidence_score'   => $confidence,
 			/* translators: %d: confidence percentage number */
-			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelwp-security' ), $confidence ),
-			'summary'            => __( 'An unauthorized administrator account was generated and coincides with modified core files or payment gateway settings.', 'sentinelwp-security' ),
+			'confidence_label'   => sprintf( __( '%d%% Confidence', 'sentinelguard-ecommerce-protection' ), $confidence ),
+			'summary'            => __( 'An unauthorized administrator account was generated and coincides with modified core files or payment gateway settings.', 'sentinelguard-ecommerce-protection' ),
 			'signals'            => $signal_bullets,
 			'matched_count'      => count( $matched_findings ),
 			'finding_ids'        => wp_list_pluck( $matched_findings, 'id' ),
-			'recommended_action' => __( 'Purge rogue administrator accounts and rotate payment gateway secret keys immediately.', 'sentinelwp-security' ),
+			'recommended_action' => __( 'Purge rogue administrator accounts and rotate payment gateway secret keys immediately.', 'sentinelguard-ecommerce-protection' ),
 			'action_type'        => 'review_admins',
 		);
 	}

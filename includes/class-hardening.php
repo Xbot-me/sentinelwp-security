@@ -137,7 +137,7 @@ class SentinelWP_Hardening {
 		if ( $locked ) {
 			return new WP_Error(
 				'sentinelwp_locked_out',
-				__( 'Too many failed login attempts. Please try again in 15 minutes.', 'sentinelwp-security' )
+				__( 'Too many failed login attempts. Please try again in 15 minutes.', 'sentinelguard-ecommerce-protection' )
 			);
 		}
 		return $user;

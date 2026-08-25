@@ -53,19 +53,17 @@ if ( ! defined( 'SENTINELWP_VERSION' ) ) {
 }
 
 if ( ! defined( 'SENTINELWP_FILE' ) ) {
-	define( 'SENTINELWP_FILE', ABSPATH . 'sentinelwp-security.php' );
+	define( 'SENTINELWP_FILE', ABSPATH . 'sentinelguard-ecommerce-protection.php' );
 }
-
 if ( ! defined( 'SENTINELWP_PATH' ) ) {
 	define( 'SENTINELWP_PATH', ABSPATH );
+}
+if ( ! defined( 'SENTINELWP_BASENAME' ) ) {
+	define( 'SENTINELWP_BASENAME', 'sentinelguard-ecommerce-protection/sentinelguard-ecommerce-protection.php' );
 }
 
 if ( ! defined( 'SENTINELWP_URL' ) ) {
 	define( 'SENTINELWP_URL', 'https://example.com/wp-content/plugins/sentinelwp-security/' );
-}
-
-if ( ! defined( 'SENTINELWP_BASENAME' ) ) {
-	define( 'SENTINELWP_BASENAME', 'sentinelwp-security/sentinelwp-security.php' );
 }
 
 // Global in-memory mock stores
@@ -658,7 +656,7 @@ if ( ! function_exists( 'get_plugins' ) ) {
 				'Author'      => 'SentinelWP Security',
 				'AuthorURI'   => 'https://sentinelwp.io',
 				'PluginURI'   => 'https://sentinelwp.io',
-				'TextDomain'  => 'sentinelwp-security',
+				'TextDomain'  => 'sentinelguard-ecommerce-protection',
 			),
 		);
 	}

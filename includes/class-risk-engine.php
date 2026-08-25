@@ -185,12 +185,12 @@ class SentinelWP_Risk_Engine {
 
 	private function get_recommended_action( $verdict, array $reasons ) {
 		if ( in_array( 'CARD_TESTING_VELOCITY', $reasons, true ) || in_array( 'DISTRIBUTED_IDENTITY_CLUSTER', $reasons, true ) ) {
-			return __( 'Throttling Store API checkout for this identity cluster to mitigate card testing.', 'sentinelwp-security' );
+			return __( 'Throttling Store API checkout for this identity cluster to mitigate card testing.', 'sentinelguard-ecommerce-protection' );
 		}
 		if ( in_array( 'MICRO_CART_ANOMALY', $reasons, true ) && in_array( 'REPEATED_PAYMENT_FAILURE', $reasons, true ) ) {
-			return __( 'Multiple failed micro-order attempts detected; challenge verification recommended.', 'sentinelwp-security' );
+			return __( 'Multiple failed micro-order attempts detected; challenge verification recommended.', 'sentinelguard-ecommerce-protection' );
 		}
-		return __( 'Monitoring checkout session telemetry.', 'sentinelwp-security' );
+		return __( 'Monitoring checkout session telemetry.', 'sentinelguard-ecommerce-protection' );
 	}
 
 	private function log_decision( array $result, array $context ) {

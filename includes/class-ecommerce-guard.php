@@ -63,12 +63,12 @@ class SentinelWP_Ecommerce_Guard {
 					'order_velocity',
 					'high',
 					'ecommerce_guard',
-					__( 'High order velocity from single IP detected', 'sentinelwp-security' ),
+					__( 'High order velocity from single IP detected', 'sentinelguard-ecommerce-protection' ),
 					/* translators: %s: client IP hash prefix */
-					sprintf( __( 'More than 5 orders from client IP hash %s in 1 hour.', 'sentinelwp-security' ), esc_html( substr( $ip_hash, 0, 12 ) . '...' ) ),
+					sprintf( __( 'More than 5 orders from client IP hash %s in 1 hour.', 'sentinelguard-ecommerce-protection' ), esc_html( substr( $ip_hash, 0, 12 ) . '...' ) ),
 					'likely',
 					'ecommerce_guard',
-					__( 'Review customer orders from this IP and consider enabling checkout rate limits.', 'sentinelwp-security' ),
+					__( 'Review customer orders from this IP and consider enabling checkout rate limits.', 'sentinelguard-ecommerce-protection' ),
 					'low'
 				);
 			}
@@ -88,12 +88,12 @@ class SentinelWP_Ecommerce_Guard {
 					'order_velocity',
 					'high',
 					'ecommerce_guard',
-					__( 'High order velocity from single email detected', 'sentinelwp-security' ),
+					__( 'High order velocity from single email detected', 'sentinelguard-ecommerce-protection' ),
 					/* translators: %d: order ID */
-					sprintf( __( 'More than 3 orders from same email in 1 hour (Order #%d).', 'sentinelwp-security' ), (int) $order_id ),
+					sprintf( __( 'More than 3 orders from same email in 1 hour (Order #%d).', 'sentinelguard-ecommerce-protection' ), (int) $order_id ),
 					'likely',
 					'ecommerce_guard',
-					__( 'Verify order legitimacy before fulfillment.', 'sentinelwp-security' ),
+					__( 'Verify order legitimacy before fulfillment.', 'sentinelguard-ecommerce-protection' ),
 					'low'
 				);
 			}
@@ -102,7 +102,7 @@ class SentinelWP_Ecommerce_Guard {
 		$is_fraud_auto_hold_enabled = get_option( 'sentinelwp_fraud_auto_hold', false );
 		if ( $is_fraud_auto_hold_enabled ) {
 			if ( ( $ip_hash && $ip_count > 5 ) || ( ! empty( $email ) && $email_count > 3 ) ) {
-				$order->update_status( 'on-hold', __( 'SentinelWP Security: Order automatically placed on hold due to high order velocity.', 'sentinelwp-security' ) );
+				$order->update_status( 'on-hold', __( 'SentinelWP Security: Order automatically placed on hold due to high order velocity.', 'sentinelguard-ecommerce-protection' ) );
 			}
 		}
 	}
@@ -132,12 +132,12 @@ class SentinelWP_Ecommerce_Guard {
 					'card_testing',
 					'critical',
 					'ecommerce_guard',
-					__( 'Card testing attack detected via IP', 'sentinelwp-security' ),
+					__( 'Card testing attack detected via IP', 'sentinelguard-ecommerce-protection' ),
 					/* translators: %s: client IP hash prefix */
-					sprintf( __( 'More than 3 rapid payment failures from IP hash %s in 10 minutes.', 'sentinelwp-security' ), esc_html( substr( $ip_hash, 0, 12 ) . '...' ) ),
+					sprintf( __( 'More than 3 rapid payment failures from IP hash %s in 10 minutes.', 'sentinelguard-ecommerce-protection' ), esc_html( substr( $ip_hash, 0, 12 ) . '...' ) ),
 					'confirmed',
 					'ecommerce_guard',
-					__( 'Investigate payment gateway logs for card testing activity and enable CAPTCHA / gateway velocity rules.', 'sentinelwp-security' ),
+					__( 'Investigate payment gateway logs for card testing activity and enable CAPTCHA / gateway velocity rules.', 'sentinelguard-ecommerce-protection' ),
 					'low'
 				);
 			}
@@ -156,12 +156,12 @@ class SentinelWP_Ecommerce_Guard {
 					'card_testing',
 					'high',
 					'ecommerce_guard',
-					__( 'Card testing attack detected via email', 'sentinelwp-security' ),
+					__( 'Card testing attack detected via email', 'sentinelguard-ecommerce-protection' ),
 					/* translators: %d: order ID */
-					sprintf( __( 'More than 5 payment failures from same billing email in 1 hour (Order #%d).', 'sentinelwp-security' ), (int) $order_id ),
+					sprintf( __( 'More than 5 payment failures from same billing email in 1 hour (Order #%d).', 'sentinelguard-ecommerce-protection' ), (int) $order_id ),
 					'likely',
 					'ecommerce_guard',
-					__( 'Review payment attempts for stolen card pattern.', 'sentinelwp-security' ),
+					__( 'Review payment attempts for stolen card pattern.', 'sentinelguard-ecommerce-protection' ),
 					'low'
 				);
 			}
@@ -193,12 +193,12 @@ class SentinelWP_Ecommerce_Guard {
 						'disposable_email',
 						'medium',
 						'ecommerce_guard',
-						__( 'Order placed using temporary disposable email domain', 'sentinelwp-security' ),
+						__( 'Order placed using temporary disposable email domain', 'sentinelguard-ecommerce-protection' ),
 						/* translators: %s: email domain */
-						sprintf( __( 'Domain "%s" is on the known disposable email list.', 'sentinelwp-security' ), esc_html( $domain ) ),
+						sprintf( __( 'Domain "%s" is on the known disposable email list.', 'sentinelguard-ecommerce-protection' ), esc_html( $domain ) ),
 						'likely',
 						'ecommerce_guard',
-						__( 'Verify customer identity before dispatching high-value items.', 'sentinelwp-security' ),
+						__( 'Verify customer identity before dispatching high-value items.', 'sentinelguard-ecommerce-protection' ),
 						'medium'
 					);
 				}
@@ -239,12 +239,12 @@ class SentinelWP_Ecommerce_Guard {
 						'order_anomaly',
 						'high',
 						'ecommerce_guard',
-						__( 'High 24h order volume from single email', 'sentinelwp-security' ),
+						__( 'High 24h order volume from single email', 'sentinelguard-ecommerce-protection' ),
 						/* translators: 1: email address, 2: order count */
-						sprintf( __( 'Email "%1$s" placed %2$d orders in the last 24 hours.', 'sentinelwp-security' ), esc_html( $row->billing_email ), (int) $row->order_count ),
+						sprintf( __( 'Email "%1$s" placed %2$d orders in the last 24 hours.', 'sentinelguard-ecommerce-protection' ), esc_html( $row->billing_email ), (int) $row->order_count ),
 						'likely',
 						'ecommerce_guard',
-						__( 'Review customer orders for automated purchasing scripts or card testing.', 'sentinelwp-security' ),
+						__( 'Review customer orders for automated purchasing scripts or card testing.', 'sentinelguard-ecommerce-protection' ),
 						'low'
 					);
 				}
@@ -269,12 +269,12 @@ class SentinelWP_Ecommerce_Guard {
 						'order_anomaly',
 						'high',
 						'ecommerce_guard',
-						__( 'High 24h order volume from single IP', 'sentinelwp-security' ),
+						__( 'High 24h order volume from single IP', 'sentinelguard-ecommerce-protection' ),
 						/* translators: 1: IP address, 2: order count */
-						sprintf( __( 'IP "%1$s" placed %2$d orders in the last 24 hours.', 'sentinelwp-security' ), esc_html( $row->ip_address ), (int) $row->order_count ),
+						sprintf( __( 'IP "%1$s" placed %2$d orders in the last 24 hours.', 'sentinelguard-ecommerce-protection' ), esc_html( $row->ip_address ), (int) $row->order_count ),
 						'likely',
 						'ecommerce_guard',
-						__( 'Inspect IP for proxy or bot network activity.', 'sentinelwp-security' ),
+						__( 'Inspect IP for proxy or bot network activity.', 'sentinelguard-ecommerce-protection' ),
 						'low'
 					);
 				}
@@ -310,12 +310,12 @@ class SentinelWP_Ecommerce_Guard {
 							'order_anomaly',
 							'medium',
 							'ecommerce_guard',
-							__( 'Anomalous order amount or customer purchase spike', 'sentinelwp-security' ),
+							__( 'Anomalous order amount or customer purchase spike', 'sentinelguard-ecommerce-protection' ),
 							/* translators: 1: order ID, 2: order total amount, 3: average order value */
-							sprintf( __( 'Order #%1$d total ($%2$s) is more than 5x the 30-day average order value ($%3$s).', 'sentinelwp-security' ), (int) $ord->id, number_format( (float) $ord->total_amount, 2 ), number_format( $avg_order_value, 2 ) ),
+							sprintf( __( 'Order #%1$d total ($%2$s) is more than 5x the 30-day average order value ($%3$s).', 'sentinelguard-ecommerce-protection' ), (int) $ord->id, number_format( (float) $ord->total_amount, 2 ), number_format( $avg_order_value, 2 ) ),
 							'suspicious',
 							'ecommerce_guard',
-							__( 'Verify high-value payment authorization with customer before shipping.', 'sentinelwp-security' ),
+							__( 'Verify high-value payment authorization with customer before shipping.', 'sentinelguard-ecommerce-protection' ),
 							'medium'
 						);
 					}
@@ -345,12 +345,12 @@ class SentinelWP_Ecommerce_Guard {
 						'order_anomaly',
 						'high',
 						'ecommerce_guard',
-						__( 'High 24h order volume from single email', 'sentinelwp-security' ),
+						__( 'High 24h order volume from single email', 'sentinelguard-ecommerce-protection' ),
 						/* translators: 1: email address, 2: order count */
-						sprintf( __( 'Email "%1$s" placed %2$d orders in the last 24 hours.', 'sentinelwp-security' ), esc_html( $row->billing_email ), (int) $row->order_count ),
+						sprintf( __( 'Email "%1$s" placed %2$d orders in the last 24 hours.', 'sentinelguard-ecommerce-protection' ), esc_html( $row->billing_email ), (int) $row->order_count ),
 						'likely',
 						'ecommerce_guard',
-						__( 'Review customer orders for automated purchasing scripts.', 'sentinelwp-security' ),
+						__( 'Review customer orders for automated purchasing scripts.', 'sentinelguard-ecommerce-protection' ),
 						'low'
 					);
 				}
@@ -392,12 +392,12 @@ class SentinelWP_Ecommerce_Guard {
 							'order_anomaly',
 							'medium',
 							'ecommerce_guard',
-							__( 'Anomalous order amount or customer purchase spike', 'sentinelwp-security' ),
+							__( 'Anomalous order amount or customer purchase spike', 'sentinelguard-ecommerce-protection' ),
 							/* translators: 1: order ID, 2: order total amount, 3: average order value */
-							sprintf( __( 'Order #%1$d total ($%2$s) is more than 5x the 30-day average order value ($%3$s).', 'sentinelwp-security' ), (int) $ord->id, number_format( (float) $ord->total_amount, 2 ), number_format( $avg_order_value, 2 ) ),
+							sprintf( __( 'Order #%1$d total ($%2$s) is more than 5x the 30-day average order value ($%3$s).', 'sentinelguard-ecommerce-protection' ), (int) $ord->id, number_format( (float) $ord->total_amount, 2 ), number_format( $avg_order_value, 2 ) ),
 							'suspicious',
 							'ecommerce_guard',
-							__( 'Verify high-value payment authorization with customer before shipping.', 'sentinelwp-security' ),
+							__( 'Verify high-value payment authorization with customer before shipping.', 'sentinelguard-ecommerce-protection' ),
 							'medium'
 						);
 					}
@@ -429,12 +429,12 @@ class SentinelWP_Ecommerce_Guard {
 						'order_anomaly',
 						'medium',
 						'ecommerce_guard',
-						__( 'Nonsensical billing data detected', 'sentinelwp-security' ),
+						__( 'Nonsensical billing data detected', 'sentinelguard-ecommerce-protection' ),
 						/* translators: 1: order ID, 2: first name, 3: last name */
-						sprintf( __( 'Order #%1$d contains suspicious numeric or single-character billing name "%2$s %3$s".', 'sentinelwp-security' ), (int) $ord->ID, esc_html( $first_name ), esc_html( $last_name ) ),
+						sprintf( __( 'Order #%1$d contains suspicious numeric or single-character billing name "%2$s %3$s".', 'sentinelguard-ecommerce-protection' ), (int) $ord->ID, esc_html( $first_name ), esc_html( $last_name ) ),
 						'suspicious',
 						'ecommerce_guard',
-						__( 'Inspect order for automated testing before processing.', 'sentinelwp-security' ),
+						__( 'Inspect order for automated testing before processing.', 'sentinelguard-ecommerce-protection' ),
 						'medium'
 					);
 				}
@@ -482,12 +482,12 @@ class SentinelWP_Ecommerce_Guard {
 					'refund_spike',
 					'high',
 					'ecommerce_guard',
-					__( 'Spike in refunded orders', 'sentinelwp-security' ),
+					__( 'Spike in refunded orders', 'sentinelguard-ecommerce-protection' ),
 					/* translators: 1: refund percentage rate, 2: refunded order count, 3: total order count */
-					sprintf( __( 'The 7-day refund rate is %1$s%% (%2$d of %3$d orders refunded).', 'sentinelwp-security' ), number_format( $rate * 100, 1 ), $refunded_7d, $total_7d ),
+					sprintf( __( 'The 7-day refund rate is %1$s%% (%2$d of %3$d orders refunded).', 'sentinelguard-ecommerce-protection' ), number_format( $rate * 100, 1 ), $refunded_7d, $total_7d ),
 					'likely',
 					'ecommerce_guard',
-					__( 'Examine recent refunds for unauthorized transactions or disputed charges.', 'sentinelwp-security' ),
+					__( 'Examine recent refunds for unauthorized transactions or disputed charges.', 'sentinelguard-ecommerce-protection' ),
 					'medium'
 				);
 			}
@@ -516,12 +516,12 @@ class SentinelWP_Ecommerce_Guard {
 				'complaint_pattern',
 				'critical',
 				'ecommerce_guard',
-				__( 'Suspicious customer complaint pattern detected', 'sentinelwp-security' ),
+				__( 'Suspicious customer complaint pattern detected', 'sentinelguard-ecommerce-protection' ),
 				/* translators: %d: suspicious note count */
-				sprintf( __( 'Found %d order notes containing fraud or chargeback keywords in the last 7 days.', 'sentinelwp-security' ), $suspicious_notes_count ),
+				sprintf( __( 'Found %d order notes containing fraud or chargeback keywords in the last 7 days.', 'sentinelguard-ecommerce-protection' ), $suspicious_notes_count ),
 				'likely',
 				'ecommerce_guard',
-				__( 'Check merchant gateway account for active chargeback disputes.', 'sentinelwp-security' ),
+				__( 'Check merchant gateway account for active chargeback disputes.', 'sentinelguard-ecommerce-protection' ),
 				'low'
 			);
 		}
@@ -556,12 +556,12 @@ class SentinelWP_Ecommerce_Guard {
 					'store_config_changed',
 					'high',
 					'ecommerce_guard',
-					__( 'Payment gateway or critical store configuration changed', 'sentinelwp-security' ),
+					__( 'Payment gateway or critical store configuration changed', 'sentinelguard-ecommerce-protection' ),
 					/* translators: %s: WooCommerce setting name */
-					sprintf( __( 'The WooCommerce setting "%s" was modified.', 'sentinelwp-security' ), esc_html( $option_name ) ),
+					sprintf( __( 'The WooCommerce setting "%s" was modified.', 'sentinelguard-ecommerce-protection' ), esc_html( $option_name ) ),
 					'confirmed',
 					'ecommerce_guard',
-					__( 'Verify that payment gateway API keys and payout accounts point to your official accounts.', 'sentinelwp-security' ),
+					__( 'Verify that payment gateway API keys and payout accounts point to your official accounts.', 'sentinelguard-ecommerce-protection' ),
 					'low'
 				);
 			}
@@ -609,12 +609,12 @@ class SentinelWP_Ecommerce_Guard {
 						'store_config_changed',
 						'high',
 						'ecommerce_guard',
-						__( 'Suspicious product price zeroing detected', 'sentinelwp-security' ),
+						__( 'Suspicious product price zeroing detected', 'sentinelguard-ecommerce-protection' ),
 						/* translators: 1: product title, 2: product ID, 3: regular price */
-						sprintf( __( 'Product "%1$s" (#%2$d) is priced at $0.00 but has a regular price of $%3$s.', 'sentinelwp-security' ), esc_html( $product->post_title ), (int) $product->ID, esc_html( $regular_price ) ),
+						sprintf( __( 'Product "%1$s" (#%2$d) is priced at $0.00 but has a regular price of $%3$s.', 'sentinelguard-ecommerce-protection' ), esc_html( $product->post_title ), (int) $product->ID, esc_html( $regular_price ) ),
 						'likely',
 						'ecommerce_guard',
-						__( 'Verify product price in WooCommerce products catalog.', 'sentinelwp-security' ),
+						__( 'Verify product price in WooCommerce products catalog.', 'sentinelguard-ecommerce-protection' ),
 						'low'
 					);
 				}
@@ -648,12 +648,12 @@ class SentinelWP_Ecommerce_Guard {
 						'store_config_changed',
 						'high',
 						'ecommerce_guard',
-						__( 'Suspicious high-value coupon created by non-admin', 'sentinelwp-security' ),
+						__( 'Suspicious high-value coupon created by non-admin', 'sentinelguard-ecommerce-protection' ),
 						/* translators: 1: coupon title, 2: author user ID */
-						sprintf( __( 'Coupon "%1$s" with >50%% discount was created by non-administrator user #%2$d.', 'sentinelwp-security' ), esc_html( $coupon->post_title ), $author_id ),
+						sprintf( __( 'Coupon "%1$s" with >50%% discount was created by non-administrator user #%2$d.', 'sentinelguard-ecommerce-protection' ), esc_html( $coupon->post_title ), $author_id ),
 						'likely',
 						'ecommerce_guard',
-						__( 'Inspect coupon settings and revoke unauthorized user permissions.', 'sentinelwp-security' ),
+						__( 'Inspect coupon settings and revoke unauthorized user permissions.', 'sentinelguard-ecommerce-protection' ),
 						'low'
 					);
 				}

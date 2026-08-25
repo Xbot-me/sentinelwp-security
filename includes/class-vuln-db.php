@@ -194,7 +194,7 @@ class SentinelWP_Vuln_DB {
 			}
 			$result->has_vulnerability = true;
 			$result->vulnerabilities[] = array(
-				'title'    => isset( $vuln['title'] ) ? sanitize_text_field( $vuln['title'] ) : __( 'Unnamed vulnerability', 'sentinelwp-security' ),
+				'title'    => isset( $vuln['title'] ) ? sanitize_text_field( $vuln['title'] ) : __( 'Unnamed vulnerability', 'sentinelguard-ecommerce-protection' ),
 				'cve'      => isset( $vuln['cve'] ) ? sanitize_text_field( $vuln['cve'] ) : '',
 				'severity' => isset( $vuln['severity'] ) ? sanitize_text_field( $vuln['severity'] ) : 'unknown',
 				'fixed_in' => sanitize_text_field( $fixed_in ),
@@ -233,7 +233,7 @@ class SentinelWP_Vuln_DB {
 			}
 			$result->has_vulnerability = true;
 			$result->vulnerabilities[] = array(
-				'title'    => isset( $vuln['title'] ) ? sanitize_text_field( $vuln['title'] ) : __( 'Unnamed vulnerability', 'sentinelwp-security' ),
+				'title'    => isset( $vuln['title'] ) ? sanitize_text_field( $vuln['title'] ) : __( 'Unnamed vulnerability', 'sentinelguard-ecommerce-protection' ),
 				'cve'      => $cve,
 				'severity' => isset( $vuln['cvss']['rating'] ) ? sanitize_text_field( $vuln['cvss']['rating'] ) : 'unknown',
 				'fixed_in' => sanitize_text_field( $fixed_in ),

@@ -102,7 +102,7 @@ class SentinelWP_Nulled_Detector {
 		$plugins = function_exists( 'get_plugins' ) ? get_plugins() : array();
 
 		foreach ( $plugins as $plugin_file => $plugin_data ) {
-			if ( strpos( $plugin_file, 'sentinelwp-security' ) !== false ) {
+			if ( strpos( $plugin_file, 'sentinelguard-ecommerce-protection' ) !== false ) {
 				continue;
 			}
 
@@ -193,9 +193,9 @@ class SentinelWP_Nulled_Detector {
 					'critical',
 					$component_name,
 					/* translators: %s: component name */
-					sprintf( esc_html__( 'Malicious Nulled File Found in %s', 'sentinelwp-security' ), $component_name ),
+					sprintf( esc_html__( 'Malicious Nulled File Found in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
 					/* translators: %s: malicious filename */
-					sprintf( esc_html__( 'File %s matches known malicious indicator.', 'sentinelwp-security' ), $filename )
+					sprintf( esc_html__( 'File %s matches known malicious indicator.', 'sentinelguard-ecommerce-protection' ), $filename )
 				);
 			}
 
@@ -206,9 +206,9 @@ class SentinelWP_Nulled_Detector {
 					'critical',
 					$component_name,
 					/* translators: %s: component name */
-					sprintf( esc_html__( 'Suspicious Filename Found in %s', 'sentinelwp-security' ), $component_name ),
+					sprintf( esc_html__( 'Suspicious Filename Found in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
 					/* translators: %s: suspicious filename */
-					sprintf( esc_html__( 'File %s indicates a potentially nulled component.', 'sentinelwp-security' ), $filename )
+					sprintf( esc_html__( 'File %s indicates a potentially nulled component.', 'sentinelguard-ecommerce-protection' ), $filename )
 				);
 			}
 		}
@@ -255,9 +255,9 @@ class SentinelWP_Nulled_Detector {
 						'medium',
 						$component_name,
 						/* translators: %s: component name */
-						sprintf( esc_html__( 'License Bypass Code in %s', 'sentinelwp-security' ), $component_name ),
+						sprintf( esc_html__( 'License Bypass Code in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
 						/* translators: 1: detection label, 2: filename */
-						sprintf( esc_html__( '%1$s matched in file %2$s', 'sentinelwp-security' ), $label, $file->getFilename() )
+						sprintf( esc_html__( '%1$s matched in file %2$s', 'sentinelguard-ecommerce-protection' ), $label, $file->getFilename() )
 					);
 					break; // Found one pattern in this file, move to next file
 				}
@@ -305,8 +305,8 @@ class SentinelWP_Nulled_Detector {
 				'low',
 				$slug,
 				/* translators: %s: component slug */
-				sprintf( esc_html__( 'Update Suppression Hook in %s', 'sentinelwp-security' ), $slug ),
-				esc_html__( 'The component hooks into update transients, potentially suppressing updates.', 'sentinelwp-security' )
+				sprintf( esc_html__( 'Update Suppression Hook in %s', 'sentinelguard-ecommerce-protection' ), $slug ),
+				esc_html__( 'The component hooks into update transients, potentially suppressing updates.', 'sentinelguard-ecommerce-protection' )
 			);
 		}
 	}
@@ -377,7 +377,7 @@ class SentinelWP_Nulled_Detector {
 				'medium',
 				$slug,
 				/* translators: %s: component slug */
-				sprintf( esc_html__( 'WP.org Data Mismatch in %s', 'sentinelwp-security' ), $slug ),
+				sprintf( esc_html__( 'WP.org Data Mismatch in %s', 'sentinelguard-ecommerce-protection' ), $slug ),
 				esc_html( implode( ' ', $details ) )
 			);
 		}
@@ -425,9 +425,9 @@ class SentinelWP_Nulled_Detector {
 							'critical',
 							$component_name,
 							/* translators: %s: component name */
-							sprintf( esc_html__( 'Suspicious Outbound Request in %s', 'sentinelwp-security' ), $component_name ),
+							sprintf( esc_html__( 'Suspicious Outbound Request in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
 							/* translators: 1: filename, 2: domain name */
-							sprintf( esc_html__( 'File %1$s makes requests to known nulled domain: %2$s', 'sentinelwp-security' ), $file->getFilename(), $domain )
+							sprintf( esc_html__( 'File %1$s makes requests to known nulled domain: %2$s', 'sentinelguard-ecommerce-protection' ), $file->getFilename(), $domain )
 						);
 					}
 				}
@@ -445,9 +445,9 @@ class SentinelWP_Nulled_Detector {
 									'critical',
 									$component_name,
 									/* translators: %s: component name */
-									sprintf( esc_html__( 'Hidden Suspicious Domain in %s', 'sentinelwp-security' ), $component_name ),
+									sprintf( esc_html__( 'Hidden Suspicious Domain in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
 									/* translators: 1: filename, 2: domain name */
-									sprintf( esc_html__( 'File %1$s contains encoded reference to known nulled domain: %2$s', 'sentinelwp-security' ), $file->getFilename(), $domain )
+									sprintf( esc_html__( 'File %1$s contains encoded reference to known nulled domain: %2$s', 'sentinelguard-ecommerce-protection' ), $file->getFilename(), $domain )
 								);
 								break 2; // Move to next file
 							}

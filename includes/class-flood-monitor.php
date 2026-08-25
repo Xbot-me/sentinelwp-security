@@ -94,12 +94,12 @@ class SentinelWP_Flood_Monitor {
 					'high',
 					'flood_monitor',
 					/* translators: 1: endpoint name, 2: hit count */
-					sprintf( __( 'High request velocity on %1$s endpoint (%2$d req / 5min)', 'sentinelwp-security' ), ucfirst( $endpoint ), $hit_count ),
+					sprintf( __( 'High request velocity on %1$s endpoint (%2$d req / 5min)', 'sentinelguard-ecommerce-protection' ), ucfirst( $endpoint ), $hit_count ),
 					/* translators: 1: IP hash prefix, 2: threshold count, 3: endpoint name */
-					sprintf( __( 'Client IP hash %1$s exceeded threshold of %2$d requests on the %3$s route.', 'sentinelwp-security' ), esc_html( substr( $ip_hash, 0, 12 ) . '...' ), $threshold, esc_html( $endpoint ) ),
+					sprintf( __( 'Client IP hash %1$s exceeded threshold of %2$d requests on the %3$s route.', 'sentinelguard-ecommerce-protection' ), esc_html( substr( $ip_hash, 0, 12 ) . '...' ), $threshold, esc_html( $endpoint ) ),
 					'likely',
 					'flood_monitor',
-					__( 'Investigate traffic patterns from this client and enable edge firewall/WAF rate limits if abusive.', 'sentinelwp-security' ),
+					__( 'Investigate traffic patterns from this client and enable edge firewall/WAF rate limits if abusive.', 'sentinelguard-ecommerce-protection' ),
 					'low'
 				);
 				
@@ -136,12 +136,12 @@ class SentinelWP_Flood_Monitor {
 				'flood_detected',
 				'critical',
 				'flood_monitor',
-				__( 'Aggregate application traffic surge detected across all routes', 'sentinelwp-security' ),
+				__( 'Aggregate application traffic surge detected across all routes', 'sentinelguard-ecommerce-protection' ),
 				/* translators: 1: current request count, 2: average request count */
-				sprintf( __( 'Current 5-minute volume (%1$d requests) is over 3x the baseline average (%2$d requests).', 'sentinelwp-security' ), $total_requests, $avg_rate ),
+				sprintf( __( 'Current 5-minute volume (%1$d requests) is over 3x the baseline average (%2$d requests).', 'sentinelguard-ecommerce-protection' ), $total_requests, $avg_rate ),
 				'likely',
 				'flood_monitor',
-				__( 'Check server access logs and upstream CDN/WAF metrics for distributed DDoS traffic.', 'sentinelwp-security' ),
+				__( 'Check server access logs and upstream CDN/WAF metrics for distributed DDoS traffic.', 'sentinelguard-ecommerce-protection' ),
 				'medium'
 			);
 		}
@@ -288,8 +288,8 @@ class SentinelWP_Flood_Monitor {
 			status_header( 429 );
 			header( 'Retry-After: 300' );
 			wp_die(
-				esc_html__( 'Too many requests. Please wait a few minutes and try again.', 'sentinelwp-security' ),
-				esc_html__( 'Rate Limit Exceeded', 'sentinelwp-security' ),
+				esc_html__( 'Too many requests. Please wait a few minutes and try again.', 'sentinelguard-ecommerce-protection' ),
+				esc_html__( 'Rate Limit Exceeded', 'sentinelguard-ecommerce-protection' ),
 				array( 'response' => 429 )
 			);
 		}

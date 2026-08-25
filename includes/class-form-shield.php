@@ -30,14 +30,14 @@ class SentinelWP_Form_Shield {
 
 	public function rate_limit_comments( $post_id ) {
 		if ( $this->check_rate( 'comment', 5, 600 ) ) {
-			wp_die( esc_html__( 'Too many comments. Please try again later.', 'sentinelwp-security' ), '', array( 'response' => 429 ) );
+			wp_die( esc_html__( 'Too many comments. Please try again later.', 'sentinelguard-ecommerce-protection' ), '', array( 'response' => 429 ) );
 		}
 	}
 
 	public function inject_honeypot() {
 		?>
 		<p style="position:absolute;left:-9999px;" aria-hidden="true">
-			<label for="sentinelwp_hp_field"><?php esc_html_e( 'Leave this empty', 'sentinelwp-security' ); ?></label>
+			<label for="sentinelwp_hp_field"><?php esc_html_e( 'Leave this empty', 'sentinelguard-ecommerce-protection' ); ?></label>
 			<input type="text" name="sentinelwp_hp_field" id="sentinelwp_hp_field" value="" tabindex="-1" autocomplete="off" />
 		</p>
 		<?php
@@ -46,14 +46,14 @@ class SentinelWP_Form_Shield {
 	public function check_honeypot( $comment_data ) {
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing
 		if ( isset( $_POST['sentinelwp_hp_field'] ) && ! empty( $_POST['sentinelwp_hp_field'] ) ) {
-			wp_die( esc_html__( 'Spam detected.', 'sentinelwp-security' ), '', array( 'response' => 403 ) );
+			wp_die( esc_html__( 'Spam detected.', 'sentinelguard-ecommerce-protection' ), '', array( 'response' => 403 ) );
 		}
 		return $comment_data;
 	}
 
 	public function rate_limit_registration( $errors, $sanitized_user_login, $user_email ) {
 		if ( $this->check_rate( 'register', 3, 3600 ) ) {
-			$errors->add( 'sentinelwp_rate_limit', __( 'Too many registration attempts. Please try again later.', 'sentinelwp-security' ) );
+			$errors->add( 'sentinelwp_rate_limit', __( 'Too many registration attempts. Please try again later.', 'sentinelguard-ecommerce-protection' ) );
 		}
 		return $errors;
 	}
@@ -64,7 +64,7 @@ class SentinelWP_Form_Shield {
 		}
 
 		if ( $this->check_rate( 'checkout', 10, 1800 ) ) {
-			wc_add_notice( __( 'Too many checkout attempts. Please try again later.', 'sentinelwp-security' ), 'error' );
+			wc_add_notice( __( 'Too many checkout attempts. Please try again later.', 'sentinelguard-ecommerce-protection' ), 'error' );
 		}
 	}
 
@@ -91,7 +91,7 @@ class SentinelWP_Form_Shield {
 		}
 
 		if ( $this->check_rate( 'rest', 60, 60 ) ) {
-			return new WP_Error( 'sentinelwp_rate_limit', __( 'Too many requests.', 'sentinelwp-security' ), array( 'status' => 429 ) );
+			return new WP_Error( 'sentinelwp_rate_limit', __( 'Too many requests.', 'sentinelguard-ecommerce-protection' ), array( 'status' => 429 ) );
 		}
 		return $result;
 	}
@@ -100,7 +100,7 @@ class SentinelWP_Form_Shield {
 		$method = isset( $_SERVER['REQUEST_METHOD'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_METHOD'] ) ) : '';
 		if ( 'GET' === strtoupper( $method ) ) {
 			if ( $this->check_rate( 'login', 20, 600 ) ) {
-				wp_die( esc_html__( 'Too many requests. Please try again later.', 'sentinelwp-security' ), '', array( 'response' => 429 ) );
+				wp_die( esc_html__( 'Too many requests. Please try again later.', 'sentinelguard-ecommerce-protection' ), '', array( 'response' => 429 ) );
 			}
 		}
 	}
