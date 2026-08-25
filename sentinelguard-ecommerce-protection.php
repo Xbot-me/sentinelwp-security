@@ -3,7 +3,7 @@
  * Plugin Name:       SentinelGuard — Ecommerce & Checkout Protection
  * Plugin URI:        https://mustafizur.info/sentinelguard
  * Description:       Dedicated security layer for ecommerce revenue, checkout integrity, and payment flows. Magecart skimmer defense, card-testing prevention, stealth admin detection, and core integrity.
- * Version:           0.4.1
+ * Version:           0.4.2
  * Requires at least: 6.0
  * Tested up to:      7.1
  * Requires PHP:      7.4
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SENTINELWP_VERSION', '0.4.1' );
+define( 'SENTINELWP_VERSION', '0.4.2' );
 define( 'SENTINELWP_FILE', __FILE__ );
 define( 'SENTINELWP_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SENTINELWP_URL', plugin_dir_url( __FILE__ ) );
