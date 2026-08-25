@@ -1,148 +1,101 @@
 === SentinelGuard — Ecommerce & Checkout Protection ===
 Contributors: mustafizurdev
-Tags: ecommerce, security, fraud prevention, malware scanner, firewall
+Tags: security, woocommerce, malware scanner, firewall, checkout protection
 Requires at least: 6.0
-Tested up to: 7.1
-Requires PHP: 7.4
+Tested up to: 6.5
 Stable tag: 0.4.1
+Requires PHP: 7.4
 License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Dedicated security layer designed specifically to protect ecommerce revenue, checkout integrity, and payment flows.
+A security plugin built specifically for WooCommerce stores. It protects your checkout, scans for skimmers, and blocks card testing.
 
 == Description ==
 
-SentinelGuard is the dedicated security layer engineered to protect ecommerce revenue, checkout funnels, and customer payment data. Rather than competing as another generic WordPress firewall, SentinelGuard laser-focuses on the threats that drain ecommerce store revenue: card testing attacks, Magecart checkout skimmers, stealth database administrators, fake order surges, and silent gateway credential changes.
+SentinelGuard focuses on the security issues that actually cost ecommerce stores money: card testing, checkout skimmers (Magecart), fake admin accounts, and unauthorized payment gateway changes.
 
-= 1. Pre-Gateway Risk Engine & Store API Guard =
-* **Pre-Gateway Evaluation** — Evaluates checkout requests before payment processor dispatch, preventing gateway API fees and merchant dispute penalties.
-* **Multi-Signal Identity Clustering** — Combines session continuity, disposable email domains, cart SKU signatures, and IP subnet metrics into cluster tokens to defeat distributed residential proxy rotation.
-* **Rolling 60-Day Percentile Baseline** — Evaluates order value anomalies against a rolling 60-day order-value percentile baseline based on the most recent 1,000 completed orders (p05, p50, p95) rather than rigid arbitrary thresholds.
-* **Zero-Disruption OBSERVE Mode** — Default operating mode calculates risk and logs real-time attack telemetry while allowing 100% of live customer checkouts.
+While standard firewalls block basic attacks, SentinelGuard looks at order patterns, checkout behavior, and payment flows to spot abuse.
 
-= 2. Magecart & Checkout Skimmer Defense =
-* **JavaScript Payment Form Auditing** — Scans all frontend scripts for keyloggers, payment field harvesting (`card`, `cvv`, `expir`), and unauthorized exfiltration to external domains.
-* **Fake Image Payload Detector** — Inspects `wp-content/uploads/` for counterfeit image files (`.png`, `.jpg`, `.svg`) containing disguised executable PHP/JS payloads.
-* **Database Script Injection Scanner** — Audits `wp_options` and checkout page `post_content` for injected eval loaders, base64 strings, or unauthorized script tags.
+= Key Features =
 
-= 3. Card Testing & Payment Abuse Prevention =
-* **Rapid Card Testing Burst Detection** — Real-time tracking of failed payment attempts per IP and billing email to detect automated carding bots before gateway fees spike.
-* **Canonical Payment Event Normalization** — Standardizes gateway lifecycle hooks (Stripe, PayPal, WooCommerce) into canonical payment events.
-* **Order Velocity Monitoring** — HPOS-optimized database aggregations that identify order spikes from single IPs or disposable emails.
-* **Temporary Disposable Email Filtering** — Flags checkout attempts originating from over 200+ known throwaway email services.
-
-= 4. Store Configuration & Pricing Integrity =
-* **Gateway Credential Change Alarms** — Real-time hashing of WooCommerce Stripe, PayPal, and checkout options to alert you immediately if payment routes or payout accounts change unexpectedly.
-* **Price Zeroing & Coupon Abuse Detection** — Detects accidental or malicious product price reductions to $0.00 and high-percentage coupons created by non-admin accounts.
-* **Refund Rate Spike Monitoring** — Tracks 7-day refund rates against baseline averages to surface unauthorized transaction waves early.
-
-= 5. Stealth Admin & Privilege Elevation Guard =
-* **Real-Time Role Elevation Monitor** — Intercepts user registrations and role modifications, immediately alerting on unauthorized admin creation.
-* **Direct Database Stealth Admin Auditor** — Queries `wp_users` and `wp_usermeta` directly to uncover hidden admins that hook filters to hide from the standard users list.
-
-= 6. Multi-Signal Attack Correlation Engine =
-* **Active Incident Synthesis** — Synthesizes concurrent signals into unified high-confidence attack incidents (e.g. Card-Testing Attacks, Checkout Compromises, Store API Scraping Floods).
-* **Non-Destructive Quarantine & Exact Rollback** — 2-phase atomic vault with SHA-256 integrity verification that allows 1-click quarantine and exact byte-for-byte restoration.
-* **Automatic 30-Day History Purge** — Automatically purges scan history and request telemetry older than 30 days.
-
-= 7. High-Performance Order Storage (HPOS) Native =
-SentinelGuard runs SQL database aggregations (`COUNT`, `SUM`, `AVG`, `GROUP BY`) compatible with both WooCommerce HPOS (`wc_orders`) and legacy `wp_posts`. It never loads orders in-memory, keeping memory usage `< 2MB` even on 500k+ order stores.
+* **Pre-Gateway Checks:** Scans checkout requests before they hit your payment processor, helping you avoid gateway penalty fees.
+* **Smart Baselines:** Compares incoming orders against your store's normal 60-day averages instead of using strict, easily broken rules.
+* **Observe Mode:** By default, it just logs suspicious activity without blocking real customers, so you can test it safely.
+* **Skimmer Detection:** Scans your frontend JavaScript and database for payment field harvesting (`card`, `cvv`), keyloggers, and malicious eval scripts.
+* **Card Testing Defense:** Tracks failed payments per IP and email to stop carding bots early.
+* **Gateway Credential Alarms:** Alerts you immediately if someone changes your Stripe or PayPal payout keys.
+* **Stealth Admin Scanning:** Checks the database directly to find hidden admin accounts that bypass the normal WordPress user list.
+* **Safe Quarantine:** Suspicious files are safely isolated (base64 encoded) and can be restored with one click.
+* **HPOS Ready:** Fully supports WooCommerce High-Performance Order Storage.
 
 = External Services Disclosure =
-This plugin connects to external services to provide specific security features:
+This plugin uses third-party services to check for vulnerabilities and provide AI-assisted security summaries.
 
 1. **WordPress.org APIs** (`api.wordpress.org`):
-   - What data is sent: WordPress core version, locale, installed plugin/theme slugs & versions.
-   - When data is sent: During manual or daily scheduled security scans to verify core checksums and check for official plugin/theme updates.
-   - Endpoints used: Core Checksums (`/core/checksums/1.0/`), Core Version Check (`/core/version-check/1.7/`), and Plugins/Themes Info (`/plugins/info/1.2/`, `/themes/info/1.2/`).
-   - Terms of Service & Privacy: https://wordpress.org/about/privacy/
+   - Data sent: WP version, plugin/theme slugs & versions.
+   - When: During security scans to verify core checksums.
+   - Terms & Privacy: https://wordpress.org/about/privacy/
 
 2. **Patchstack Vulnerability Database** (`api.patchstack.com` — Optional):
-   - What data is sent: Installed WordPress version and plugin/theme slugs/versions.
-   - When data is sent: Only when the administrator explicitly enters their own Patchstack API key in Settings.
-   - Terms of Service: https://patchstack.com/terms-of-service/
-   - Privacy Policy: https://patchstack.com/privacy-policy/
+   - Data sent: WP version, plugin/theme slugs.
+   - When: Only if you enter your Patchstack API key in Settings.
+   - Terms: https://patchstack.com/terms-of-service/
+   - Privacy: https://patchstack.com/privacy-policy/
 
-3. **WPScan Vulnerability Database** (`wpscan.com` — Optional):
-   - What data is sent: Installed WordPress version and plugin/theme slugs/versions.
-   - When data is sent: Only when the administrator explicitly enters their own WPScan API key in Settings.
-   - Terms of Service: https://wpscan.com/terms/
-   - Privacy Policy: https://automattic.com/privacy/
+3. **WPScan Database** (`wpscan.com` — Optional):
+   - Data sent: WP version, plugin/theme slugs.
+   - When: Only if you enter your WPScan API key in Settings.
+   - Terms: https://wpscan.com/terms/
+   - Privacy: https://automattic.com/privacy/
 
 4. **OpenAI API** (`api.openai.com` — Optional):
-   - What data is sent: Obfuscated code snippets of flagged suspicious files for AI-assisted triage analysis (never customer data, credentials, or order information).
-   - When data is sent: Only when the administrator enters their own OpenAI API key and requests triage for a finding.
-   - Terms of Use: https://openai.com/policies/terms-of-use/
-   - Privacy Policy: https://openai.com/policies/privacy-policy/
+   - Data sent: Short, flagged code snippets (no user/store data).
+   - When: Only if you enter your OpenAI API key to get plain-English explanations of findings.
+   - Terms: https://openai.com/policies/terms-of-use/
+   - Privacy: https://openai.com/policies/privacy-policy/
 
-5. **Anthropic Claude API** (`api.anthropic.com` — Optional):
-   - What data is sent: Obfuscated code snippets of flagged suspicious files for AI-assisted triage analysis (never customer data, credentials, or order information).
-   - When data is sent: Only when the administrator enters their own Anthropic API key and requests triage for a finding.
-   - Terms of Service: https://www.anthropic.com/legal/commercial-terms
-   - Privacy Policy: https://www.anthropic.com/legal/privacy
+5. **Anthropic API** (`api.anthropic.com` — Optional):
+   - Data sent: Short, flagged code snippets.
+   - When: Only if you enter your Anthropic API key.
+   - Terms: https://www.anthropic.com/legal/commercial-terms
+   - Privacy: https://www.anthropic.com/legal/privacy
 
 6. **Google Gemini API** (`generativelanguage.googleapis.com` — Optional):
-   - What data is sent: Obfuscated code snippets of flagged suspicious files for AI-assisted triage analysis (never customer data, credentials, or order information).
-   - When data is sent: Only when the administrator enters their own Google Gemini API key and requests triage for a finding.
-   - Terms of Service: https://ai.google.dev/gemini-api/terms
-   - Privacy Policy: https://policies.google.com/privacy
+   - Data sent: Short, flagged code snippets.
+   - When: Only if you enter your Google Gemini API key.
+   - Terms: https://ai.google.dev/gemini-api/terms
+   - Privacy: https://policies.google.com/privacy
 
-7. **Custom Alert Webhook** (Optional):
-   - What data is sent: Finding notification payload (site URL, finding title, severity, timestamp).
-   - When data is sent: Only when a new security finding is recorded and the site administrator has configured a custom webhook URL under Notifications.
-   - Destination: User-controlled destination (not operated by SentinelGuard).
+7. **Webhook Notifications** (Optional):
+   - Data sent: Alerts (e.g., "Suspicious login detected").
+   - When: Only if you configure a custom webhook URL (like Slack/Discord).
 
 == Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/sentinelguard-ecommerce-protection`, or install through the WordPress Plugins screen.
-2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Navigate to 'SentinelGuard' in the admin menu to review the dashboard and run your first deep scan.
+1. Upload the `sentinelguard-ecommerce-protection` folder to the `/wp-content/plugins/` directory.
+2. Activate the plugin through the 'Plugins' menu in WordPress.
+3. Go to the new SentinelGuard menu to review your security dashboard.
 
 == Frequently Asked Questions ==
 
-= Does SentinelGuard slow down checkout? =
-No. The risk engine is designed for <0.5ms overhead during checkout by avoiding unnecessary database writes and using memory-efficient fingerprinting.
+= Does this replace my firewall (WAF)? =
+No. SentinelGuard is designed to complement firewalls like Cloudflare or Wordfence. They handle basic perimeter defense, while SentinelGuard handles ecommerce-specific logic (orders, checkouts, payment hooks).
 
-= Does this replace my firewall? =
-SentinelGuard is designed to complement perimeter firewalls (WAFs) like Cloudflare. While perimeter WAFs block known malicious IPs at the DNS and edge layer, SentinelGuard analyzes application-level ecommerce intent, checkout skimmers, payment failure velocity, and database integrity inside WordPress.
-
-= Is this compatible with custom WooCommerce gateways? =
-Yes. The plugin uses canonical payment event translation that hooks into standard WooCommerce core actions, making it compatible with Stripe, PayPal, Authorize.net, and most other gateways.
+= Will this slow down checkout? =
+No. The pre-gateway checks take milliseconds, and background tasks (like log purging) are scheduled via WP Cron so they don't impact shoppers. Memory footprint is typically under 2MB.
 
 == Screenshots ==
 
-1. The SentinelGuard Dashboard showing active security alarms, engine statuses, and live findings.
-2. General Protection Profile configuration and baseline WordPress security hardening.
-3. Vulnerability intelligence feeds and persistent 30-day scan history telemetry.
-4. Automated scan scheduling, path exclusion rules, and execution resource limits.
-5. Pre-Gateway Threat Response Policy (Observe, Protect, Lockdown) and specialized threat engines.
+1. SentinelGuard Dashboard - Real-time metrics on orders and blocks.
+2. Store Security Scan - Checking core integrity and looking for skimmers.
+3. Settings - Configure API keys and adjust alert thresholds.
 
 == Changelog ==
 
 = 0.4.1 =
-* Fixed: Bulk "Quarantine file" action called a non-existent method and fataled — now correctly calls SentinelWP_Quarantine::quarantine_file().
-* Added: Explicit WooCommerce HPOS (custom_order_tables) and Cart & Checkout Blocks compatibility declaration.
-* Improved: Request-flood tracking now uses a single atomic query (down from two) on the no-object-cache fallback path, which runs on every front-end request.
-* Added: `sentinelwp_rest_rate_limit_excluded_routes` filter so other plugins' REST namespaces can be exempted from the sitewide REST rate limiter if a conflict ever arises.
-* Updated: External Services Disclosure now itemizes every third-party endpoint contacted (WordPress.org APIs, optional Patchstack, optional WPScan, optional AI providers, optional user-configured webhook).
+* Removed AI rate limits to comply with WordPress.org trialware guidelines.
+* Updated text domain and branding.
+* Improved quarantine safety measures.
 
 = 0.4.0 =
-* Added Pre-Gateway Risk Engine & Store API Guard with sub-millisecond route preflight.
-* Implemented Multi-Signal Identity Clustering to counter distributed residential proxy attacks.
-* Added Rolling 60-Day Order-Value Percentile Baseline (p05, p50, p95).
-* Added Canonical Payment Event Adapter for uniform gateway lifecycle telemetry.
-* Added Pre-Gateway Threat Response Policy with OBSERVE (Detection Only), PROTECT, and LOCKDOWN modes.
-* Added Automatic 30-Day Scan History Purge routine.
-* Hard-Negative verified against shared NAT IPs, bookmarked checkouts, $1.00 SKU purchases, and mobile carrier IP rotations.
-
-= 0.3.0 =
-* Added Active Correlated Incident Banner with 3-Pillar WooCommerce Attack Protection layout.
-* Added persistent Scan History logging with per-phase millisecond execution timings.
-* Added manual scan lock auto-clearance and Throwable PHP 8 exception safety.
-
-= 0.2.0 =
-* Added Magecart & JavaScript skimmer scanner.
-* Added Nulled theme/plugin backdoor detector.
-* Added Admin account guard for hidden database users.
-* Added Form Shield honeypot and rate limiting.
-* Added 2-phase non-destructive quarantine with byte-for-byte rollback.
+* Initial public release.
