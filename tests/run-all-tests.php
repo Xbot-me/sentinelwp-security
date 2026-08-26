@@ -19,6 +19,7 @@ $test_files = array(
 	'test-operational-chaos-suite.php',
 	'test-scan-history-retention.php',
 	'test-corpus-benchmark.php',
+	'test-code-quality.php',
 );
 
 echo "======================================================================\n";
