@@ -188,10 +188,10 @@ class SentinelWP_Nulled_Detector {
 			);
 		}
 
-		if ( preg_match( '/nulled|cracked|gpl-?club|theme-?starter/i', $filename ) ) {
+		if ( preg_match( '/\b(nulled|cracked|gpl-?club|freenulled|gpldl)\.(php|js|txt)\b/i', $filename ) ) {
 			$this->record_finding(
 				'nulled_suspicious_filename',
-				'critical',
+				'medium',
 				$component_name,
 				/* translators: %s: component name */
 				sprintf( esc_html__( 'Suspicious Filename Found in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
@@ -315,10 +315,10 @@ class SentinelWP_Nulled_Detector {
 			}
 
 			// Check against pattern
-			if ( preg_match( '/nulled|cracked|gpl-?club|theme-?starter/i', $filename ) ) {
+			if ( preg_match( '/\b(nulled|cracked|gpl-?club|freenulled|gpldl)\.(php|js|txt)\b/i', $filename ) ) {
 				$this->record_finding(
 					'nulled_suspicious_filename',
-					'critical',
+					'medium',
 					$component_name,
 					/* translators: %s: component name */
 					sprintf( esc_html__( 'Suspicious Filename Found in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
