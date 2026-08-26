@@ -3,7 +3,7 @@ Contributors: mustafizurdev
 Tags: security, woocommerce, malware scanner, firewall, checkout protection
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.4.4
+Stable tag: 0.4.3
 Requires PHP: 7.4
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -92,20 +92,16 @@ No. The pre-gateway checks take milliseconds, and background tasks (like log pur
 
 == Changelog ==
 
-= 0.4.4 =
-* Fixed Tested up to headers to match WordPress 7.1.
-* Added PHPCS suppression rules for expected database and WooCommerce integration warnings.
-
 = 0.4.3 =
-* Fixed quarantine file headers and index.php generation based on WordPress.org review.
-* Replaced internal directory constants with correct definitions and WP_CONTENT_DIR.
-* Updated Patchstack terms URL and Tested up to value.
-
-= 0.4.2 =
-* Rebranded plugin to SentinelGuard — Ecommerce & Checkout Protection.
-* Updated contributor list to align with WordPress.org ownership guidelines.
-* Improved documentation for external service APIs.
-* Simplified readme text and plugin description.
+* Rebranded to SentinelGuard and updated the plugin slug to sentinelguard-ecommerce-protection.
+* Fixed broken "Scan Site Now" button (JS selector mismatch).
+* Fixed skimmer and nulled-plugin findings not saving to the database.
+* Replaced hardcoded directory paths with plugin_dir_path() and WP_CONTENT_DIR.
+* Removed PHP execution headers from quarantine vault files.
+* Added quarantine vault cleanup and missing options to uninstall.php.
+* Fixed broken Patchstack terms URL and updated Tested up to value.
+* Documented all external API services with working Terms and Privacy links.
+* Simplified readme description and removed marketing fluff.
 
 = 0.4.1 =
 * Removed AI rate limits to comply with WordPress.org trialware guidelines.
