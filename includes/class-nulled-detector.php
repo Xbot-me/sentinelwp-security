@@ -111,29 +111,36 @@ class SentinelWP_Nulled_Detector {
 		$plugins = function_exists( 'get_plugins' ) ? get_plugins() : array();
 
 		foreach ( $plugins as $plugin_file => $plugin_data ) {
-			if ( strpos( $plugin_file, 'sentinelguard-ecommerce-protection' ) !== false ) {
+			if ( strpos( $plugin_file, 'sentinelguard-ecommerce-protection' ) !== false || strpos( $plugin_file, 'sentinelwp' ) !== false ) {
 				continue;
 			}
 
-			$plugin_slug = dirname( $plugin_file );
+			$component_name = isset( $plugin_data['Name'] ) ? $plugin_data['Name'] : $plugin_file;
+			$plugin_slug    = dirname( $plugin_file );
+
 			if ( '.' === $plugin_slug ) {
-				$plugin_slug = $plugin_file;
-				$plugin_dir  = WP_PLUGIN_DIR;
+				// Single-file plugin (e.g. hello.php) - scan only this specific file, NOT the entire WP_PLUGIN_DIR
+				$single_file = WP_PLUGIN_DIR . '/' . $plugin_file;
+				if ( ! file_exists( $single_file ) ) {
+					continue;
+				}
+				$this->check_single_plugin_file( $single_file, $component_name );
+				$this->check_update_suppression( $plugin_file, 'plugin' );
+				$slug_base = sanitize_title( pathinfo( $plugin_file, PATHINFO_FILENAME ) );
+				$this->check_wporg_mismatch( $slug_base, $plugin_data, 'plugin' );
 			} else {
+				// Directory-based plugin
 				$plugin_dir = WP_PLUGIN_DIR . '/' . $plugin_slug;
+				if ( ! is_dir( $plugin_dir ) ) {
+					continue;
+				}
+
+				$this->check_malicious_files( $plugin_dir, $component_name, 'plugin' );
+				$this->check_license_bypass( $plugin_dir, $component_name );
+				$this->check_update_suppression( $plugin_slug, 'plugin' );
+				$this->check_wporg_mismatch( $plugin_slug, $plugin_data, 'plugin' );
+				$this->check_phonehome_patterns( $plugin_dir, $component_name );
 			}
-
-			if ( ! is_dir( $plugin_dir ) ) {
-				continue;
-			}
-
-			$component_name = $plugin_data['Name'];
-
-			$this->check_malicious_files( $plugin_dir, $component_name, 'plugin' );
-			$this->check_license_bypass( $plugin_dir, $component_name );
-			$this->check_update_suppression( $plugin_slug, 'plugin' );
-			$this->check_wporg_mismatch( $plugin_slug, $plugin_data, 'plugin' );
-			$this->check_phonehome_patterns( $plugin_dir, $component_name );
 		}
 	}
 
@@ -160,7 +167,106 @@ class SentinelWP_Nulled_Detector {
 		}
 	}
 
+	private function check_single_plugin_file( $file_path, $component_name ) {
+		$indicators = $this->load_indicators();
+		$malicious  = isset( $indicators['malicious_files'] ) ? $indicators['malicious_files'] : array();
+		$patterns   = isset( $indicators['license_bypass_patterns'] ) ? $indicators['license_bypass_patterns'] : array();
+		$domains    = isset( $indicators['nulled_domains'] ) ? $indicators['nulled_domains'] : array();
+
+		$filename = basename( $file_path );
+
+		// 1. Filename check
+		if ( in_array( $filename, $malicious, true ) ) {
+			$this->record_finding(
+				'nulled_malicious_file',
+				'critical',
+				$component_name,
+				/* translators: %s: component name */
+				sprintf( esc_html__( 'Malicious Nulled File Found in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
+				/* translators: %s: malicious filename */
+				sprintf( esc_html__( 'File %s matches known malicious indicator.', 'sentinelguard-ecommerce-protection' ), $filename )
+			);
+		}
+
+		if ( preg_match( '/nulled|cracked|gpl-?club|theme-?starter/i', $filename ) ) {
+			$this->record_finding(
+				'nulled_suspicious_filename',
+				'critical',
+				$component_name,
+				/* translators: %s: component name */
+				sprintf( esc_html__( 'Suspicious Filename Found in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
+				/* translators: %s: suspicious filename */
+				sprintf( esc_html__( 'File %s indicates a potentially nulled component.', 'sentinelguard-ecommerce-protection' ), $filename )
+			);
+		}
+
+		// Read content (max 1MB)
+		if ( file_exists( $file_path ) && filesize( $file_path ) <= 1048576 ) {
+			$content = @file_get_contents( $file_path );
+			if ( false !== $content ) {
+				// 2. License bypass check
+				foreach ( $patterns as $pattern => $label ) {
+					if ( preg_match( $pattern, $content ) ) {
+						$this->record_finding(
+							'nulled_license_bypass',
+							'medium',
+							$component_name,
+							/* translators: %s: component name */
+							sprintf( esc_html__( 'License Bypass Code in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
+							/* translators: 1: detection label, 2: filename */
+							sprintf( esc_html__( '%1$s matched in file %2$s', 'sentinelguard-ecommerce-protection' ), $label, $filename )
+						);
+						break;
+					}
+				}
+
+				// 3. Outbound request check
+				foreach ( $domains as $domain ) {
+					if ( stripos( $content, $domain ) !== false ) {
+						if ( preg_match( '/(wp_remote_get|wp_remote_post|file_get_contents|curl_exec).*?[\'"](?:https?:)?\/\/[^\'"]*' . preg_quote( $domain, '/' ) . '/i', $content ) ) {
+							$this->record_finding(
+								'nulled_phonehome_call',
+								'critical',
+								$component_name,
+								/* translators: %s: component name */
+								sprintf( esc_html__( 'Suspicious Outbound Request in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
+								/* translators: 1: filename, 2: domain name */
+								sprintf( esc_html__( 'File %1$s makes requests to known nulled domain: %2$s', 'sentinelguard-ecommerce-protection' ), $filename, $domain )
+							);
+						}
+					}
+				}
+
+				// 4. Base64 check
+				if ( preg_match_all( '/[\'"]([A-Za-z0-9+\/]{40,}=*)[\'"]/', $content, $matches ) ) {
+					foreach ( $matches[1] as $b64 ) {
+						$decoded = @base64_decode( $b64, true );
+						if ( $decoded ) {
+							foreach ( $domains as $domain ) {
+								if ( stripos( $decoded, $domain ) !== false ) {
+									$this->record_finding(
+										'nulled_phonehome_base64',
+										'critical',
+										$component_name,
+										/* translators: %s: component name */
+										sprintf( esc_html__( 'Hidden Suspicious Domain in %s', 'sentinelguard-ecommerce-protection' ), $component_name ),
+										/* translators: 1: filename, 2: domain name */
+										sprintf( esc_html__( 'File %1$s contains encoded reference to known nulled domain: %2$s', 'sentinelguard-ecommerce-protection' ), $filename, $domain )
+									);
+									break 2;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	private function get_iterator( $dir ) {
+		if ( empty( $dir ) || ! is_dir( $dir ) || $dir === WP_PLUGIN_DIR ) {
+			return false;
+		}
 		try {
 			$flags    = RecursiveDirectoryIterator::SKIP_DOTS;
 			$iterator = new RecursiveIteratorIterator(

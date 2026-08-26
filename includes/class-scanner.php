@@ -265,6 +265,12 @@ class SentinelWP_Scanner {
 			if ( 'php' !== strtolower( $file->getExtension() ) ) {
 				continue;
 			}
+
+			$path_norm = wp_normalize_path( $file->getPathname() );
+			if ( strpos( $path_norm, 'sentinelwp-quarantine' ) !== false || strpos( $path_norm, 'sentinelguard' ) !== false ) {
+				continue;
+			}
+
 			$checked++;
 
 			$this->record_finding(
