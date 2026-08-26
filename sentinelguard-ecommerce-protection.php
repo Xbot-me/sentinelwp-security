@@ -4,7 +4,6 @@
  * Plugin URI:        https://mustafizur.info/sentinelguard
  * Description:       Dedicated security layer for ecommerce revenue, checkout integrity, and payment flows. Magecart skimmer defense, card-testing prevention, stealth admin detection, and core integrity.
  * Version:           0.4.4
- * Tested up to:      7.1
  * Requires at least: 6.0
  * Tested up to:      7.1
  * Requires PHP:      7.4

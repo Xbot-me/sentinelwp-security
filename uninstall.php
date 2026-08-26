@@ -72,6 +72,10 @@ $sentinelwp_options = array(
 	'sentinelwp_risk_decision_log',
 	'sentinelwp_payment_events_log',
 	'sentinelwp_scan_history_log',
+	// Scan state
+	'sentinelwp_last_scan_time',
+	'sentinelwp_last_scan_summary',
+	'sentinelwp_webhook_url',
 );
 
 foreach ( $sentinelwp_options as $sentinelwp_opt ) {
@@ -87,7 +91,26 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}sentinelwp_store_hashes" ); /
 
 wp_clear_scheduled_hook( 'sentinelwp_daily_scan' );
 wp_clear_scheduled_hook( 'sentinelwp_flood_check' );
+wp_clear_scheduled_hook( 'sentinelwp_ai_triage_job' );
+
+// Remove quarantine vault directory from uploads.
+$sentinelwp_upload_dir = wp_upload_dir();
+$sentinelwp_vault_dir  = trailingslashit( $sentinelwp_upload_dir['basedir'] ) . 'sentinelwp-quarantine';
+if ( is_dir( $sentinelwp_vault_dir ) ) {
+	$sentinelwp_files = new RecursiveIteratorIterator(
+		new RecursiveDirectoryIterator( $sentinelwp_vault_dir, RecursiveDirectoryIterator::SKIP_DOTS ),
+		RecursiveIteratorIterator::CHILD_FIRST
+	);
+	foreach ( $sentinelwp_files as $sentinelwp_file ) {
+		if ( $sentinelwp_file->isDir() ) {
+			rmdir( $sentinelwp_file->getRealPath() );
+		} else {
+			unlink( $sentinelwp_file->getRealPath() );
+		}
+	}
+	rmdir( $sentinelwp_vault_dir );
+}
 
 // Clean up transients with known prefixes.
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", '_transient_sentinelwp_%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery
-$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", '_transient_timeout_sentinelwp_%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery
+$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_sentinelwp_' ) . '%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery
+$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like( '_transient_timeout_sentinelwp_' ) . '%' ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.DirectQuery

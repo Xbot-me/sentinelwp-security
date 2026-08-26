@@ -5,8 +5,8 @@ Requires at least: 6.0
 Tested up to: 7.1
 Stable tag: 0.4.4
 Requires PHP: 7.4
-License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
+License: GPL v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 A security plugin built specifically for WooCommerce stores. It protects your checkout, scans for skimmers, and blocks card testing.
 

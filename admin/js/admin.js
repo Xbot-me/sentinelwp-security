@@ -5,10 +5,10 @@
 		/* ---------------------------------------------------------- */
 		/* 1. Deep Scan Trigger & Progress Bar Animation              */
 		/* ---------------------------------------------------------- */
-		$( '#sentinelwp-scan-now' ).on( 'click', function ( e ) {
+		$( '#sentinelwp-btn-scan' ).on( 'click', function ( e ) {
 			e.preventDefault();
 			var $btn      = $( this );
-			var $btnText  = $( '#sentinelwp-scan-btn-text' );
+			var $btnText  = $btn.find( '.btn-text' );
 			var $bar      = $( '#sentinelwp-progress-bar' );
 			var $fill     = $( '#sentinelwp-progress-fill' );
 			var $label    = $( '#sentinelwp-progress-label' );
@@ -373,7 +373,7 @@
 				var encodedUri = encodeURI( csvContent );
 				var link = document.createElement( 'a' );
 				link.setAttribute( 'href', encodedUri );
-				link.setAttribute( 'download', 'sentinelwp-findings.csv' );
+				link.setAttribute( 'download', 'sentinelguard-findings.csv' );
 				document.body.appendChild( link );
 				link.click();
 				document.body.removeChild( link );

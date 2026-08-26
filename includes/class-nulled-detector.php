@@ -87,7 +87,7 @@ class SentinelWP_Nulled_Detector {
 
 		$format = array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' );
 
-		$ok = $wpdb->insert( $table_name, $data, $format );
+		$ok = $wpdb->insert( $wpdb->prefix . 'sentinelwp_findings', $data, $format );
 		$id = $wpdb->insert_id;
 
 		if ( $ok && $id ) {

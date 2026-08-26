@@ -509,8 +509,8 @@ class SentinelWP_Admin {
 			<footer>
 				<span><?php /* translators: %s: plugin version string */ echo esc_html( sprintf( __( 'SentinelGuard v%s', 'sentinelguard-ecommerce-protection' ), SENTINELWP_VERSION ) ); ?></span> &middot;
 				<span><?php esc_html_e( 'Definitions 2026.08-rev1', 'sentinelguard-ecommerce-protection' ); ?></span> &middot;
-				<a href="https://sentinelwp.io/docs" target="_blank"><?php esc_html_e( 'Documentation', 'sentinelguard-ecommerce-protection' ); ?></a> &middot;
-				<a href="https://sentinelwp.io/support" target="_blank"><?php esc_html_e( 'Support', 'sentinelguard-ecommerce-protection' ); ?></a>
+				<a href="https://mustafizur.info/sentinelguard/docs" target="_blank"><?php esc_html_e( 'Documentation', 'sentinelguard-ecommerce-protection' ); ?></a> &middot;
+				<a href="https://mustafizur.info/sentinelguard/support" target="_blank"><?php esc_html_e( 'Support', 'sentinelguard-ecommerce-protection' ); ?></a>
 			</footer>
 		</div>
 		<?php

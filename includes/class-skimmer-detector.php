@@ -103,7 +103,7 @@ class SentinelWP_Skimmer_Detector {
 		);
 		
 		$format = array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s' );
-		$wpdb->insert( $table_name, $data, $format );
+		$wpdb->insert( $wpdb->prefix . 'sentinelwp_findings', $data, $format );
 		$finding_id = $wpdb->insert_id;
 
 		if ( $finding_id ) {
