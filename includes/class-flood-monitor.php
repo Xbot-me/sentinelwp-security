@@ -191,6 +191,11 @@ class SentinelWP_Flood_Monitor {
 	private function get_endpoint_type() {
 		$uri = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
 
+		$wc_ajax = isset( $_GET['wc-ajax'] ) ? sanitize_key( wp_unslash( $_GET['wc-ajax'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( in_array( $wc_ajax, array( 'checkout', 'add_to_cart', 'update_order_review' ), true ) ) {
+			return 'checkout';
+		}
+
 		if ( false !== strpos( $uri, 'wp-login.php' ) ) {
 			return 'login';
 		}
@@ -200,7 +205,13 @@ class SentinelWP_Flood_Monitor {
 		if ( false !== strpos( $uri, 'admin-ajax.php' ) ) {
 			return 'ajax';
 		}
-		if ( false !== strpos( $uri, 'wp-json/' ) || isset( $_GET['rest_route'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		$rest_route = isset( $_GET['rest_route'] ) ? sanitize_text_field( wp_unslash( $_GET['rest_route'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( false !== strpos( $uri, 'wc/store/v1/checkout' ) || false !== strpos( $uri, 'wc/store/v1/cart' ) || false !== strpos( $rest_route, 'wc/store/v1/checkout' ) || false !== strpos( $rest_route, 'wc/store/v1/cart' ) ) {
+			return 'checkout';
+		}
+
+		if ( false !== strpos( $uri, 'wp-json/' ) || ! empty( $rest_route ) ) {
 			return 'rest';
 		}
 		if ( false !== strpos( $uri, 'wp-cron.php' ) ) {

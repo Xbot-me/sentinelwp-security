@@ -19,4 +19,10 @@ return apply_filters( 'sentinelwp_skimmer_signatures', array(
 	'/gtm\.js.*(eval\(|atob\(|btoa\()/is' => 'Fake GTM/analytics with suspicious patterns',
 	'/querySelectorAll\([\'"]input[^\'"]*[\'"]\).*\.value.*(fetch|XMLHttpRequest|sendBeacon)/is' => 'Input field value harvesting and external sending',
 	'/addEventListener\([\'"](copy|paste)[\'"]\)/i' => 'Clipboard hijacking on payment pages',
+	// CloudSEK June 2026 Report: Targets DOM overlays injected alongside Stripe/WCPay payment containers.
+	'/((?:wcpay-payment-element|StripeElement).{0,500}createElement\s*\(\s*[\'"](?:form|input)[\'"]|createElement\s*\(\s*[\'"](?:form|input)[\'"].{0,500}(?:wcpay-payment-element|StripeElement))/is' => 'Fake form or input overlay injected near payment container',
+	// CloudSEK June 2026 Report: Targets client-side Google Analytics suppression used to avoid telemetry alarms.
+	'/(?:window\[\s*[\'"]|\b)ga-disable-G-[A-Z0-9]{6,}/i' => 'Google Analytics tracking suppression flag (anti-telemetry)',
+	// CloudSEK June 2026 Report: Targets obfuscator.io-style string array rotation coupled with payment keywords or decoders.
+	'/(?:\bwhile\s*\(\s*--\s*[a-zA-Z0-9_$]+\s*\).*(?:push|shift|unshift)).*(?:atob\s*\(|btoa\s*\(|card|payment|billing|checkout|cvv|cc-num)|(?:atob\s*\(|btoa\s*\(|card|payment|billing|checkout|cvv|cc-num).*(?:\bwhile\s*\(\s*--\s*[a-zA-Z0-9_$]+\s*\).*(?:push|shift|unshift))/is' => 'Obfuscated string array rotation with payment or decoding keywords',
 ) );

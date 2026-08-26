@@ -20,6 +20,7 @@ $test_files = array(
 	'test-scan-history-retention.php',
 	'test-corpus-benchmark.php',
 	'test-code-quality.php',
+	'test-skimmer-and-endpoint-hardening.php',
 );
 
 echo "======================================================================\n";
