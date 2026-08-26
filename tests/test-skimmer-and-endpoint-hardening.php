@@ -119,6 +119,9 @@ echo "\n--- 2. FLOOD MONITOR ENDPOINT CLASSIFICATION TESTS ---\n";
 $flood_monitor = SentinelWP_Flood_Monitor::instance();
 $reflection = new ReflectionClass( $flood_monitor );
 $method = $reflection->getMethod( 'get_endpoint_type' );
+if ( method_exists( $method, 'setAccessible' ) ) {
+	@$method->setAccessible( true );
+}
 
 function classify_request( $flood_monitor, $method, $uri, $get_params = array() ) {
 	$_SERVER['REQUEST_URI'] = $uri;
