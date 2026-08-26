@@ -30,9 +30,9 @@ Most WordPress security plugins were built for blogs, not checkout flows. They c
 
 **Pre-gateway risk scoring.** Checkout requests, both the classic `woocommerce_checkout_process` hook and the Store API's `/wc/store/v1/checkout` endpoint, get scored before the card is ever charged. The engine builds a 60-day rolling baseline of your store's own order values (p05/p50/p95) so a $5 order or a $2,000 VIP order doesn't get flagged just for being unusual in general. It also clusters session tokens, cart fingerprints, and billing details together, which catches coordinated attacks that rotate IPs but reuse the same session or cart pattern. You can run it in observe mode first and only switch to blocking once you trust the scores.
 
-**Skimmer and Magecart detection.** Scans theme and plugin JS for listeners on card and CVV fields, base64-encoded eval loaders, and exfiltration beacons disguised as image requests. It also walks `wp-content/uploads/` looking for files with image extensions that actually contain PHP.
+**Skimmer and Magecart detection.** Scans theme and plugin JS for listeners on card and CVV fields, base64-encoded eval loaders, exfiltration beacons disguised as image requests, and CloudSEK-documented overlay skimmer techniques (fake form/input injection beside Stripe/WCPay elements, client-side Google Analytics opt-out suppression `ga-disable-G-*`, and `obfuscator.io` string-array rotation bootstraps). It also walks `wp-content/uploads/` looking for files with image extensions that actually contain PHP.
 
-**Card-testing defense.** Tracks failed payment bursts per IP and per email cluster, normalizes events from WooCommerce core, Stripe, PayPal, Authorize.Net, and Braintree into one format, and checks against a list of 200+ disposable email domains, since a lot of card-testing traffic uses throwaway addresses.
+**Card-testing and flood defense.** Tracks failed payment bursts per IP and per email cluster, normalizes events from WooCommerce core, Stripe, PayPal, Authorize.Net, and Braintree into one format, and checks against a list of 200+ disposable email domains. It also classifies request traffic across specific endpoint buckets—routing high-risk WooCommerce Store API endpoints (`/wc/store/v1/checkout`, `/wc/store/v1/cart`) and `wc-ajax` actions (`checkout`, `add_to_cart`, `update_order_review`) into tight rate-limiting limits (30 req / 5 min) rather than generic REST or general traffic limits.
 
 **Configuration integrity.** Hashes your gateway settings, API keys, PayPal recipient, webhook secrets, so you get an alert the moment they change. Also flags $0.00 products and coupons created by anyone other than an admin, and watches refund volume against your own historical average.
 
@@ -89,16 +89,17 @@ Everything lives under **SentinelGuard** in the WP admin sidebar:
 15+ suites covering unit logic, integration, stress, and adversarial abuse cases.
 
 ```bash
-# full suite
+# full unified suite (12 automated test suites)
 php tests/run-all-tests.php
 
 # individual suites
+php tests/test-skimmer-and-endpoint-hardening.php
+php tests/test-code-quality.php
 php tests/test-risk-engine-phase1.php
 php tests/test-attack-correlator.php
 php tests/test-adversarial-abuse-suite.php
 php tests/test-quarantine-rollback.php
 php tests/test-corpus-benchmark.php
-php tests/test-woocommerce-attacks-and-scalability.php
 php tests/test-operational-chaos-suite.php
 ```
 
