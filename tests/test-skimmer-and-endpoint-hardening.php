@@ -28,16 +28,15 @@ echo "======================================================================\n";
 echo " SENTINELGUARD — SKIMMER & ENDPOINT HARDENING TEST SUITE              \n";
 echo "======================================================================\n";
 
-$passed = 0;
-$failed = 0;
+$GLOBALS['sh_passed'] = 0;
+$GLOBALS['sh_failed'] = 0;
 
 function assert_test( $name, $condition, $details = '' ) {
-	global $passed, $failed;
 	if ( $condition ) {
-		$passed++;
+		$GLOBALS['sh_passed']++;
 		echo "[PASS] " . str_pad( $name, 58 ) . "\n";
 	} else {
-		$failed++;
+		$GLOBALS['sh_failed']++;
 		echo "[FAIL] " . str_pad( $name, 58 ) . " | $details\n";
 	}
 }
@@ -223,7 +222,7 @@ $_SERVER['REQUEST_URI'] = '';
 $_GET = array();
 
 echo "\n======================================================================\n";
-echo " SKIMMER & ENDPOINT HARDENING SUMMARY: $passed PASSED | $failed FAILED\n";
+echo " SKIMMER & ENDPOINT HARDENING SUMMARY: " . $GLOBALS['sh_passed'] . " PASSED | " . $GLOBALS['sh_failed'] . " FAILED\n";
 echo "======================================================================\n";
 
-$GLOBALS['sentinelwp_test_result'] = ( $failed === 0 ) ? 'PASS' : 'FAIL';
+$GLOBALS['sentinelwp_test_result'] = ( $GLOBALS['sh_failed'] === 0 ) ? 'PASS' : 'FAIL';

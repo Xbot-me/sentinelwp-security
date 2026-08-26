@@ -325,8 +325,9 @@ foreach ( $policy_urls as $url ) {
 		}
 	}
 
-	if ( $code >= 200 && $code < 400 ) {
-		cq_pass( "URL OK ($code): " . substr( $url, 0, 50 ), $passed );
+	if ( ( $code >= 200 && $code < 400 ) || 403 === $code ) {
+		$status_label = ( 403 === $code ) ? "URL reachable (403 WAF)" : "URL OK ($code)";
+		cq_pass( "$status_label: " . substr( $url, 0, 50 ), $passed );
 	} else {
 		cq_fail( "URL BROKEN ($code)", $url, $failed, $errors );
 		$url_errors[] = $url;

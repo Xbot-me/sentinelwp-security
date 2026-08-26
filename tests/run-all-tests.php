@@ -32,33 +32,37 @@ echo "======================================================================\n\n
 $failed_suites = array();
 $passed_suites = 0;
 
-foreach ( $test_files as $file ) {
-	$path = __DIR__ . '/' . $file;
-	if ( ! file_exists( $path ) ) {
-		echo "\033[33m[SKIP]\033[0m Missing test file: $file\n";
+function sentinelwp_execute_suite( $suite_file_path ) {
+	include $suite_file_path;
+}
+
+foreach ( $test_files as $suite_name ) {
+	$suite_path = __DIR__ . '/' . $suite_name;
+	if ( ! file_exists( $suite_path ) ) {
+		echo "\033[33m[SKIP]\033[0m Missing test file: $suite_name\n";
 		continue;
 	}
 
 	echo "\n----------------------------------------------------------------------\n";
-	echo " RUNNING: $file\n";
+	echo " RUNNING: $suite_name\n";
 	echo "----------------------------------------------------------------------\n";
 
 	ob_start();
 	try {
-		include $path;
+		sentinelwp_execute_suite( $suite_path );
 		$output = ob_get_clean();
 		echo $output;
 
 		if ( strpos( $output, '[FAIL]' ) !== false || strpos( $output, '[ERROR]' ) !== false ) {
-			$failed_suites[] = $file;
+			$failed_suites[] = $suite_name;
 		} else {
 			$passed_suites++;
 		}
 	} catch ( Throwable $t ) {
 		$output = ob_get_clean();
 		echo $output;
-		echo "\n\033[31m[FATAL EXCEPTION]\033[0m in $file: " . $t->getMessage() . " at " . $t->getFile() . ":" . $t->getLine() . "\n";
-		$failed_suites[] = $file;
+		echo "\n\033[31m[FATAL EXCEPTION]\033[0m in $suite_name: " . $t->getMessage() . " at " . $t->getFile() . ":" . $t->getLine() . "\n";
+		$failed_suites[] = $suite_name;
 	}
 }
 
