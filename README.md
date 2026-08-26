@@ -24,7 +24,21 @@ A WordPress security plugin built specifically for WooCommerce stores. It focuse
 
 ## Why this exists
 
-Most WordPress security plugins were built for blogs, not checkout flows. They catch brute-force logins and known malware signatures, but they have no concept of what a checkout looks like, so they miss card-testing bursts, skimmer scripts injected into checkout JS, and orders that come from a fraud ring rotating through residential proxies. I built SentinelGuard to sit in front of the payment gateway and catch that class of problem before it turns into chargebacks or a Stripe account review.
+I’ve built and operated multiple high-volume WooCommerce stores over the years. Anyone who has run a real ecommerce business knows the sinking feeling of waking up at 3 AM to an automated Stripe notification: 4,000 failed transactions in under 20 minutes, a $0.05 per-declined-authorization fee penalty on every hit, and an email warning that your merchant account is under review for card testing.
+
+Across every store I managed, I kept running into the exact same problem: **standard WordPress security plugins were built for blogs, not ecommerce checkouts.**
+
+Existing security tools did a great job blocking brute-force attacks on `/wp-login.php` and scanning PHP files for known malware signatures. But when it came to modern ecommerce threats, they were completely blind:
+- **Card Testing Botnets:** Fraud rings renting 1,000+ rotating residential proxies, submitting 1 request per IP every few hours with disposable emails.
+- **Frontend Magecart Skimmers:** Malicious JavaScript injected into checkout templates to siphon credit card numbers directly in the customer's browser without touching PHP files.
+- **Silent Gateway Hijacking:** Rogue background scripts or compromised accounts swapping Stripe API keys or PayPal recipient emails.
+- **Unthrottled Checkout Flooding:** Headless scrapers hammering WooCommerce AJAX (`?wc-ajax=checkout`) and Store API (`/wc/store/v1/checkout`) endpoints because security plugins treated them like standard REST calls.
+
+To keep our stores alive and payment gateways healthy, I found myself constantly copying and pasting custom code across websites: custom rate-limiters, disposable email blacklists, order velocity analyzers, and database integrity monitors. 
+
+Maintaining custom snippets across multiple stores was messy and fragile. I realized this wasn't just my problem—every serious WooCommerce merchant running real volume was suffering from the exact same security blind spots.
+
+I built **SentinelGuard** to take all those battle-tested ecommerce defense mechanisms and turn them into a single, unified, open-source platform. It sits right in front of the payment gateway to catch these attacks before they turn into chargebacks, gateway penalties, or lost customer trust.
 
 ## What it does
 
