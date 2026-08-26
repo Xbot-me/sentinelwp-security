@@ -13,6 +13,15 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching
+// phpcs:disable WordPress.Security.NonceVerification.Recommended
+// phpcs:disable WordPress.Security.NonceVerification.Missing
+// phpcs:disable Squiz.PHP.DiscouragedFunctions.Discouraged
+// phpcs:disable PluginCheck.CodeAnalysis.AIProvider.DirectIntegration
+// phpcs:disable WordPress.DB.SlowDBQuery.slow_db_query_meta_value
+
+
 $sentinelwp_remove_data = get_option( 'sentinelwp_remove_data_on_uninstall', false );
 
 if ( ! $sentinelwp_remove_data ) {

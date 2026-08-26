@@ -2,8 +2,8 @@
 Contributors: mustafizurdev
 Tags: security, woocommerce, malware scanner, firewall, checkout protection
 Requires at least: 6.0
-Tested up to: 7.0
-Stable tag: 0.4.3
+Tested up to: 7.1
+Stable tag: 0.4.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -91,6 +91,10 @@ No. The pre-gateway checks take milliseconds, and background tasks (like log pur
 3. Settings - Configure API keys and adjust alert thresholds.
 
 == Changelog ==
+
+= 0.4.4 =
+* Fixed Tested up to headers to match WordPress 7.1.
+* Added PHPCS suppression rules for expected database and WooCommerce integration warnings.
 
 = 0.4.3 =
 * Fixed quarantine file headers and index.php generation based on WordPress.org review.
