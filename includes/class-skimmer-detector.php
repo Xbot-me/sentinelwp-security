@@ -310,8 +310,9 @@ class SentinelWP_Skimmer_Detector {
 			'woocommerce_thankyou'
 		);
 
+		$plugins_dir = defined( 'WP_PLUGIN_DIR' ) ? WP_PLUGIN_DIR : wp_normalize_path( WP_CONTENT_DIR . '/plugins' );
 		foreach ( $active_plugins as $plugin_file ) {
-			$full_path = WP_PLUGIN_DIR . '/' . $plugin_file;
+			$full_path = trailingslashit( $plugins_dir ) . $plugin_file;
 			if ( ! file_exists( $full_path ) ) {
 				continue;
 			}

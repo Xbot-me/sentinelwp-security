@@ -88,10 +88,10 @@ class SentinelWP_Quarantine {
 			}
 		}
 
-		// 2. Write index.php to prevent directory listing
+		// 2. Write empty index.php to prevent directory listing without executable PHP
 		$index_file = trailingslashit( $vault_dir ) . 'index.php';
 		if ( ! file_exists( $index_file ) ) {
-			$index_content = "<?php // Silence is golden.";
+			$index_content = '';
 			if ( $fs ) {
 				$fs->put_contents( $index_file, $index_content, FS_CHMOD_FILE );
 			} else {
