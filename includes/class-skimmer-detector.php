@@ -106,7 +106,7 @@ class SentinelWP_Skimmer_Detector {
 	}
 
 	public function scan_js_files() {
-		$dir = defined( 'WP_CONTENT_DIR' ) ? WP_CONTENT_DIR : ABSPATH . 'wp-content';
+		$dir = WP_CONTENT_DIR;
 		if ( ! is_dir( $dir ) ) {
 			return;
 		}

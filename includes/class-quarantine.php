@@ -82,7 +82,7 @@ class SentinelWP_Quarantine {
 		// 2. Write index.php to prevent directory listing
 		$index_file = trailingslashit( $vault_dir ) . 'index.php';
 		if ( ! file_exists( $index_file ) ) {
-			$index_content = "<?php\n// Silence is golden.\nexit;\n";
+			$index_content = "<?php // Silence is golden.";
 			if ( $fs ) {
 				$fs->put_contents( $index_file, $index_content, FS_CHMOD_FILE );
 			} else {
@@ -172,8 +172,7 @@ class SentinelWP_Quarantine {
 		$vault_dest  = trailingslashit( $this->get_vault_dir() ) . $vault_name;
 
 		// --- PHASE 1: Durable Encoded Storage & Checksum Verification ---
-		$header = "<?php exit('Direct execution prohibited.'); ?>\n";
-		$vault_payload = $header . base64_encode( (string) $file_content );
+		$vault_payload = base64_encode( (string) $file_content );
 		$written = $fs ? $fs->put_contents( $vault_dest, $vault_payload ) : @file_put_contents( $vault_dest, $vault_payload );
 		if ( ! $written || ! file_exists( $vault_dest ) ) {
 			return array(
@@ -183,8 +182,7 @@ class SentinelWP_Quarantine {
 		}
 
 		$vault_raw = $fs ? $fs->get_contents( $vault_dest ) : @file_get_contents( $vault_dest );
-		$decoded_payload = (string) substr( (string) $vault_raw, strlen( $header ) );
-		$decoded_content = base64_decode( $decoded_payload );
+		$decoded_content = base64_decode( (string) $vault_raw );
 		if ( hash( 'sha256', (string) $decoded_content ) !== $file_hash ) {
 			if ( $fs ) {
 				$fs->delete( $vault_dest );
@@ -303,13 +301,20 @@ class SentinelWP_Quarantine {
 		}
 
 		// Verify vault file integrity against original hash
-		$header = "<?php exit('Direct execution prohibited.'); ?>\n";
 		$vault_raw = $fs ? $fs->get_contents( $vault_file ) : @file_get_contents( $vault_file );
-		if ( 0 !== strpos( (string) $vault_raw, $header ) ) {
-			$decoded_content = (string) $vault_raw;
-		} else {
+		
+		# Fallback for old quarantine files that might still have the header (from before v0.4.5)
+		$header = "<?php exit('Direct execution prohibited.'); ?>\n";
+		if ( 0 === strpos( (string) $vault_raw, $header ) ) {
 			$decoded_payload = (string) substr( (string) $vault_raw, strlen( $header ) );
 			$decoded_content = base64_decode( $decoded_payload );
+		} else {
+			// If not base64 string, could be raw (extremely old fallback), otherwise base64 decode it
+			if ( base64_encode(base64_decode((string) $vault_raw, true)) === (string) $vault_raw ) {
+				$decoded_content = base64_decode( (string) $vault_raw );
+			} else {
+				$decoded_content = base64_decode( (string) $vault_raw ); // Mostly will be base64
+			}
 		}
 
 		if ( hash( 'sha256', (string) $decoded_content ) !== $record->file_hash ) {

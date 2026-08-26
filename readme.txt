@@ -2,8 +2,8 @@
 Contributors: mustafizurdev
 Tags: security, woocommerce, malware scanner, firewall, checkout protection
 Requires at least: 6.0
-Tested up to: 6.5
-Stable tag: 0.4.2
+Tested up to: 7.0
+Stable tag: 0.4.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -39,7 +39,7 @@ This plugin uses third-party services to check for vulnerabilities and provide A
 2. **Patchstack Vulnerability Database** (`api.patchstack.com` — Optional):
    - Data sent: WP version, plugin/theme slugs.
    - When: Only if you enter your Patchstack API key in Settings.
-   - Terms: https://patchstack.com/terms-of-service/
+   - Terms: https://patchstack.com/terms-and-conditions/
    - Privacy: https://patchstack.com/privacy-policy/
 
 3. **WPScan Database** (`wpscan.com` — Optional):
@@ -91,6 +91,11 @@ No. The pre-gateway checks take milliseconds, and background tasks (like log pur
 3. Settings - Configure API keys and adjust alert thresholds.
 
 == Changelog ==
+
+= 0.4.3 =
+* Fixed quarantine file headers and index.php generation based on WordPress.org review.
+* Replaced internal directory constants with correct definitions and WP_CONTENT_DIR.
+* Updated Patchstack terms URL and Tested up to value.
 
 = 0.4.2 =
 * Rebranded plugin to SentinelGuard — Ecommerce & Checkout Protection.
