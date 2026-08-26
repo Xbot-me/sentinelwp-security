@@ -103,6 +103,12 @@ No. The pre-gateway checks take milliseconds, and background tasks (like log pur
 * Documented all external API services with working Terms and Privacy links.
 * Simplified readme description and removed marketing fluff.
 
+= 0.4.2 =
+* Rebranded to SentinelGuard — Ecommerce & Checkout Protection.
+* Updated contributor list and plugin URI.
+* Documented all external API services with Terms and Privacy links.
+* Simplified readme text.
+
 = 0.4.1 =
 * Removed AI rate limits to comply with WordPress.org trialware guidelines.
 * Updated text domain and branding.
