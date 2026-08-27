@@ -3,7 +3,7 @@ Contributors: mustafizurdev
 Tags: security, woocommerce, malware scanner, firewall, checkout protection
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.4.3
+Stable tag: 0.4.4
 Requires PHP: 7.4
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -91,6 +91,10 @@ No. The pre-gateway checks take milliseconds, and background tasks (like log pur
 3. Settings - Configure API keys and adjust alert thresholds.
 
 == Changelog ==
+
+= 0.4.4 =
+* Ensured empty index.php directory listing guards in vault and languages directories.
+* Standardized plugin directory path resolution with dynamic fallbacks.
 
 = 0.4.3 =
 * Rebranded to SentinelGuard and updated the plugin slug to sentinelguard-ecommerce-protection.
