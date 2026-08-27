@@ -134,6 +134,13 @@ class SentinelWP_Quarantine {
 
 		$file_hash   = hash( 'sha256', (string) $file_content );
 		$file_size   = filesize( $canonical_path );
+		$max_bytes   = defined( 'MB_IN_BYTES' ) ? 5 * MB_IN_BYTES : 5 * 1048576;
+		if ( $file_size > $max_bytes ) {
+			return array(
+				'success' => false,
+				'message' => __( 'Action blocked: File exceeds maximum quarantine size (5 MB).', 'sentinelguard-ecommerce-protection' ),
+			);
+		}
 		$perms       = substr( sprintf( '%o', fileperms( $canonical_path ) ), -4 );
 		$unique_code = wp_generate_password( 16, false );
 		$vault_name  = sanitize_file_name( basename( $canonical_path ) ) . '.' . $unique_code . '.quarantine';
