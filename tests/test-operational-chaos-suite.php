@@ -78,11 +78,11 @@ $quarantine_id      = isset( $quarantine_success['quarantine_id'] ) ? $quarantin
 
 $res_unwritable_restore = SentinelWP_Quarantine::instance()->restore_quarantine( $quarantine_id );
 
-// Check that vault copy was preserved
+// Check that DB record and payload was preserved
 $vault_record = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$quarantine_table} WHERE id = %d", $quarantine_id ) );
-$vault_file_exists = $vault_record ? file_exists( trailingslashit( $vault_dir ) . $vault_record->quarantine_filename ) : false;
+$record_preserved = $vault_record && ! empty( $vault_record->file_content ) && 'quarantined' === $vault_record->status;
 
-record_chaos_test( 'Rollback Safety', 'Vault Preserved on Unwritable Dest', $vault_file_exists && 'quarantined' === $vault_record->status, "Vault file preserved safely when destination is read-only" );
+record_chaos_test( 'Rollback Safety', 'Record Preserved on Unwritable Dest', $record_preserved, "Quarantine record preserved safely in DB when destination is read-only" );
 
 // Restore permissions and finish restore
 @chmod( $chaos_dir, 0755 );

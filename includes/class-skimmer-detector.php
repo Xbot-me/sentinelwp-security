@@ -169,7 +169,7 @@ class SentinelWP_Skimmer_Detector {
 
 					/* translators: %s: script file basename */
 					$title      = sprintf( esc_html__( 'Magecart / card skimmer script detected in %s', 'sentinelguard-ecommerce-protection' ), basename( $path ) );
-					$rel_path   = str_replace( ABSPATH, '', $path );
+					$rel_path   = SentinelWP_Helper::get_relative_path( $path );
 					$finding_id = $this->record_finding(
 						'checkout_skimmer',
 						'critical',
@@ -229,7 +229,7 @@ class SentinelWP_Skimmer_Detector {
 				if ( strpos( $content, '<?php' ) !== false || strpos( $content, '<script' ) !== false || strpos( $content, '<%' ) !== false ) {
 					/* translators: %s: file basename */
 					$title    = sprintf( esc_html__( 'Fake image payload detected: %s', 'sentinelguard-ecommerce-protection' ), basename( $path ) );
-					$rel_path = str_replace( ABSPATH, '', $path );
+					$rel_path = SentinelWP_Helper::get_relative_path( $path );
 					$this->record_finding(
 						'fake_image_payload',
 						'critical',
@@ -412,9 +412,9 @@ class SentinelWP_Skimmer_Detector {
 							$refl    = new ReflectionFunction( $callback );
 							$source  = $refl->getFileName();
 						}
-						
-						if ( $source && strpos( $source, WP_CONTENT_DIR ) !== false ) {
-							$source = str_replace( WP_CONTENT_DIR, '', $source );
+
+						if ( $source ) {
+							$source = SentinelWP_Helper::get_relative_path( $source );
 						}
 
 						$registered_hooks[] = array(

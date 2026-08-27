@@ -91,6 +91,7 @@ class SentinelWP_Activator {
 			file_hash varchar(64) NOT NULL,
 			file_size bigint(20) unsigned NOT NULL,
 			permissions varchar(10) NOT NULL default '0644',
+			file_content longtext default NULL,
 			status varchar(20) NOT NULL default 'quarantined',
 			created_at datetime NOT NULL,
 			restored_at datetime default NULL,

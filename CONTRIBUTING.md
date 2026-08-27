@@ -17,7 +17,7 @@ We are committed to providing a welcoming, inclusive, and harassment-free enviro
 - Use our [Bug Report Template](.github/ISSUE_TEMPLATE/bug_report.md) with complete reproduction steps, environment details (WordPress, WooCommerce, HPOS status, PHP version), and logs.
 
 ### 2. Suggesting Enhancements
-- Check [Discussions](https://github.com/Xbot-me/sentinelwp-security/discussions) and [Open Issues](https://github.com/Xbot-me/sentinelwp-security/issues).
+- Check [Open Issues](https://github.com/Xbot-me/sentinelwp-security/issues) to ensure your idea hasn't been proposed.
 - Use our [Feature Request Template](.github/ISSUE_TEMPLATE/feature_request.md) describing the motivation, architecture impact, and proposed implementation.
 
 ### 3. Submitting Pull Requests (PRs)

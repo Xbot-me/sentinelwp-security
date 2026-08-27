@@ -106,4 +106,36 @@ class SentinelWP_Helper {
 		}
 		return (bool) apply_filters( 'sentinelwp_is_hpos_enabled', $enabled );
 	}
+
+	/**
+	 * Get the WordPress root filesystem directory safely using WordPress core APIs.
+	 *
+	 * @return string Normalized root directory path with trailing slash.
+	 */
+	public static function get_home_directory() {
+		$home = function_exists( 'get_home_path' ) ? get_home_path() : ( defined( 'ABSPATH' ) ? ABSPATH : '' );
+		return trailingslashit( wp_normalize_path( $home ) );
+	}
+
+	/**
+	 * Safely resolve a path relative to the WordPress root directory for display.
+	 * Avoids direct string replacement on ABSPATH or WP_CONTENT_DIR.
+	 *
+	 * @param string $path Absolute or partial filesystem path.
+	 * @return string Relative path or base filename.
+	 */
+	public static function get_relative_path( $path ) {
+		if ( empty( $path ) || ! is_string( $path ) ) {
+			return '';
+		}
+
+		$norm_path = wp_normalize_path( $path );
+		$home_dir  = untrailingslashit( self::get_home_directory() );
+
+		if ( ! empty( $home_dir ) && strpos( $norm_path, $home_dir ) === 0 ) {
+			return ltrim( substr( $norm_path, strlen( $home_dir ) ), '/' );
+		}
+
+		return basename( $norm_path );
+	}
 }

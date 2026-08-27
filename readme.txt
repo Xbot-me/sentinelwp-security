@@ -3,7 +3,7 @@ Contributors: mustafizurdev
 Tags: security, woocommerce, malware scanner, firewall, checkout protection
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 0.4.4
+Stable tag: 0.4.5
 Requires PHP: 7.4
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -91,6 +91,10 @@ No. The pre-gateway checks take milliseconds, and background tasks (like log pur
 3. Settings - Configure API keys and adjust alert thresholds.
 
 == Changelog ==
+
+= 0.4.5 =
+* Transitioned quarantine storage completely to the database, eliminating code file storage on disk.
+* Standardized path resolution and relative path helpers to use WordPress core APIs instead of internal constants.
 
 = 0.4.4 =
 * Ensured empty index.php directory listing guards in vault and languages directories.

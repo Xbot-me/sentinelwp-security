@@ -126,7 +126,8 @@ class SentinelWP_Scanner {
 			if ( 0 === strpos( $relative_path, 'wp-content/' ) ) {
 				continue;
 			}
-			$full_path = ABSPATH . $relative_path;
+			$home_dir  = SentinelWP_Helper::get_home_directory();
+			$full_path = trailingslashit( $home_dir ) . ltrim( $relative_path, '/' );
 			if ( ! file_exists( $full_path ) ) {
 				$mismatches[] = array( 'file' => $relative_path, 'issue' => 'missing' );
 				continue;
@@ -280,7 +281,7 @@ class SentinelWP_Scanner {
 				sprintf(
 					/* translators: %s: relative file path */
 					__( 'PHP file found inside uploads directory: %s', 'sentinelguard-ecommerce-protection' ),
-					str_replace( ABSPATH, '', $file->getPathname() )
+					SentinelWP_Helper::get_relative_path( $file->getPathname() )
 				),
 				'',
 				'likely',
@@ -318,7 +319,7 @@ class SentinelWP_Scanner {
 						/* translators: 1: signature label, 2: relative file path */
 						__( 'Suspicious code pattern (%1$s) in %2$s', 'sentinelguard-ecommerce-protection' ),
 						$label,
-						str_replace( ABSPATH, '', $path )
+						SentinelWP_Helper::get_relative_path( $path )
 					),
 					wp_json_encode( array( 'signature' => $label ) ),
 					'suspicious',

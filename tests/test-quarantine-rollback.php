@@ -73,13 +73,14 @@ if ( $removed_from_webroot ) {
 	echo "\033[31m[FAIL]\033[0m [STEP 4] File still exists in webroot!\n";
 }
 
-// Step 5: Verify vault existence and protection
-$vault_dir = SentinelWP_Quarantine::instance()->get_vault_dir();
-$vault_protected = file_exists( trailingslashit( $vault_dir ) . '.htaccess' ) && file_exists( trailingslashit( $vault_dir ) . 'index.php' );
-if ( $vault_protected ) {
-	echo "\033[32m[PASS]\033[0m [STEP 5] Quarantine vault is secured (.htaccess + index.php).\n";
+// Step 5: Verify database-backed quarantine storage & zero disk footprint
+$quarantine_row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}sentinelwp_quarantine WHERE id = %d", $quarantine_id ) );
+$db_verified = ! empty( $quarantine_row ) && ! empty( $quarantine_row->file_content ) && hash( 'sha256', base64_decode( $quarantine_row->file_content ) ) === $original_hash;
+if ( $db_verified ) {
+	echo "\033[32m[PASS]\033[0m [STEP 5] Quarantined content verified in database (zero disk footprint).\n";
 } else {
-	echo "\033[31m[FAIL]\033[0m [STEP 5] Vault protection files missing.\n";
+	echo "\033[31m[FAIL]\033[0m [STEP 5] Database quarantine payload verification failed.\n";
+	exit( 1 );
 }
 
 // Step 6: 1-Click Rollback / Restore

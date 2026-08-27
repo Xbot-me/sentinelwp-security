@@ -65,40 +65,6 @@ class SentinelWP_Quarantine {
 	}
 
 	public function init_vault() {
-		$vault_dir = $this->get_vault_dir();
-
-		if ( ! file_exists( $vault_dir ) ) {
-			wp_mkdir_p( $vault_dir );
-		}
-
-		if ( ! is_dir( $vault_dir ) || ! wp_is_writable( $vault_dir ) ) {
-			return false;
-		}
-
-		$fs = $this->get_filesystem();
-
-		// 1. Write .htaccess to block direct HTTP access
-		$htaccess_file = trailingslashit( $vault_dir ) . '.htaccess';
-		if ( ! file_exists( $htaccess_file ) ) {
-			$htaccess_content = "# SentinelGuard Quarantine Vault - Deny All Access\n<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n    Order deny,allow\n    Deny from all\n</IfModule>\n";
-			if ( $fs ) {
-				$fs->put_contents( $htaccess_file, $htaccess_content, FS_CHMOD_FILE );
-			} else {
-				@file_put_contents( $htaccess_file, $htaccess_content );
-			}
-		}
-
-		// 2. Write empty index.php to prevent directory listing without executable PHP
-		$index_file = trailingslashit( $vault_dir ) . 'index.php';
-		if ( ! file_exists( $index_file ) ) {
-			$index_content = '';
-			if ( $fs ) {
-				$fs->put_contents( $index_file, $index_content, FS_CHMOD_FILE );
-			} else {
-				@file_put_contents( $index_file, $index_content );
-			}
-		}
-
 		return true;
 	}
 
@@ -113,13 +79,6 @@ class SentinelWP_Quarantine {
 	 */
 	public function quarantine_file( $finding_id, $file_path = null ) {
 		global $wpdb;
-
-		if ( ! $this->init_vault() ) {
-			return array(
-				'success' => false,
-				'message' => __( 'Unable to initialize quarantine vault directory (check filesystem permissions).', 'sentinelguard-ecommerce-protection' ),
-			);
-		}
 
 		$findings_table   = $wpdb->prefix . 'sentinelwp_findings';
 		$quarantine_table = $wpdb->prefix . 'sentinelwp_quarantine';
@@ -178,33 +137,16 @@ class SentinelWP_Quarantine {
 		$perms       = substr( sprintf( '%o', fileperms( $canonical_path ) ), -4 );
 		$unique_code = wp_generate_password( 16, false );
 		$vault_name  = sanitize_file_name( basename( $canonical_path ) ) . '.' . $unique_code . '.quarantine';
-		$vault_dest  = trailingslashit( $this->get_vault_dir() ) . $vault_name;
-
 		// --- PHASE 1: Durable Encoded Storage & Checksum Verification ---
 		$vault_payload = base64_encode( (string) $file_content );
-		$written = $fs ? $fs->put_contents( $vault_dest, $vault_payload ) : @file_put_contents( $vault_dest, $vault_payload );
-		if ( ! $written || ! file_exists( $vault_dest ) ) {
+		if ( hash( 'sha256', (string) base64_decode( $vault_payload ) ) !== $file_hash ) {
 			return array(
 				'success' => false,
-				'message' => __( 'Failed to write file into quarantine vault (possible disk full or permission error).', 'sentinelguard-ecommerce-protection' ),
+				'message' => __( 'Quarantine aborted: Checksum verification failed before database commit.', 'sentinelguard-ecommerce-protection' ),
 			);
 		}
 
-		$vault_raw = $fs ? $fs->get_contents( $vault_dest ) : @file_get_contents( $vault_dest );
-		$decoded_content = base64_decode( (string) $vault_raw );
-		if ( hash( 'sha256', (string) $decoded_content ) !== $file_hash ) {
-			if ( $fs ) {
-				$fs->delete( $vault_dest );
-			} else {
-				wp_delete_file( $vault_dest );
-			}
-			return array(
-				'success' => false,
-				'message' => __( 'Quarantine aborted: Checksum verification failed between source and vault artifact.', 'sentinelguard-ecommerce-protection' ),
-			);
-		}
-
-		// Commit metadata to database
+		// Commit metadata and encoded payload safely to database
 		$now = current_time( 'mysql' );
 		$db_ok = $wpdb->insert(
 			$quarantine_table,
@@ -215,18 +157,14 @@ class SentinelWP_Quarantine {
 				'file_hash'           => $file_hash,
 				'file_size'           => (int) $file_size,
 				'permissions'         => $perms,
+				'file_content'        => $vault_payload,
 				'status'              => 'quarantined',
 				'created_at'          => $now,
 			),
-			array( '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s' )
+			array( '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s' )
 		);
 
 		if ( ! $db_ok || empty( $wpdb->insert_id ) ) {
-			if ( $fs ) {
-				$fs->delete( $vault_dest );
-			} else {
-				wp_delete_file( $vault_dest );
-			}
 			return array(
 				'success' => false,
 				'message' => __( 'Quarantine aborted: Failed to commit metadata record to database. Original file preserved.', 'sentinelguard-ecommerce-protection' ),
@@ -301,32 +239,20 @@ class SentinelWP_Quarantine {
 		}
 
 		$fs = $this->get_filesystem();
-		$vault_file = trailingslashit( $this->get_vault_dir() ) . $record->quarantine_filename;
-		if ( ! file_exists( $vault_file ) ) {
-			return array(
-				'success' => false,
-				'message' => __( 'Quarantined file missing from vault.', 'sentinelguard-ecommerce-protection' ),
-			);
-		}
+		$decoded_content = '';
 
-		// Verify vault file integrity against original hash
-		$vault_raw = $fs ? $fs->get_contents( $vault_file ) : @file_get_contents( $vault_file );
-		
-		# Fallback for old quarantine files that might still have the header (from before v0.4.5)
-		$header = "<?php exit('Direct execution prohibited.'); ?>\n";
-		if ( 0 === strpos( (string) $vault_raw, $header ) ) {
-			$decoded_payload = (string) substr( (string) $vault_raw, strlen( $header ) );
-			$decoded_content = base64_decode( $decoded_payload );
+		if ( ! empty( $record->file_content ) ) {
+			$decoded_content = base64_decode( (string) $record->file_content );
 		} else {
-			// If not base64 string, could be raw (extremely old fallback), otherwise base64 decode it
-			if ( base64_encode(base64_decode((string) $vault_raw, true)) === (string) $vault_raw ) {
+			// Legacy disk fallback if an older record exists
+			$vault_file = trailingslashit( $this->get_vault_dir() ) . $record->quarantine_filename;
+			if ( file_exists( $vault_file ) ) {
+				$vault_raw = $fs ? $fs->get_contents( $vault_file ) : @file_get_contents( $vault_file );
 				$decoded_content = base64_decode( (string) $vault_raw );
-			} else {
-				$decoded_content = base64_decode( (string) $vault_raw ); // Mostly will be base64
 			}
 		}
 
-		if ( hash( 'sha256', (string) $decoded_content ) !== $record->file_hash ) {
+		if ( empty( $decoded_content ) || hash( 'sha256', (string) $decoded_content ) !== $record->file_hash ) {
 			return array(
 				'success' => false,
 				'message' => __( 'Quarantined file failed integrity hash check.', 'sentinelguard-ecommerce-protection' ),
@@ -361,11 +287,14 @@ class SentinelWP_Quarantine {
 			$fs->chmod( $record->original_path, octdec( $record->permissions ) );
 		}
 
-		// Remove from vault only after successful restore
-		if ( $fs ) {
-			$fs->delete( $vault_file );
-		} else {
-			wp_delete_file( $vault_file );
+		// Optional cleanup of legacy vault file if one existed on disk
+		$legacy_vault = trailingslashit( $this->get_vault_dir() ) . $record->quarantine_filename;
+		if ( file_exists( $legacy_vault ) ) {
+			if ( $fs ) {
+				$fs->delete( $legacy_vault );
+			} else {
+				wp_delete_file( $legacy_vault );
+			}
 		}
 
 		// Update quarantine record
@@ -470,21 +399,22 @@ class SentinelWP_Quarantine {
 		}
 
 		// 4. Resolve canonical realpath
-		$abspath     = wp_normalize_path( strtolower( untrailingslashit( ABSPATH ) ) );
-		$content_dir = wp_normalize_path( strtolower( untrailingslashit( WP_CONTENT_DIR ) ) );
+		$home_path   = wp_normalize_path( strtolower( untrailingslashit( SentinelWP_Helper::get_home_directory() ) ) );
+		$upload_info = wp_upload_dir();
+		$upload_dir  = ! empty( $upload_info['basedir'] ) ? wp_normalize_path( strtolower( untrailingslashit( $upload_info['basedir'] ) ) ) : '';
 		$norm_lower  = strtolower( $normalized );
 
 		if ( ! $is_restore && file_exists( $normalized ) ) {
 			$real = wp_normalize_path( realpath( $normalized ) );
 			if ( false === $real ) {
-				return array( 'safe' => false, 'error' => __( 'Unable to resolve canonical file path.', 'sentinelguard-ecommerce-protection' ) );
+				return array( 'safe' => false, 'error' => __( 'Unable to resolve canonical file path.', 'sentinelguard-ecommerce-protection' ), );
 			}
 
 			$real_lower = strtolower( $real );
 
 			// Reject symlinks pointing outside webroot
 			if ( is_link( $normalized ) ) {
-				if ( strpos( $real_lower, $abspath ) !== 0 && strpos( $real_lower, $content_dir ) !== 0 ) {
+				if ( strpos( $real_lower, $home_path ) !== 0 && ( empty( $upload_dir ) || strpos( $real_lower, $upload_dir ) !== 0 ) ) {
 					return array( 'safe' => false, 'error' => __( 'Action blocked: Symlink points outside WordPress root.', 'sentinelguard-ecommerce-protection' ) );
 				}
 			}
@@ -496,8 +426,8 @@ class SentinelWP_Quarantine {
 			$canonical_lower = $norm_lower;
 		}
 
-		// 5. Enforce boundary containment inside ABSPATH or WP_CONTENT_DIR
-		if ( strpos( $canonical_lower, $abspath ) !== 0 && strpos( $canonical_lower, $content_dir ) !== 0 ) {
+		// 5. Enforce boundary containment inside WordPress root or uploads
+		if ( strpos( $canonical_lower, $home_path ) !== 0 && ( empty( $upload_dir ) || strpos( $canonical_lower, $upload_dir ) !== 0 ) ) {
 			return array( 'safe' => false, 'error' => __( 'Action blocked: Path is outside allowed WordPress directory boundary.', 'sentinelguard-ecommerce-protection' ) );
 		}
 
@@ -559,16 +489,15 @@ class SentinelWP_Quarantine {
 		}
 
 		// Disallow any files directly under wp-admin or wp-includes
-		$abspath     = wp_normalize_path( strtolower( untrailingslashit( ABSPATH ) ) );
-		$content_dir = wp_normalize_path( strtolower( untrailingslashit( WP_CONTENT_DIR ) ) );
-		if ( strpos( $normalized, $abspath . '/wp-admin/' ) === 0 || 
-		     strpos( $normalized, $abspath . '/wp-includes/' ) === 0 || 
-		     strpos( $normalized, $abspath . '/wp-admin' ) === 0 || 
-		     strpos( $normalized, $abspath . '/wp-includes' ) === 0 ) {
+		$home_path = wp_normalize_path( strtolower( untrailingslashit( SentinelWP_Helper::get_home_directory() ) ) );
+		if ( strpos( $normalized, $home_path . '/wp-admin/' ) === 0 || 
+		     strpos( $normalized, $home_path . '/wp-includes/' ) === 0 || 
+		     strpos( $normalized, $home_path . '/wp-admin' ) === 0 || 
+		     strpos( $normalized, $home_path . '/wp-includes' ) === 0 ) {
 			return true;
 		}
 
-				// Disallow quarantining our own plugin files (excluding uploads)
+		// Disallow quarantining our own plugin files (excluding uploads)
 		$our_plugin_dir = wp_normalize_path( strtolower( untrailingslashit( plugin_dir_path( dirname( __FILE__ ) ) ) ) );
 		if ( strpos( $normalized, $our_plugin_dir . '/' ) === 0 && strpos( $normalized, '/uploads/' ) === false ) {
 			return true;
@@ -580,8 +509,9 @@ class SentinelWP_Quarantine {
 			$active_plugins = array_merge( $active_plugins, array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) ) );
 		}
 		
+		$plugins_root = wp_normalize_path( strtolower( defined( 'WP_PLUGIN_DIR' ) ? WP_PLUGIN_DIR : trailingslashit( dirname( $our_plugin_dir ) ) ) );
 		foreach ( $active_plugins as $plugin_file ) {
-			$plugin_path = wp_normalize_path( strtolower( WP_PLUGIN_DIR . '/' . $plugin_file ) );
+			$plugin_path = wp_normalize_path( strtolower( trailingslashit( $plugins_root ) . $plugin_file ) );
 			if ( $normalized === $plugin_path ) {
 				return true;
 			}
