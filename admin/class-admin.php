@@ -76,7 +76,7 @@ class SentinelWP_Admin {
 	}
 
 	public function enqueue_assets( $hook ) {
-		if ( strpos( $hook, 'sentinelguard-ecommerce-protection' ) === false ) {
+		if ( strpos( $hook, 'sentinelguard' ) === false ) {
 			return;
 		}
 		wp_enqueue_style( 'sentinelwp-admin', SENTINELWP_URL . 'admin/css/admin.css', array(), SENTINELWP_VERSION );

@@ -272,7 +272,7 @@ class SentinelWP_Event_Normalizer {
 
 	private function resolve_journey_duration() {
 		if ( isset( $_COOKIE['sentinelwp_journey_start'] ) ) {
-			$start = (int) $_COOKIE['sentinelwp_journey_start'];
+			$start = absint( wp_unslash( $_COOKIE['sentinelwp_journey_start'] ) );
 			if ( $start > 0 && $start <= time() ) {
 				return (float) ( time() - $start );
 			}

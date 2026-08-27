@@ -59,7 +59,10 @@ class SentinelWP_Alerts {
 			return;
 		}
 
-		$webhook_url = get_option( 'sentinelwp_webhook_url', '' );
+		$webhook_url = get_option( 'sentinelwp_alert_webhook', '' );
+		if ( empty( $webhook_url ) ) {
+			$webhook_url = get_option( 'sentinelwp_webhook_url', '' );
+		}
 		if ( ! $webhook_url || ! wp_http_validate_url( $webhook_url ) ) {
 			return;
 		}
