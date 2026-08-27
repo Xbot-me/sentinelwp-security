@@ -93,22 +93,18 @@ wp_clear_scheduled_hook( 'sentinelwp_daily_scan' );
 wp_clear_scheduled_hook( 'sentinelwp_flood_check' );
 wp_clear_scheduled_hook( 'sentinelwp_ai_triage_job' );
 
-// Remove quarantine vault directory from uploads.
+// Remove quarantine vault directory from uploads using WP_Filesystem.
 $sentinelwp_upload_dir = wp_upload_dir();
 $sentinelwp_vault_dir  = trailingslashit( $sentinelwp_upload_dir['basedir'] ) . 'sentinelwp-quarantine';
-if ( is_dir( $sentinelwp_vault_dir ) ) {
-	$sentinelwp_files = new RecursiveIteratorIterator(
-		new RecursiveDirectoryIterator( $sentinelwp_vault_dir, RecursiveDirectoryIterator::SKIP_DOTS ),
-		RecursiveIteratorIterator::CHILD_FIRST
-	);
-	foreach ( $sentinelwp_files as $sentinelwp_file ) {
-		if ( $sentinelwp_file->isDir() ) {
-			rmdir( $sentinelwp_file->getRealPath() );
-		} else {
-			unlink( $sentinelwp_file->getRealPath() );
-		}
-	}
-	rmdir( $sentinelwp_vault_dir );
+
+global $wp_filesystem;
+if ( ! $wp_filesystem ) {
+	require_once ABSPATH . 'wp-admin/includes/file.php';
+	WP_Filesystem();
+}
+
+if ( $wp_filesystem && $wp_filesystem->is_dir( $sentinelwp_vault_dir ) ) {
+	$wp_filesystem->delete( $sentinelwp_vault_dir, true );
 }
 
 // Clean up transients with known prefixes.
