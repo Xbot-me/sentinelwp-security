@@ -108,8 +108,8 @@ class SentinelWP_Nulled_Detector {
 			require_once ABSPATH . 'wp-admin/includes/plugin.php';
 		}
 
-		$plugins = function_exists( 'get_plugins' ) ? get_plugins() : array();
-		$plugins_dir = defined( 'WP_PLUGIN_DIR' ) ? WP_PLUGIN_DIR : wp_normalize_path( WP_CONTENT_DIR . '/plugins' );
+		$plugins     = function_exists( 'get_plugins' ) ? get_plugins() : array();
+		$plugins_dir = SentinelWP_Helper::get_plugins_directory();
 
 		foreach ( $plugins as $plugin_file => $plugin_data ) {
 			if ( strpos( $plugin_file, 'sentinelguard-ecommerce-protection' ) !== false || strpos( $plugin_file, 'sentinelwp' ) !== false ) {
@@ -265,7 +265,7 @@ class SentinelWP_Nulled_Detector {
 	}
 
 	private function get_iterator( $dir ) {
-		if ( empty( $dir ) || ! is_dir( $dir ) || $dir === WP_PLUGIN_DIR ) {
+		if ( empty( $dir ) || ! is_dir( $dir ) || $dir === SentinelWP_Helper::get_plugins_directory() ) {
 			return false;
 		}
 		try {

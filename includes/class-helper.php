@@ -138,4 +138,28 @@ class SentinelWP_Helper {
 
 		return basename( $norm_path );
 	}
+
+	/**
+	 * Get the WordPress content directory path safely.
+	 *
+	 * @return string Normalized content directory path without trailing slash.
+	 */
+	public static function get_content_directory() {
+		if ( defined( 'WP_CONTENT_DIR' ) ) {
+			return untrailingslashit( wp_normalize_path( WP_CONTENT_DIR ) );
+		}
+		return untrailingslashit( self::get_home_directory() ) . '/wp-content';
+	}
+
+	/**
+	 * Get the WordPress plugins directory path safely.
+	 *
+	 * @return string Normalized plugins directory path without trailing slash.
+	 */
+	public static function get_plugins_directory() {
+		if ( defined( 'WP_PLUGIN_DIR' ) ) {
+			return untrailingslashit( wp_normalize_path( WP_PLUGIN_DIR ) );
+		}
+		return self::get_content_directory() . '/plugins';
+	}
 }

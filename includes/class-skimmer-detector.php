@@ -115,7 +115,7 @@ class SentinelWP_Skimmer_Detector {
 	}
 
 	public function scan_js_files() {
-		$dir = WP_CONTENT_DIR;
+		$dir = SentinelWP_Helper::get_content_directory();
 		if ( ! is_dir( $dir ) ) {
 			return;
 		}
@@ -310,7 +310,7 @@ class SentinelWP_Skimmer_Detector {
 			'woocommerce_thankyou'
 		);
 
-		$plugins_dir = defined( 'WP_PLUGIN_DIR' ) ? WP_PLUGIN_DIR : wp_normalize_path( WP_CONTENT_DIR . '/plugins' );
+		$plugins_dir = SentinelWP_Helper::get_plugins_directory();
 		foreach ( $active_plugins as $plugin_file ) {
 			$full_path = trailingslashit( $plugins_dir ) . $plugin_file;
 			if ( ! file_exists( $full_path ) ) {

@@ -509,7 +509,7 @@ class SentinelWP_Quarantine {
 			$active_plugins = array_merge( $active_plugins, array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) ) );
 		}
 		
-		$plugins_root = wp_normalize_path( strtolower( defined( 'WP_PLUGIN_DIR' ) ? WP_PLUGIN_DIR : trailingslashit( dirname( $our_plugin_dir ) ) ) );
+		$plugins_root = wp_normalize_path( strtolower( SentinelWP_Helper::get_plugins_directory() ) );
 		foreach ( $active_plugins as $plugin_file ) {
 			$plugin_path = wp_normalize_path( strtolower( trailingslashit( $plugins_root ) . $plugin_file ) );
 			if ( $normalized === $plugin_path ) {
