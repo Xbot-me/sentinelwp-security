@@ -330,13 +330,15 @@ foreach ( $policy_urls as $url ) {
 		curl_setopt( $ch, CURLOPT_URL, $url );
 		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 		curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
-		curl_setopt( $ch, CURLOPT_TIMEOUT, 8 );
-		curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' );
+		curl_setopt( $ch, CURLOPT_TIMEOUT, 10 );
+		curl_setopt( $ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' );
 		curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-		curl_setopt( $ch, CURLOPT_NOBODY, true );
+		curl_setopt( $ch, CURLOPT_RANGE, '0-100' );
 		curl_exec( $ch );
 		$code = (int) curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-		curl_close( $ch );
+		if ( PHP_VERSION_ID < 80500 ) {
+			curl_close( $ch );
+		}
 	}
 
 	if ( ( $code >= 200 && $code < 400 ) || 403 === $code ) {
