@@ -93,8 +93,10 @@ No. The pre-gateway checks take milliseconds, and background tasks (like log pur
 == Changelog ==
 
 = 0.4.5 =
-* Transitioned quarantine storage completely to the database, eliminating code file storage on disk.
+* Transitioned quarantine storage completely to the database, eliminating all code file storage on disk.
 * Standardized path resolution and relative path helpers to use WordPress core APIs instead of internal constants.
+* Cleaned up obsolete vault initialization methods and sanitized session journey cookies.
+* Synchronized webhook alert configuration and ensured admin assets load across all settings screens.
 
 = 0.4.4 =
 * Ensured empty index.php directory listing guards in vault and languages directories.

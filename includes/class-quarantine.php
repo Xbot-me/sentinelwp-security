@@ -44,9 +44,6 @@ class SentinelWP_Quarantine {
 	}
 
 	/**
-	 * Ensure the quarantine vault exists and is securely locked down.
-	 *
-	/**
 	 * Get WP_Filesystem instance safely.
 	 *
 	 * @return \WP_Filesystem_Base|null
@@ -64,13 +61,9 @@ class SentinelWP_Quarantine {
 		return $wp_filesystem;
 	}
 
-	public function init_vault() {
-		return true;
-	}
-
 	/**
 	 * Quarantine a file using a Durable Two-Phase Commit:
-	 * Phase 1: Copy to vault -> Verify SHA-256 Checksum -> Commit DB metadata.
+	 * Phase 1: Read & encode content -> Verify SHA-256 Checksum -> Commit to database.
 	 * Phase 2: Unlink original only after Phase 1 is durably confirmed.
 	 *
 	 * @param int         $finding_id Finding ID in sentinelwp_findings table.
