@@ -1,4 +1,4 @@
-=== SentinelGuard — WooCommerce Fraud & Checkout Protection ===
+=== SentinelGuard — Fraud & Checkout Protection for WooCommerce ===
 Contributors: mustafizurdev
 Tags: woocommerce, fraud protection, card testing, checkout security, skimmer
 Requires at least: 6.0

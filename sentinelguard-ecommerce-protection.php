@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       SentinelGuard — WooCommerce Fraud & Checkout Protection
+ * Plugin Name:       SentinelGuard — Fraud & Checkout Protection for WooCommerce
  * Plugin URI:        https://mustafizur.info/sentinelguard
  * Description:       Dedicated security layer for ecommerce revenue, checkout integrity, and payment flows. Magecart skimmer defense, card-testing prevention, stealth admin detection, and core integrity.
  * Version:           0.4.6
