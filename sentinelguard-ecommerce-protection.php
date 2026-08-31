@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       SentinelGuard — Ecommerce & Checkout Protection
+ * Plugin Name:       SentinelGuard — WooCommerce Fraud & Checkout Protection
  * Plugin URI:        https://mustafizur.info/sentinelguard
  * Description:       Dedicated security layer for ecommerce revenue, checkout integrity, and payment flows. Magecart skimmer defense, card-testing prevention, stealth admin detection, and core integrity.
- * Version:           0.4.5
+ * Version:           0.4.6
  * Requires at least: 6.0
  * Tested up to:      7.1
  * Requires PHP:      7.4
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'SENTINELWP_VERSION', '0.4.5' );
+define( 'SENTINELWP_VERSION', '0.4.6' );
 
 define( 'SENTINELGUARD_PLUGIN_FILE', __FILE__ );
 define( 'SENTINELGUARD_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -83,6 +83,12 @@ function sentinelwp_add_cron_schedules( $schedules ) {
 		$schedules['every_five_minutes'] = array(
 			'interval' => 300,
 			'display'  => __( 'Every 5 Minutes', 'sentinelguard-ecommerce-protection' ),
+		);
+	}
+	if ( ! isset( $schedules['weekly'] ) ) {
+		$schedules['weekly'] = array(
+			'interval' => 7 * DAY_IN_SECONDS,
+			'display'  => __( 'Once Weekly', 'sentinelguard-ecommerce-protection' ),
 		);
 	}
 	return $schedules;

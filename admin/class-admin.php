@@ -32,6 +32,7 @@ class SentinelWP_Admin {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
 		add_action( 'wp_ajax_sentinelwp_run_scan_now', array( $this, 'ajax_run_scan_now' ) );
 		add_action( 'wp_ajax_sentinelwp_resolve_finding', array( $this, 'ajax_resolve_finding' ) );
+		add_action( 'wp_ajax_sentinelwp_acknowledge_finding', array( $this, 'ajax_acknowledge_finding' ) );
 		add_action( 'wp_ajax_sentinelwp_unresolve_finding', array( $this, 'ajax_unresolve_finding' ) );
 		add_action( 'wp_ajax_sentinelwp_bulk_action', array( $this, 'ajax_bulk_action' ) );
 		add_action( 'wp_ajax_sentinelwp_test_email', array( $this, 'ajax_test_email' ) );
@@ -102,11 +103,12 @@ class SentinelWP_Admin {
 			wp_die( esc_html__( 'You do not have permission to access this page.', 'sentinelguard-ecommerce-protection' ) );
 		}		global $wpdb;
 
-		// All open findings
+		// Open + acknowledged findings
 		$findings = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}sentinelwp_findings WHERE status != 'resolved' ORDER BY FIELD(severity,'critical','high','medium','low'), created_at DESC LIMIT 200" );
-		
-		// Resolved count
-		$resolved_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'resolved'" );
+
+		// Recent resolved (for the Resolved tab)
+		$resolved_findings = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'resolved' ORDER BY updated_at DESC LIMIT 100" );
+		$resolved_count    = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'resolved'" );
 
 		$counts = array(
 			'all'      => count( $findings ),
@@ -123,6 +125,8 @@ class SentinelWP_Admin {
 				$counts[ $sev ]++;
 			}
 		}
+
+		$findings = array_merge( $findings, $resolved_findings );
 
 		$crit_count = $counts['critical'];
 		$high_count = $counts['high'];
@@ -374,7 +378,7 @@ class SentinelWP_Admin {
 					$engine_slug = $this->format_engine_slug( $finding->type, $finding->source );
 					$module_key  = $this->get_module_for_type( $finding->type );
 					?>
-					<tr class="sentinelwp-finding-row" data-id="<?php echo esc_attr( $finding->id ); ?>" data-severity="<?php echo esc_attr( $sev ); ?>" data-source="<?php echo esc_attr( $finding->source ); ?>" data-type="<?php echo esc_attr( $finding->type ); ?>" data-engine="<?php echo esc_attr( $engine_slug ); ?>" data-module="<?php echo esc_attr( $module_key ); ?>" data-status="open">
+					<tr class="sentinelwp-finding-row" data-id="<?php echo esc_attr( $finding->id ); ?>" data-severity="<?php echo esc_attr( $sev ); ?>" data-source="<?php echo esc_attr( $finding->source ); ?>" data-type="<?php echo esc_attr( $finding->type ); ?>" data-engine="<?php echo esc_attr( $engine_slug ); ?>" data-module="<?php echo esc_attr( $module_key ); ?>" data-status="<?php echo esc_attr( ( 'resolved' === $finding->status ) ? 'resolved' : 'open' ); ?>">
 						<td class="c-check">
 							<input type="checkbox" name="finding_ids[]" value="<?php echo esc_attr( $finding->id ); ?>" />
 						</td>
@@ -698,7 +702,8 @@ class SentinelWP_Admin {
 
 			<form method="post" action="options.php" id="sentinelwp-settings-form">
 				<?php
-				settings_fields( 'sentinelwp_settings' );
+				$option_group = 'sentinelwp_settings_' . $current_tab;
+				settings_fields( $option_group );
 
 				switch ( $current_tab ) {
 					case 'scanning':
@@ -751,7 +756,6 @@ class SentinelWP_Admin {
 					<tr>
 						<th scope="row">
 							<label><?php esc_html_e( 'Protection Level', 'sentinelguard-ecommerce-protection' ); ?></label>
-							<p class="description"><?php esc_html_e( 'Controls scan strictness and real-time response posture.', 'sentinelguard-ecommerce-protection' ); ?></p>
 						</th>
 						<td>
 							<fieldset class="sentinelwp-segmented-control">
@@ -761,7 +765,7 @@ class SentinelWP_Admin {
 								</label>
 								<label class="sentinelwp-seg-option <?php echo 'balanced' === $prot_level ? 'is-selected' : ''; ?>">
 									<input type="radio" name="sentinelwp_protection_level" value="balanced" <?php checked( $prot_level, 'balanced' ); ?> />
-									<?php esc_html_e( 'Balanced (Recommended)', 'sentinelguard-ecommerce-protection' ); ?>
+									<?php esc_html_e( 'Balanced · Recommended', 'sentinelguard-ecommerce-protection' ); ?>
 								</label>
 								<label class="sentinelwp-seg-option <?php echo 'aggressive' === $prot_level ? 'is-selected' : ''; ?>">
 									<input type="radio" name="sentinelwp_protection_level" value="aggressive" <?php checked( $prot_level, 'aggressive' ); ?> />
@@ -769,7 +773,7 @@ class SentinelWP_Admin {
 								</label>
 							</fieldset>
 							<p class="description sentinelwp-helper-line">
-								<?php esc_html_e( 'Balanced mode enforces core checksum validation, standard rate tracking, and daily Magecart scans.', 'sentinelguard-ecommerce-protection' ); ?>
+								<?php esc_html_e( 'Monitor = log only · Balanced = core checks + daily scans · Aggressive = strictest real-time response', 'sentinelguard-ecommerce-protection' ); ?>
 							</p>
 						</td>
 					</tr>
@@ -825,6 +829,7 @@ class SentinelWP_Admin {
 							<th scope="row"><?php echo esc_html( $label ); ?></th>
 							<td>
 								<label class="sentinelwp-switch">
+									<input type="hidden" name="sentinelwp_hardening[<?php echo esc_attr( $key ); ?>]" value="0" />
 									<input type="checkbox" name="sentinelwp_hardening[<?php echo esc_attr( $key ); ?>]" value="1" <?php checked( ! empty( $hardening[ $key ] ) ); ?> />
 									<span class="sentinelwp-slider"></span>
 								</label>
@@ -1028,37 +1033,40 @@ class SentinelWP_Admin {
 		$threshold      = (int) get_option( 'sentinelwp_flood_threshold', 120 );
 		$operating_mode = class_exists( 'SentinelWP_Risk_Engine' ) ? SentinelWP_Risk_Engine::instance()->get_mode() : 'observe';
 		?>
-		<div class="postbox sentinelwp-postbox" style="border-left: 4px solid #2271b1;">
+		<div class="postbox sentinelwp-postbox">
 			<div class="postbox-header">
-				<h2><?php esc_html_e( 'Pre-Gateway Threat Response Policy (Operating Mode)', 'sentinelguard-ecommerce-protection' ); ?></h2>
+				<h2><?php esc_html_e( 'Pre-Gateway Threat Response Policy', 'sentinelguard-ecommerce-protection' ); ?></h2>
 			</div>
 			<div class="inside">
-				<p class="description" style="margin-bottom:14px; font-size:13px;">
-					<?php esc_html_e( 'Controls how SentinelGuard responds when high-confidence card testing or distributed bot clusters are detected at the Store API preflight gate.', 'sentinelguard-ecommerce-protection' ); ?>
-				</p>
 				<table class="form-table sentinelwp-form-table">
 					<tr>
 						<th scope="row">
-							<strong><?php esc_html_e( 'Operating Mode', 'sentinelguard-ecommerce-protection' ); ?></strong>
+							<label><?php esc_html_e( 'Operating Mode', 'sentinelguard-ecommerce-protection' ); ?></label>
 						</th>
 						<td>
-							<fieldset>
-								<label style="display:block; margin-bottom:10px;">
+							<div class="sentinelwp-notice-inline" style="background:#f0f6fc; border-left:4px solid #72aee6; padding:10px 14px; margin-bottom:12px; border-radius:3px;">
+								<strong style="color:#1d2327;"><?php esc_html_e( 'Recommended Deployment Lifecycle:', 'sentinelguard-ecommerce-protection' ); ?></strong>
+								<span style="color:#50575e; display:block; margin-top:2px;">
+									<?php esc_html_e( 'Keep in Observe Mode for at least 7–14 days. Observe logs suspicious card testing and threat patterns without blocking any legitimate customers. Review your findings timeline before switching to Protect. Never enable Lockdown unless your store is under an active, verified carding attack.', 'sentinelguard-ecommerce-protection' ); ?>
+								</span>
+							</div>
+							<fieldset class="sentinelwp-segmented-control">
+								<label class="sentinelwp-seg-option <?php echo 'observe' === $operating_mode ? 'is-selected' : ''; ?>">
 									<input type="radio" name="sentinelwp_operating_mode" value="observe" <?php checked( 'observe', $operating_mode ); ?> />
-									<strong><?php esc_html_e( 'OBSERVE (Detection Only — Recommended)', 'sentinelguard-ecommerce-protection' ); ?></strong>
-									<br><span class="description" style="margin-left:24px; display:block;"><?php esc_html_e( 'Risk scores and reason codes are calculated and logged into the Threat Timeline in real time. Zero customer checkout attempts will be blocked.', 'sentinelguard-ecommerce-protection' ); ?></span>
+									<?php esc_html_e( 'Observe · Recommended', 'sentinelguard-ecommerce-protection' ); ?>
 								</label>
-								<label style="display:block; margin-bottom:10px;">
+								<label class="sentinelwp-seg-option <?php echo 'protect' === $operating_mode ? 'is-selected' : ''; ?>">
 									<input type="radio" name="sentinelwp_operating_mode" value="protect" <?php checked( 'protect', $operating_mode ); ?> />
-									<strong><?php esc_html_e( 'PROTECT (Adaptive Shield)', 'sentinelguard-ecommerce-protection' ); ?></strong>
-									<br><span class="description" style="margin-left:24px; display:block;"><?php esc_html_e( 'Challenges or soft-throttles high-confidence carding clusters and repeated payment failure bursts (>75% risk).', 'sentinelguard-ecommerce-protection' ); ?></span>
+									<?php esc_html_e( 'Protect · Active Defense', 'sentinelguard-ecommerce-protection' ); ?>
 								</label>
-								<label style="display:block;">
+								<label class="sentinelwp-seg-option <?php echo 'lockdown' === $operating_mode ? 'is-selected' : ''; ?>">
 									<input type="radio" name="sentinelwp_operating_mode" value="lockdown" <?php checked( 'lockdown', $operating_mode ); ?> />
-									<strong><?php esc_html_e( 'LOCKDOWN (Under Active Attack)', 'sentinelguard-ecommerce-protection' ); ?></strong>
-									<br><span class="description" style="margin-left:24px; display:block;"><?php esc_html_e( 'Strictly blocks confirmed attack clusters (>85% risk with corroborating failure velocity). Recommended during active high-volume card testing campaigns.', 'sentinelguard-ecommerce-protection' ); ?></span>
+									<?php esc_html_e( 'Lockdown · Emergency Only', 'sentinelguard-ecommerce-protection' ); ?>
 								</label>
 							</fieldset>
+							<p class="description sentinelwp-helper-line">
+								<?php esc_html_e( 'Observe = 100% safe, logs telemetry only · Protect = soft-throttles high-velocity payment retries · Lockdown = hard-blocks confirmed attack clusters', 'sentinelguard-ecommerce-protection' ); ?>
+							</p>
 						</td>
 					</tr>
 				</table>
@@ -1108,6 +1116,7 @@ class SentinelWP_Admin {
 						</th>
 						<td>
 							<label class="sentinelwp-switch">
+								<input type="hidden" name="sentinelwp_flood_enabled" value="0" />
 								<input type="checkbox" id="sentinelwp_flood_enabled" name="sentinelwp_flood_enabled" value="1" <?php checked( $flood_enabled ); ?> />
 								<span class="sentinelwp-slider"></span>
 							</label>
@@ -1125,6 +1134,7 @@ class SentinelWP_Admin {
 						</th>
 						<td>
 							<label class="sentinelwp-switch">
+								<input type="hidden" name="sentinelwp_form_shield_enabled" value="0" />
 								<input type="checkbox" id="sentinelwp_form_shield_enabled" name="sentinelwp_form_shield_enabled" value="1" <?php checked( $form_enabled ); ?> />
 								<span class="sentinelwp-slider"></span>
 							</label>
@@ -1139,6 +1149,7 @@ class SentinelWP_Admin {
 						</th>
 						<td>
 							<label class="sentinelwp-switch">
+								<input type="hidden" name="sentinelwp_ecommerce_guard_enabled" value="0" />
 								<input type="checkbox" id="sentinelwp_ecommerce_guard_enabled" name="sentinelwp_ecommerce_guard_enabled" value="1" <?php checked( $ecom_enabled ); ?> />
 								<span class="sentinelwp-slider"></span>
 							</label>
@@ -1152,6 +1163,7 @@ class SentinelWP_Admin {
 						</th>
 						<td>
 							<label class="sentinelwp-switch">
+								<input type="hidden" name="sentinelwp_fraud_auto_hold" value="0" />
 								<input type="checkbox" id="sentinelwp_fraud_auto_hold" name="sentinelwp_fraud_auto_hold" value="1" <?php checked( $fraud_hold ); ?> />
 								<span class="sentinelwp-slider"></span>
 							</label>
@@ -1165,6 +1177,7 @@ class SentinelWP_Admin {
 						</th>
 						<td>
 							<label class="sentinelwp-switch">
+								<input type="hidden" name="sentinelwp_disposable_email_check" value="0" />
 								<input type="checkbox" id="sentinelwp_disposable_email_check" name="sentinelwp_disposable_email_check" value="1" <?php checked( $disp_email ); ?> />
 								<span class="sentinelwp-slider"></span>
 							</label>
@@ -1298,6 +1311,7 @@ class SentinelWP_Admin {
 						<th scope="row"><?php esc_html_e( 'Debug Logging', 'sentinelguard-ecommerce-protection' ); ?></th>
 						<td>
 							<label class="sentinelwp-switch">
+								<input type="hidden" name="sentinelwp_debug_logging" value="0" />
 								<input type="checkbox" name="sentinelwp_debug_logging" value="1" <?php checked( $debug ); ?> />
 								<span class="sentinelwp-slider"></span>
 							</label>
@@ -1317,6 +1331,7 @@ class SentinelWP_Admin {
 						<th scope="row"><?php esc_html_e( 'Data Removal on Uninstall', 'sentinelguard-ecommerce-protection' ); ?></th>
 						<td>
 							<label>
+								<input type="hidden" name="sentinelwp_remove_data_on_uninstall" value="0" />
 								<input type="checkbox" name="sentinelwp_remove_data_on_uninstall" value="1" <?php checked( $uninstall ); ?> />
 								<?php esc_html_e( 'Delete all SentinelGuard database tables and options on plugin deletion', 'sentinelguard-ecommerce-protection' ); ?>
 							</label>
@@ -1593,6 +1608,30 @@ class SentinelWP_Admin {
 		wp_send_json_success();
 	}
 
+	public function ajax_acknowledge_finding() {
+		check_ajax_referer( 'sentinelwp_admin_action', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'sentinelguard-ecommerce-protection' ) ), 403 );
+		}
+
+		$id = isset( $_POST['id'] ) ? absint( $_POST['id'] ) : 0;
+		if ( ! $id ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid finding.', 'sentinelguard-ecommerce-protection' ) ), 400 );
+		}
+
+		global $wpdb;
+		$wpdb->update(
+			$wpdb->prefix . 'sentinelwp_findings',
+			array( 'status' => 'acknowledged', 'updated_at' => current_time( 'mysql' ) ),
+			array( 'id' => $id ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
+
+		wp_send_json_success();
+	}
+
 	public function ajax_unresolve_finding() {
 		check_ajax_referer( 'sentinelwp_admin_action', 'nonce' );
 
@@ -1633,16 +1672,17 @@ class SentinelWP_Admin {
 
 		global $wpdb;
 		$placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+		$affected     = 0;
 
 		if ( 'resolve' === $bulk_action ) {
-			$wpdb->query(
+			$affected = $wpdb->query(
 				$wpdb->prepare(
 					"UPDATE {$wpdb->prefix}sentinelwp_findings SET status = 'resolved', updated_at = %s WHERE id IN ($placeholders)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 					array_merge( array( current_time( 'mysql' ) ), $ids )
 				)
 			);
 		} elseif ( 'false_positive' === $bulk_action || 'ignore' === $bulk_action ) {
-			$wpdb->query(
+			$affected = $wpdb->query(
 				$wpdb->prepare(
 					"UPDATE {$wpdb->prefix}sentinelwp_findings SET status = 'acknowledged', updated_at = %s WHERE id IN ($placeholders)", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 					array_merge( array( current_time( 'mysql' ) ), $ids )
@@ -1652,12 +1692,19 @@ class SentinelWP_Admin {
 			if ( class_exists( 'SentinelWP_Quarantine' ) ) {
 				$quarantine = SentinelWP_Quarantine::instance();
 				foreach ( $ids as $id ) {
-					$quarantine->quarantine_file( $id );
+					$result = $quarantine->quarantine_file( $id );
+					if ( ! empty( $result['success'] ) ) {
+						$affected++;
+					}
 				}
 			}
 		}
 
-		wp_send_json_success();
+		if ( false === $affected || 0 === $affected ) {
+			wp_send_json_error( array( 'message' => __( 'No findings were updated.', 'sentinelguard-ecommerce-protection' ) ) );
+		}
+
+		wp_send_json_success( array( 'affected' => (int) $affected ) );
 	}
 
 	public function ajax_test_email() {
@@ -1667,16 +1714,27 @@ class SentinelWP_Admin {
 			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'sentinelguard-ecommerce-protection' ) ), 403 );
 		}
 
-		$to = get_option( 'sentinelwp_alert_email', get_option( 'admin_email' ) );
+		$alerts = SentinelWP_Alerts::instance();
+		$recipients = method_exists( $alerts, 'get_recipients' ) ? $alerts->get_recipients() : array( get_option( 'sentinelwp_alert_email', get_option( 'admin_email' ) ) );
+
+		if ( empty( $recipients ) ) {
+			wp_send_json_error( array( 'message' => __( 'No valid recipient email address configured.', 'sentinelguard-ecommerce-protection' ) ) );
+		}
+
 		/* translators: %s: site name */
 		$subject = sprintf( __( '[%s] SentinelGuard Test Notification', 'sentinelguard-ecommerce-protection' ), get_bloginfo( 'name' ) );
 		$body = __( "This is a test notification from SentinelGuard.\n\nYour alert dispatch channel is operational.", 'sentinelguard-ecommerce-protection' );
 
-		$sent = wp_mail( $to, $subject, $body );
+		$sent_count = 0;
+		foreach ( $recipients as $to ) {
+			if ( wp_mail( $to, $subject, $body ) ) {
+				$sent_count++;
+			}
+		}
 
-		if ( $sent ) {
-			/* translators: %s: recipient email address */
-			wp_send_json_success( array( 'message' => sprintf( __( 'Test email sent to %s', 'sentinelguard-ecommerce-protection' ), $to ) ) );
+		if ( $sent_count > 0 ) {
+			/* translators: %s: recipient email addresses */
+			wp_send_json_success( array( 'message' => sprintf( __( 'Test email sent to %s', 'sentinelguard-ecommerce-protection' ), implode( ', ', $recipients ) ) ) );
 		} else {
 			wp_send_json_error( array( 'message' => __( 'wp_mail() returned false. Check mail server configuration.', 'sentinelguard-ecommerce-protection' ) ) );
 		}
@@ -1791,6 +1849,7 @@ class SentinelWP_Admin {
 			'sentinelwp_ecommerce_guard_enabled' => true,
 			'sentinelwp_fraud_auto_hold'         => false,
 			'sentinelwp_disposable_email_check'  => true,
+			'sentinelwp_operating_mode'          => 'observe',
 			'sentinelwp_protection_level'        => 'balanced',
 			'sentinelwp_site_role'               => class_exists( 'WooCommerce' ) ? 'woocommerce' : 'standard',
 			'sentinelwp_data_retention'          => 90,

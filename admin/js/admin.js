@@ -268,13 +268,13 @@
 			var title = $row.find( '.title a' ).text();
 			var $detail = $( '#detail-' + id );
 
-			$row.fadeOut( 200 );
+			$row.addClass( 'is-acknowledged' ).data( 'status', 'acknowledged' ).fadeOut( 200 );
 			$detail.hide();
 
 			showUndoNotice( id, title, 'ignored (false positive)' );
 
 			$.post( SentinelWPAdmin.ajaxUrl, {
-				action: 'sentinelwp_resolve_finding',
+				action: 'sentinelwp_acknowledge_finding',
 				id: id,
 				nonce: SentinelWPAdmin.nonce
 			} );

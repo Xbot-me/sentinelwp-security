@@ -135,6 +135,7 @@ class SentinelWP_Activator {
 			'sentinelwp_fraud_auto_hold'          => false,
 			'sentinelwp_disposable_email_check'   => true,
 			'sentinelwp_operating_mode'           => 'observe',
+			'sentinelwp_protection_level'         => 'balanced',
 		);
 
 		foreach ( $defaults as $key => $value ) {

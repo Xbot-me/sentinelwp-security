@@ -57,6 +57,13 @@ class SentinelWP_Scanner {
 
 	private function __construct() {
 		add_action( 'sentinelwp_daily_scan', array( $this, 'run_full_scan' ) );
+
+		// If beta update channel is enabled, include experimental zero-day heuristics
+		if ( 'beta' === get_option( 'sentinelwp_update_channel', 'stable' ) ) {
+			$this->signatures['/(?:wp_remote_get|curl_exec)\s*\(.*pastebin\.com/i'] = 'experimental: pastebin remote code loader';
+			$this->signatures['/strrev\s*\(\s*[\'"][^\'"]*(?:edoced_46esab|etalfnzg)[\'"]\s*\)/i'] = 'experimental: reversed obfuscation helper';
+			$this->signatures['/(?:crypto-loot|coinhive|minr)\.min\.js/i'] = 'experimental: in-browser cryptominer payload';
+		}
 	}
 
 	public function run_full_scan() {
@@ -256,8 +263,18 @@ class SentinelWP_Scanner {
 			return;
 		}
 
-		$max_files_per_run = 5000;
+		$depth = get_option( 'sentinelwp_scan_depth', 'standard' );
+		if ( 'quick' === $depth ) {
+			$max_files_per_run = 1000;
+		} elseif ( 'deep' === $depth ) {
+			$max_files_per_run = 20000;
+		} else {
+			$max_files_per_run = 5000;
+		}
 		$checked           = 0;
+
+		$exclusions_raw = get_option( 'sentinelwp_path_exclusions', '' );
+		$exclusions     = array_filter( array_map( 'trim', preg_split( '/[\r\n]+/', (string) $exclusions_raw ) ) );
 
 		foreach ( $iterator as $file ) {
 			if ( $checked >= $max_files_per_run ) {
@@ -269,6 +286,17 @@ class SentinelWP_Scanner {
 
 			$path_norm = wp_normalize_path( $file->getPathname() );
 			if ( strpos( $path_norm, 'sentinelwp-quarantine' ) !== false || strpos( $path_norm, 'sentinelguard' ) !== false ) {
+				continue;
+			}
+
+			$is_excluded = false;
+			foreach ( $exclusions as $ex ) {
+				if ( '' !== $ex && false !== strpos( $path_norm, wp_normalize_path( $ex ) ) ) {
+					$is_excluded = true;
+					break;
+				}
+			}
+			if ( $is_excluded ) {
 				continue;
 			}
 
@@ -351,9 +379,12 @@ class SentinelWP_Scanner {
 			return;
 		}
 
+		$depth = get_option( 'sentinelwp_scan_depth', 'standard' );
+		$mu_limit = ( 'quick' === $depth ) ? 500 : ( ( 'deep' === $depth ) ? 10000 : 2000 );
+
 		$checked = 0;
 		foreach ( $iterator as $file ) {
-			if ( $checked >= 2000 ) {
+			if ( $checked >= $mu_limit ) {
 				break;
 			}
 			if ( 'php' !== strtolower( $file->getExtension() ) ) {

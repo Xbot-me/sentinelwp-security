@@ -21,12 +21,42 @@ class SentinelWP_Settings {
 
 	private function __construct() {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'update_option_sentinelwp_scan_schedule', array( $this, 'reschedule_scan_cron' ), 10, 2 );
+		add_action( 'update_option_sentinelwp_scan_time', array( $this, 'reschedule_scan_cron' ), 10, 2 );
+	}
+
+	/**
+	 * Dynamically reschedule the scan cron event when settings change.
+	 */
+	public function reschedule_scan_cron() {
+		$timestamp = wp_next_scheduled( 'sentinelwp_daily_scan' );
+		if ( $timestamp ) {
+			wp_unschedule_event( $timestamp, 'sentinelwp_daily_scan' );
+		}
+
+		$schedule = get_option( 'sentinelwp_scan_schedule', 'daily' );
+		if ( 'off' === $schedule ) {
+			return;
+		}
+
+		$time_str = get_option( 'sentinelwp_scan_time', '03:00' );
+		$parts    = explode( ':', $time_str );
+		$hour     = isset( $parts[0] ) ? absint( $parts[0] ) : 3;
+		$minute   = isset( $parts[1] ) ? absint( $parts[1] ) : 0;
+
+		$target = strtotime( sprintf( 'today %02d:%02d:00', $hour, $minute ) );
+		if ( false === $target || $target <= time() ) {
+			$target = strtotime( sprintf( 'tomorrow %02d:%02d:00', $hour, $minute ) );
+		}
+
+		$recurrence = in_array( $schedule, array( 'daily', 'twicedaily', 'weekly' ), true ) ? $schedule : 'daily';
+		wp_schedule_event( $target ? $target : time(), $recurrence, 'sentinelwp_daily_scan' );
 	}
 
 	public function register_settings() {
-		// Hardening toggles.
+		// ---- General tab ----
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_general',
 			'sentinelwp_hardening',
 			array(
 				'type'              => 'array',
@@ -34,170 +64,8 @@ class SentinelWP_Settings {
 				'default'           => array(),
 			)
 		);
-
-		// Operating Mode (Observe, Protect, Lockdown).
 		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_operating_mode',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_operating_mode' ),
-				'default'           => 'observe',
-			)
-		);
-
-		// Reverse Proxy / Cloudflare support.
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_behind_proxy',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-				'default'           => false,
-			)
-		);
-
-		// Which vulnerability source to use.
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_vuln_source',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_vuln_source' ),
-				'default'           => 'wordpress_org',
-			)
-		);
-
-		// API keys — write-only in the UI (rendered masked, never echoed
-		// back in full), stored with autoload disabled.
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_patchstack_key',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_patchstack_key' ),
-				'default'           => '',
-			)
-		);
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_wpscan_key',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_wpscan_key' ),
-				'default'           => '',
-			)
-		);
-
-		// AI provider + key.
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_ai_provider',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_ai_provider' ),
-				'default'           => '',
-			)
-		);
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_ai_api_key',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_ai_api_key' ),
-				'default'           => '',
-			)
-		);
-
-		// Alert email — validated as an email, falls back to admin email.
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_alert_email',
-			array(
-				'type'              => 'string',
-				'sanitize_callback' => array( $this, 'sanitize_email' ),
-				'default'           => get_option( 'admin_email' ),
-			)
-		);
-
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_remove_data_on_uninstall',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-				'default'           => false,
-			)
-		);
-
-		// Ecommerce protection settings.
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_flood_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-				'default'           => true,
-			)
-		);
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_flood_threshold',
-			array(
-				'type'              => 'integer',
-				'sanitize_callback' => array( $this, 'sanitize_flood_threshold' ),
-				'default'           => 120,
-			)
-		);
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_flood_block',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-				'default'           => false,
-			)
-		);
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_form_shield_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-				'default'           => true,
-			)
-		);
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_ecommerce_guard_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-				'default'           => true,
-			)
-		);
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_fraud_auto_hold',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-				'default'           => false,
-			)
-		);
-		register_setting(
-			'sentinelwp_settings',
-			'sentinelwp_disposable_email_check',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => 'rest_sanitize_boolean',
-				'default'           => true,
-			)
-		);
-
-		// General Tab Settings
-		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_general',
 			'sentinelwp_protection_level',
 			array(
 				'type'              => 'string',
@@ -206,7 +74,7 @@ class SentinelWP_Settings {
 			)
 		);
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_general',
 			'sentinelwp_site_role',
 			array(
 				'type'              => 'string',
@@ -215,7 +83,7 @@ class SentinelWP_Settings {
 			)
 		);
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_general',
 			'sentinelwp_data_retention',
 			array(
 				'type'              => 'integer',
@@ -224,9 +92,9 @@ class SentinelWP_Settings {
 			)
 		);
 
-		// Scanning Tab Settings
+		// ---- Scanning tab ----
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_scanning',
 			'sentinelwp_scan_schedule',
 			array(
 				'type'              => 'string',
@@ -235,7 +103,7 @@ class SentinelWP_Settings {
 			)
 		);
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_scanning',
 			'sentinelwp_scan_time',
 			array(
 				'type'              => 'string',
@@ -244,7 +112,7 @@ class SentinelWP_Settings {
 			)
 		);
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_scanning',
 			'sentinelwp_scan_depth',
 			array(
 				'type'              => 'string',
@@ -253,7 +121,7 @@ class SentinelWP_Settings {
 			)
 		);
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_scanning',
 			'sentinelwp_path_exclusions',
 			array(
 				'type'              => 'string',
@@ -262,7 +130,7 @@ class SentinelWP_Settings {
 			)
 		);
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_scanning',
 			'sentinelwp_max_scan_duration',
 			array(
 				'type'              => 'integer',
@@ -270,10 +138,118 @@ class SentinelWP_Settings {
 				'default'           => 300,
 			)
 		);
-
-		// Modules Tab Settings
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_scanning',
+			'sentinelwp_vuln_source',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_vuln_source' ),
+				'default'           => 'wordpress_org',
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_scanning',
+			'sentinelwp_patchstack_key',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_patchstack_key' ),
+				'default'           => '',
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_scanning',
+			'sentinelwp_wpscan_key',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_wpscan_key' ),
+				'default'           => '',
+			)
+		);
+
+		// ---- Modules tab ----
+		register_setting(
+			'sentinelwp_settings_modules',
+			'sentinelwp_operating_mode',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_operating_mode' ),
+				'default'           => 'observe',
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_modules',
+			'sentinelwp_behind_proxy',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'default'           => false,
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_modules',
+			'sentinelwp_flood_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'default'           => true,
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_modules',
+			'sentinelwp_flood_threshold',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => array( $this, 'sanitize_flood_threshold' ),
+				'default'           => 120,
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_modules',
+			'sentinelwp_flood_block',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'default'           => false,
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_modules',
+			'sentinelwp_form_shield_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'default'           => true,
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_modules',
+			'sentinelwp_ecommerce_guard_enabled',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'default'           => true,
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_modules',
+			'sentinelwp_fraud_auto_hold',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'default'           => false,
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_modules',
+			'sentinelwp_disposable_email_check',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'default'           => true,
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_modules',
 			'sentinelwp_modules_status',
 			array(
 				'type'              => 'array',
@@ -282,9 +258,18 @@ class SentinelWP_Settings {
 			)
 		);
 
-		// Notifications Tab Settings
+		// ---- Notifications tab ----
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_notifications',
+			'sentinelwp_alert_email',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_email' ),
+				'default'           => get_option( 'admin_email' ),
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_notifications',
 			'sentinelwp_alert_threshold',
 			array(
 				'type'              => 'string',
@@ -293,7 +278,7 @@ class SentinelWP_Settings {
 			)
 		);
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_notifications',
 			'sentinelwp_alert_recipients',
 			array(
 				'type'              => 'string',
@@ -302,7 +287,7 @@ class SentinelWP_Settings {
 			)
 		);
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_notifications',
 			'sentinelwp_alert_digest',
 			array(
 				'type'              => 'string',
@@ -311,7 +296,7 @@ class SentinelWP_Settings {
 			)
 		);
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_notifications',
 			'sentinelwp_alert_webhook',
 			array(
 				'type'              => 'string',
@@ -320,9 +305,27 @@ class SentinelWP_Settings {
 			)
 		);
 
-		// Advanced Tab Settings
+		// ---- Advanced tab ----
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_advanced',
+			'sentinelwp_ai_provider',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_ai_provider' ),
+				'default'           => '',
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_advanced',
+			'sentinelwp_ai_api_key',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_ai_api_key' ),
+				'default'           => '',
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_advanced',
 			'sentinelwp_debug_logging',
 			array(
 				'type'              => 'boolean',
@@ -331,12 +334,21 @@ class SentinelWP_Settings {
 			)
 		);
 		register_setting(
-			'sentinelwp_settings',
+			'sentinelwp_settings_advanced',
 			'sentinelwp_update_channel',
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => array( $this, 'sanitize_update_channel' ),
 				'default'           => 'stable',
+			)
+		);
+		register_setting(
+			'sentinelwp_settings_advanced',
+			'sentinelwp_remove_data_on_uninstall',
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => 'rest_sanitize_boolean',
+				'default'           => false,
 			)
 		);
 	}

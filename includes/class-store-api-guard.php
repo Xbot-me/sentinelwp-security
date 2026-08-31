@@ -95,9 +95,13 @@ class SentinelWP_Store_API_Guard {
 		$decision = SentinelWP_Risk_Engine::instance()->evaluate_payment_attempt( $context );
 
 		if ( SentinelWP_Risk_Engine::DECISION_HARD_BLOCK === $decision['decision'] ) {
-			wc_add_notice( __( 'Unable to process checkout. Please contact store support.', 'sentinelguard-ecommerce-protection' ), 'error' );
+			$msg = __( 'Unable to process checkout. Please contact store support.', 'sentinelguard-ecommerce-protection' );
+			wc_add_notice( $msg, 'error' );
+			throw new Exception( esc_html( $msg ) );
 		} elseif ( SentinelWP_Risk_Engine::DECISION_SOFT_BLOCK === $decision['decision'] ) {
-			wc_add_notice( __( 'Too many checkout attempts. Please wait a moment and try again.', 'sentinelguard-ecommerce-protection' ), 'error' );
+			$msg = __( 'Too many checkout attempts. Please wait a moment and try again.', 'sentinelguard-ecommerce-protection' );
+			wc_add_notice( $msg, 'error' );
+			throw new Exception( esc_html( $msg ) );
 		}
 	}
 

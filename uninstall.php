@@ -76,6 +76,7 @@ $sentinelwp_options = array(
 	'sentinelwp_last_scan_time',
 	'sentinelwp_last_scan_summary',
 	'sentinelwp_webhook_url',
+	'sentinelwp_digest_queue',
 );
 
 foreach ( $sentinelwp_options as $sentinelwp_opt ) {
@@ -92,6 +93,7 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}sentinelwp_store_hashes" ); /
 wp_clear_scheduled_hook( 'sentinelwp_daily_scan' );
 wp_clear_scheduled_hook( 'sentinelwp_flood_check' );
 wp_clear_scheduled_hook( 'sentinelwp_ai_triage_job' );
+wp_clear_scheduled_hook( 'sentinelwp_daily_digest' );
 
 // Remove quarantine vault directory from uploads using WP_Filesystem.
 $sentinelwp_upload_dir = wp_upload_dir();

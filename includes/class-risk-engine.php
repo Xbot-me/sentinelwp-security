@@ -95,8 +95,9 @@ class SentinelWP_Risk_Engine {
 			$reasons[] = 'MICRO_CART_ANOMALY';
 		}
 
-		// 5. Disposable / Temporary Email Domain
-		if ( ! empty( $context['is_disposable'] ) ) {
+		// 5. Disposable / Temporary Email Domain (gated by setting toggle)
+		$disposable_check_enabled = (bool) get_option( 'sentinelwp_disposable_email_check', true );
+		if ( $disposable_check_enabled && ! empty( $context['is_disposable'] ) ) {
 			$score    += 15;
 			$reasons[] = 'DISPOSABLE_EMAIL_DOMAIN';
 		}
@@ -124,36 +125,57 @@ class SentinelWP_Risk_Engine {
 		if ( in_array( 'DISPOSABLE_EMAIL_DOMAIN', $reasons, true ) ) {
 			$confidence += 0.05;
 		}
-		$confidence = round( min( 1.0, $confidence ), 2 );
 
-		// Check for Corroborating Attack Reasons
+		$confidence = max( 0.0, min( 1.0, round( $confidence, 2 ) ) );
+
+		// Corroboration rule: hard blocks REQUIRE velocity + payment failure evidence.
 		$has_corroborating_reasons = (
 			( in_array( 'CARD_TESTING_VELOCITY', $reasons, true ) || in_array( 'DISTRIBUTED_IDENTITY_CLUSTER', $reasons, true ) ) &&
 			in_array( 'REPEATED_PAYMENT_FAILURE', $reasons, true )
 		);
 
+		// Protection Level posture modifier
+		$protection_level = get_option( 'sentinelwp_protection_level', 'balanced' );
+		$soft_threshold   = 40;
+		$chal_threshold   = 70;
+		$hard_threshold   = 85;
+
+		if ( 'aggressive' === $protection_level ) {
+			$soft_threshold = 30; // More sensitive to suspicious indicators
+			$chal_threshold = 60;
+		} elseif ( 'monitor' === $protection_level ) {
+			$soft_threshold = 55; // Highly permissive, relies on obvious patterns
+			$chal_threshold = 80;
+		}
+
 		// --- DUAL RISK + CONFIDENCE POLICY MATRIX ---
 		$raw_verdict = self::DECISION_ALLOW;
 
-		if ( $score >= 85 && $confidence >= 0.85 && $has_corroborating_reasons ) {
+		if ( $score >= $hard_threshold && $confidence >= 0.85 && $has_corroborating_reasons ) {
 			$raw_verdict = self::DECISION_HARD_BLOCK;
-		} elseif ( $score >= 70 && $confidence >= 0.70 ) {
+		} elseif ( $score >= $chal_threshold && $confidence >= 0.70 ) {
 			$raw_verdict = self::DECISION_CHALLENGE;
-		} elseif ( $score >= 40 && $confidence >= 0.40 ) {
+		} elseif ( $score >= $soft_threshold && $confidence >= 0.40 ) {
 			$raw_verdict = self::DECISION_SOFT_BLOCK;
 		} else {
 			$raw_verdict = self::DECISION_ALLOW;
 		}
 
-		// Enforce Operating Mode.
-		// The hard-block safety invariant is identical in every enforcement mode.
+		// Enforce Operating Mode:
+		// - LOCKDOWN: Full enforcement including HARD_BLOCK.
+		// - PROTECT: Adaptive shield. Soft-throttles or challenges high-risk traffic, but NEVER hard-blocks shoppers.
+		// - OBSERVE: Logs simulated action only; always allows live traffic.
 		$decision           = self::DECISION_ALLOW;
 		$would_have_blocked = ( self::DECISION_HARD_BLOCK === $raw_verdict );
 
 		if ( self::MODE_LOCKDOWN === $mode ) {
 			$decision = $raw_verdict;
 		} elseif ( self::MODE_PROTECT === $mode ) {
-			$decision = $raw_verdict;
+			if ( self::DECISION_HARD_BLOCK === $raw_verdict ) {
+				$decision = self::DECISION_SOFT_BLOCK;
+			} else {
+				$decision = $raw_verdict;
+			}
 		} else {
 			// OBSERVE mode: always ALLOW live traffic, but record simulated action.
 			$decision = self::DECISION_ALLOW;

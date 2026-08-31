@@ -71,18 +71,20 @@ class SentinelWP_Scan_Coordinator {
 	 * @return array Scan results summary.
 	 */
 	public function run_full_scan() {
-		@set_time_limit( 300 );
+		$max_duration = (int) get_option( 'sentinelwp_max_scan_duration', 300 );
+		$max_duration = ( $max_duration >= 30 && $max_duration <= 1800 ) ? $max_duration : 300;
+		@set_time_limit( $max_duration );
 
 		// Concurrency Lock: Prevent multiple scans from running simultaneously
 		$existing_lock = get_transient( 'sentinelwp_active_scan_lock' );
-		if ( $existing_lock && ( time() - (int) $existing_lock ) < 300 ) {
+		if ( $existing_lock && ( time() - (int) $existing_lock ) < $max_duration ) {
 			$current_state = $this->get_state();
 			$current_state['status']  = 'running';
 			$current_state['message'] = __( 'A scan is already in progress.', 'sentinelguard-ecommerce-protection' );
 			return $current_state;
 		}
 
-		set_transient( 'sentinelwp_active_scan_lock', time(), 300 );
+		set_transient( 'sentinelwp_active_scan_lock', time(), $max_duration );
 
 		$start_time = microtime( true );
 		$phases     = array_keys( $this->get_phases() );
@@ -133,8 +135,8 @@ class SentinelWP_Scan_Coordinator {
 
 		// Record persistent scan history log (capped at 50 runs)
 		global $wpdb;
-		$findings_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'open'" );
-		$critical_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'open' AND severity = 'critical'" );
+		$findings_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status IN ('new', 'open')" );
+		$critical_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status IN ('new', 'open') AND severity = 'critical'" );
 
 		$history_entry = array(
 			'id'             => (int) round( microtime( true ) * 1000 ),
@@ -241,8 +243,8 @@ class SentinelWP_Scan_Coordinator {
 			$last = get_option( 'sentinelwp_last_scan_summary' );
 			if ( ! empty( $last ) && is_array( $last ) ) {
 				global $wpdb;
-				$findings_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'open'" );
-				$critical_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status = 'open' AND severity = 'critical'" );
+				$findings_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status IN ('new', 'open')" );
+				$critical_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}sentinelwp_findings WHERE status IN ('new', 'open') AND severity = 'critical'" );
 				$history = array(
 					array(
 						'id'             => ! empty( $last['started_at'] ) ? strtotime( $last['started_at'] ) : time(),

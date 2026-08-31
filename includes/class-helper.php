@@ -162,4 +162,25 @@ class SentinelWP_Helper {
 		}
 		return self::get_content_directory() . '/plugins';
 	}
+
+	/**
+	 * Writes a message to the WordPress debug log if sentinelwp_debug_logging is enabled.
+	 *
+	 * @param string $message Log message.
+	 * @param array  $context Optional context data.
+	 */
+	public static function log( $message, $context = array() ) {
+		if ( ! get_option( 'sentinelwp_debug_logging', false ) ) {
+			return;
+		}
+
+		$formatted = sprintf( '[SentinelGuard] %s', (string) $message );
+		if ( ! empty( $context ) ) {
+			$formatted .= ' | ' . wp_json_encode( $context );
+		}
+
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ) {
+			error_log( $formatted ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		}
+	}
 }

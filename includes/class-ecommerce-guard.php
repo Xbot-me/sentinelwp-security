@@ -34,7 +34,8 @@ class SentinelWP_Ecommerce_Guard {
 	}
 
 	private function __construct() {
-		if ( ! class_exists( 'WooCommerce' ) || ! get_option( 'sentinelwp_ecommerce_guard_enabled', 1 ) ) {
+		$site_role = get_option( 'sentinelwp_site_role', class_exists( 'WooCommerce' ) ? 'woocommerce' : 'standard' );
+		if ( 'standard' === $site_role || ! class_exists( 'WooCommerce' ) || ! get_option( 'sentinelwp_ecommerce_guard_enabled', 1 ) ) {
 			return;
 		}
 
@@ -86,6 +87,9 @@ class SentinelWP_Ecommerce_Guard {
 		$email = $order->get_billing_email();
 		$email_count = 0;
 		if ( ! empty( $email ) ) {
+			// Check disposable email domain on order processing (covers Block & classic checkout).
+			$this->check_disposable_email( $email, $order_id );
+
 			$email_hash = md5( strtolower( trim( $email ) ) );
 			$email_transient_key = 'sentinelwp_ord_vel_email_' . $email_hash;
 			$email_count = (int) get_transient( $email_transient_key );
@@ -178,39 +182,51 @@ class SentinelWP_Ecommerce_Guard {
 	}
 
 	/**
-	 * Real-time disposable email domain check during checkout.
+	 * Real-time disposable email domain check during checkout or order creation.
+	 *
+	 * @param string|null $email Optional billing email address.
+	 * @param int|null    $order_id Optional order ID if called on order processed.
 	 */
-	public function check_disposable_email() {
+	public function check_disposable_email( $email = null, $order_id = null ) {
 		$is_enabled = get_option( 'sentinelwp_disposable_email_check', true );
 		if ( ! $is_enabled ) {
 			return;
 		}
 
-		if ( isset( $_POST['billing_email'] ) ) {
+		$billing_email = '';
+		if ( ! empty( $email ) && is_string( $email ) ) {
+			$billing_email = sanitize_email( $email );
+		} elseif ( isset( $_POST['billing_email'] ) ) {
 			$billing_email = sanitize_email( wp_unslash( $_POST['billing_email'] ) );
-			if ( empty( $billing_email ) ) {
-				return;
-			}
+		}
 
-			$parts = explode( '@', $billing_email );
-			if ( count( $parts ) === 2 ) {
-				$domain = strtolower( trim( $parts[1] ) );
-				$disposable_domains = $this->load_disposable_domains();
-				
-				if ( in_array( $domain, $disposable_domains, true ) ) {
-					$this->record_finding(
-						'disposable_email',
-						'medium',
-						'ecommerce_guard',
-						__( 'Order placed using temporary disposable email domain', 'sentinelguard-ecommerce-protection' ),
-						/* translators: %s: email domain */
-						sprintf( __( 'Domain "%s" is on the known disposable email list.', 'sentinelguard-ecommerce-protection' ), esc_html( $domain ) ),
-						'likely',
-						'ecommerce_guard',
-						__( 'Verify customer identity before dispatching high-value items.', 'sentinelguard-ecommerce-protection' ),
-						'medium'
-					);
-				}
+		if ( empty( $billing_email ) ) {
+			return;
+		}
+
+		$parts = explode( '@', $billing_email );
+		if ( count( $parts ) === 2 ) {
+			$domain = strtolower( trim( $parts[1] ) );
+			$disposable_domains = $this->load_disposable_domains();
+			
+			if ( in_array( $domain, $disposable_domains, true ) ) {
+				$msg = ! empty( $order_id )
+					/* translators: 1: email domain, 2: order ID */
+					? sprintf( __( 'Domain "%1$s" is on the known disposable email list (Order #%2$d).', 'sentinelguard-ecommerce-protection' ), esc_html( $domain ), (int) $order_id )
+					/* translators: %s: email domain */
+					: sprintf( __( 'Domain "%s" is on the known disposable email list.', 'sentinelguard-ecommerce-protection' ), esc_html( $domain ) );
+
+				$this->record_finding(
+					'disposable_email',
+					'medium',
+					'ecommerce_guard',
+					__( 'Order placed using temporary disposable email domain', 'sentinelguard-ecommerce-protection' ),
+					$msg,
+					'likely',
+					'ecommerce_guard',
+					__( 'Verify customer identity before dispatching high-value items.', 'sentinelguard-ecommerce-protection' ),
+					'medium'
+				);
 			}
 		}
 	}

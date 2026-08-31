@@ -65,6 +65,12 @@ class SentinelWP_Flood_Monitor {
 			$hit_count     = (int) get_transient( $transient_key );
 			$hit_count++;
 			set_transient( $transient_key, $hit_count, 300 );
+
+			// Also maintain aggregate window hit count for surge detection
+			$window_agg_key = 'sentinelwp_rr_agg_' . $window_id;
+			$agg_count      = (int) get_transient( $window_agg_key );
+			$agg_count++;
+			set_transient( $window_agg_key, $agg_count, 600 );
 		} else {
 			global $wpdb;
 
@@ -124,19 +130,19 @@ class SentinelWP_Flood_Monitor {
 	 * Analyze aggregate traffic across all visitors.
 	 */
 	public function cron_analyze_rates() {
-		if ( wp_using_ext_object_cache() ) {
-			return;
-		}
-
 		global $wpdb;
-		$window_id  = (int) floor( time() / 300 );
+		$window_id = (int) floor( time() / 300 );
 
-		$total_requests = (int) $wpdb->get_var(
-			$wpdb->prepare(
-				"SELECT SUM(hit_count) FROM {$wpdb->prefix}sentinelwp_request_rates WHERE window_id = %d",
-				$window_id
-			)
-		);
+		if ( wp_using_ext_object_cache() ) {
+			$total_requests = (int) get_transient( 'sentinelwp_rr_agg_' . $window_id );
+		} else {
+			$total_requests = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT SUM(hit_count) FROM {$wpdb->prefix}sentinelwp_request_rates WHERE window_id = %d",
+					$window_id
+				)
+			);
+		}
 
 		$avg_rate = (int) get_transient( 'sentinelwp_avg_req_rate' );
 

@@ -78,12 +78,29 @@ class SentinelWP_Vuln_DB {
 		if ( ! $extra ) {
 			return;
 		}
+		$existing_cves   = array_filter( wp_list_pluck( $result->vulnerabilities, 'cve' ) );
+		$existing_titles = array_filter( wp_list_pluck( $result->vulnerabilities, 'title' ) );
+
 		foreach ( $extra->vulnerabilities as $vuln ) {
 			// De-dupe by CVE id if present, otherwise by title.
-			$key = $vuln['cve'] ? $vuln['cve'] : $vuln['title'];
-			$existing_keys = wp_list_pluck( $result->vulnerabilities, 'cve' );
-			if ( ! in_array( $key, $existing_keys, true ) ) {
+			$cve   = ! empty( $vuln['cve'] ) ? $vuln['cve'] : '';
+			$title = ! empty( $vuln['title'] ) ? $vuln['title'] : '';
+
+			$is_duplicate = false;
+			if ( ! empty( $cve ) && in_array( $cve, $existing_cves, true ) ) {
+				$is_duplicate = true;
+			} elseif ( empty( $cve ) && ! empty( $title ) && in_array( $title, $existing_titles, true ) ) {
+				$is_duplicate = true;
+			}
+
+			if ( ! $is_duplicate ) {
 				$result->vulnerabilities[] = $vuln;
+				if ( ! empty( $cve ) ) {
+					$existing_cves[] = $cve;
+				}
+				if ( ! empty( $title ) ) {
+					$existing_titles[] = $title;
+				}
 			}
 		}
 		if ( $extra->has_vulnerability ) {

@@ -206,7 +206,7 @@ $edge_context_no_corrob['ip_failures'] = 0;
 $edge_res_no_corrob = $risk_engine->evaluate_payment_attempt( $edge_context_no_corrob );
 
 $tp_verified = (
-	'HARD_BLOCK' === $protect_attack_res['decision'] &&
+	'SOFT_BLOCK' === $protect_attack_res['decision'] &&
 	'HARD_BLOCK' === $lockdown_attack_res['decision'] &&
 	$protect_attack_res['risk_score'] >= 85 &&
 	$protect_attack_res['confidence'] >= 0.85 &&

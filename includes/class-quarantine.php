@@ -34,12 +34,36 @@ class SentinelWP_Quarantine {
 
 	/**
 	 * Get the absolute filesystem path to the quarantine vault directory.
+	 * Automatically ensures directory is protected from direct web access.
 	 *
 	 * @return string
 	 */
 	public function get_vault_dir() {
 		$upload_dir = wp_upload_dir();
 		$vault_dir  = trailingslashit( $upload_dir['basedir'] ) . 'sentinelwp-quarantine';
+
+		if ( is_dir( $vault_dir ) ) {
+			$fs = $this->get_filesystem();
+			$htaccess = trailingslashit( $vault_dir ) . '.htaccess';
+			if ( ! file_exists( $htaccess ) ) {
+				$deny_rule = "<IfModule !mod_authz_core.c>\nOrder deny,allow\nDeny from all\n</IfModule>\n<IfModule mod_authz_core.c>\nRequire all denied\n</IfModule>\n";
+				if ( $fs ) {
+					$fs->put_contents( $htaccess, $deny_rule, FS_CHMOD_FILE );
+				} else {
+					@file_put_contents( $htaccess, $deny_rule );
+				}
+			}
+
+			$index_file = trailingslashit( $vault_dir ) . 'index.php';
+			if ( ! file_exists( $index_file ) ) {
+				if ( $fs ) {
+					$fs->put_contents( $index_file, '', FS_CHMOD_FILE );
+				} else {
+					@file_put_contents( $index_file, '' );
+				}
+			}
+		}
+
 		return $vault_dir;
 	}
 
@@ -444,20 +468,34 @@ class SentinelWP_Quarantine {
 	 * @return string|null
 	 */
 	private function extract_path_from_finding( $finding ) {
-		if ( ! empty( $finding->title ) && file_exists( $finding->title ) ) {
-			return $finding->title;
-		}
-
+		// 1. Check structured JSON details
 		if ( ! empty( $finding->details ) ) {
 			$details = json_decode( $finding->details, true );
 			if ( is_array( $details ) ) {
-				if ( ! empty( $details['file'] ) ) {
+				if ( ! empty( $details['file'] ) && file_exists( $details['file'] ) ) {
 					return $details['file'];
 				}
-				if ( ! empty( $details['path'] ) ) {
+				if ( ! empty( $details['path'] ) && file_exists( $details['path'] ) ) {
 					return $details['path'];
 				}
 			}
+		}
+
+		// 2. Check source column (many scanners store relative or absolute path in source)
+		if ( ! empty( $finding->source ) ) {
+			$home = SentinelWP_Helper::get_home_directory();
+			$src  = trailingslashit( $home ) . ltrim( $finding->source, '/' );
+			if ( file_exists( $src ) ) {
+				return $src;
+			}
+			if ( file_exists( $finding->source ) ) {
+				return $finding->source;
+			}
+		}
+
+		// 3. Fallback to title only if it is a valid file
+		if ( ! empty( $finding->title ) && file_exists( $finding->title ) ) {
+			return $finding->title;
 		}
 
 		return null;
